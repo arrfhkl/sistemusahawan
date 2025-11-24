@@ -11,7 +11,7 @@ if (isset($_GET['id'])) {
   $id = intval($_GET['id']);
   $user_id = $_SESSION['usahawan_id'];
 
-  $sql = "DELETE FROM cart WHERE id = $id AND user_id = $user_id";
+  $sql = "DELETE FROM cart WHERE id = $id AND usahawan_id = $user_id";
   if ($conn->query($sql)) {
     echo "Item berjaya dipadam.";
   } else {
