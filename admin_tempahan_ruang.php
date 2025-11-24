@@ -33,6 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
 $sql = "SELECT id, nama_ruang, nama_pemohon, no_ic, telefon, tarikh_tempah, maklum_balas FROM tempahan_ruang ORDER BY tarikh_tempah DESC";
 $result = $conn->query($sql);
 ?>
+
 <!DOCTYPE html>
 <html lang="ms">
 <head>
