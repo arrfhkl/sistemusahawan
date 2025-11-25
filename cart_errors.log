@@ -1,0 +1,8 @@
+[2025-11-19 04:34:17] Add to cart request - User: 3, Produk: 16, Nama: Ikan
+[2025-11-19 04:34:17] Product added to cart successfully - User: 3, Produk: 16, Cart ID: 81
+[2025-11-19 04:34:44] Add to cart request - User: 4, Produk: 16, Nama: Ikan
+[2025-11-19 04:34:44] Exception: Cannot add or update a child row: a foreign key constraint fails (`sistem_usahawan_pahang`.`cart`, CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE)
+[2025-11-19 04:36:29] Add to cart request - User: 4, Produk: 16, Nama: Ikan
+[2025-11-19 04:36:29] Exception: Cannot add or update a child row: a foreign key constraint fails (`sistem_usahawan_pahang`.`cart`, CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE) | Line: 197 | File: C:\xampp\htdocs\sups\add_to_cart.php
+[2025-11-19 04:36:31] Add to cart request - User: 4, Produk: 16, Nama: Ikan
+[2025-11-19 04:36:31] Exception: Cannot add or update a child row: a foreign key constraint fails (`sistem_usahawan_pahang`.`cart`, CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE) | Line: 197 | File: C:\xampp\htdocs\sups\add_to_cart.php
