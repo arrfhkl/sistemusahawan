@@ -264,6 +264,7 @@ header h1 {
   <a href="tambah_berita.php" class="active">Tambah Berita</a>
   <a href="admin_tambah_ruang.php">Tambah Ruang</a>
   <a href="admin_tempahan_ruang.php">Tempahan Ruang</a>
+  <a href="admin_order.php">Pengurusan Pesanan</a>
   <a href="logout_admin.php">Log Keluar</a>
 </div>
 
