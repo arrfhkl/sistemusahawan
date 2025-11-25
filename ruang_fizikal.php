@@ -570,7 +570,7 @@ footer .copyright {
         <input type="text" name="telefon" required>
 
         <label>Tarikh Tempahan</label>
-        <input type="date" name="tarikh_tempah" required>
+        <input type="date" id="tarikh_tempah" name="tarikh_tempah" required>
 
         <button type="submit">Hantar Tempahan</button>
       </form>
@@ -593,10 +593,27 @@ footer .copyright {
 
   <!-- ===== JavaScript ===== -->
   <script>
+
     function bukaPopup(namaRuang) {
       document.getElementById('popupForm').style.display = 'flex';
       document.getElementById('nama_ruang').value = namaRuang;
+
+      // Set tarikh minimum 1 hari dari sekarang ikut waktu KL
+      const sekarang = new Date();
+      const utc = sekarang.getTime() + sekarang.getTimezoneOffset() * 60000;
+      const klDate = new Date(utc + 8*60*60*1000); // UTC+8
+      klDate.setDate(klDate.getDate() + 1);
+
+      const yyyy = klDate.getFullYear();
+      const mm = String(klDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(klDate.getDate()).padStart(2, '0');
+      const tarikhMin = `${yyyy}-${mm}-${dd}`;
+
+      const tarikhInput = document.getElementById('tarikh_tempah');
+      tarikhInput.min = tarikhMin;
+      tarikhInput.value = tarikhMin; // default value 1 hari ke depan
     }
+  
 
     function tutupPopup() {
       document.getElementById('popupForm').style.display = 'none';
