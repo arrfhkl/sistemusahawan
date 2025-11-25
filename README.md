@@ -1,2 +1,0 @@
-# sups
-Sistem Usahawan Pahang
