@@ -340,7 +340,10 @@ header h1 {
       </select>
 
       <label>Muat Naik Gambar</label>
-      <input type="file" name="gambar" accept="image/*" required>
+      <input type="file" name="gambar" accept="image/*" required onchange="previewImage(event)">
+
+      <img id="preview" style="display:none; margin-top:15px; max-width:200px; border-radius:10px;">
+
 
       <button type="submit" class="submit-btn">Simpan Ruang</button>
       <button type="button" class="list-btn" onclick="window.location.href='admin_list_ruang.php'">Senarai Ruang</button>
@@ -351,6 +354,17 @@ header h1 {
   </div>
 
   <script>
+    //preview gambar sebelum hantar
+    function previewImage(event) {
+    const reader = new FileReader();
+    reader.onload = function(){
+        const output = document.getElementById('preview');
+        output.src = reader.result;
+        output.style.display = 'block';
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
+  
     // Toggle sidebar untuk mobile
     const toggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
