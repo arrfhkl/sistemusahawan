@@ -291,7 +291,9 @@ header h1 {
         <textarea id="kandungan" name="kandungan" required></textarea>
 
         <label for="imej">Muat Naik Imej:</label>
-        <input type="file" id="imej" name="imej" accept="image/*" required>
+        <input type="file" id="imej" name="imej" accept="image/*" required onchange="previewImage(event)">
+
+        <img id="preview" style="display:none; margin-top:15px; max-width:200px; border-radius:10px;">
 
         <label for="pautan">Pautan (jika ada):</label>
         <input type="url" id="pautan" name="pautan" placeholder="https://...">
@@ -305,6 +307,18 @@ header h1 {
   </div>
 
   <script>
+
+    // preview gambar 
+    function previewImage(event) {
+      const reader = new FileReader();
+      reader.onload = function(){
+        const output = document.getElementById('preview');
+        output.src = reader.result;
+        output.style.display = 'block';
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
+  
     // Toggle sidebar untuk mobile
     const toggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
