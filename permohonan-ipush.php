@@ -23,6 +23,7 @@ body {
   overflow-x: hidden;
   position: relative;
   margin-top: 90px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* ✨ Cahaya lembut keemasan & hitam bergerak */
@@ -49,7 +50,7 @@ body::after {
   background-repeat: repeat;
   background-size: 180px 180px;
   background-position: center;
-  opacity: 0.15; /* 🔆 Naikkan dari 0.07 → 0.15 supaya lebih nampak */
+  opacity: 0.15;
   filter: grayscale(5%) brightness(1.3) contrast(1.1);
   animation: watermarkFloat 40s linear infinite;
   z-index: -2;
@@ -67,23 +68,6 @@ body::after {
   0% { background-position: 0% 50%, 100% 50%; transform: scale(1); }
   100% { background-position: 100% 50%, 0% 50%; transform: scale(1.05); }
 }
-
-/* ===== Kad (card) Optional ===== */
-.card {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  padding: 25px;
-  backdrop-filter: blur(8px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-}
-
 
 /* ===== Header ===== */
 header {
@@ -185,25 +169,241 @@ header .title::after {
   100% { background-position: 0% 50%; }
 }
 
+/* ===== Container & Card ===== */
+.container { 
+  max-width: 900px; 
+  margin: 40px auto; 
+  padding: 20px; 
+}
 
+.card { 
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px; 
+  border-radius: 16px; 
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
 
+/* ===== Form Header ===== */
+.form-header {
+  text-align: center;
+  margin-bottom: 35px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid rgba(18, 73, 255, 0.2);
+}
 
-    .container { max-width: 800px; margin: auto; padding: 20px; }
-    .card { background: white; padding: 25px; border-radius: 8px; border: 1px solid #ccc; }
-    h2 { margin-bottom: 20px; color: #1249ffff; }
+.form-header i {
+  font-size: 3rem;
+  color: #1249ff;
+  margin-bottom: 15px;
+  display: block;
+}
 
-    form label { display: block; margin: 12px 0 5px; font-weight: bold; }
-    form input, form textarea, form select {
-      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;
-    }
-    form input[type="file"] { border: none; }
-    .btn-submit {
-      background: #28a745; color: white; border: none; padding: 12px 20px;
-      border-radius: 6px; font-size: 1rem; cursor: pointer; transition: all 0.3s;
-    }
-    .btn-submit:hover { background: #1e7e34; transform: translateY(-2px); }
+.form-header h2 { 
+  color: #1249ff;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
 
-    /* ===== Footer ===== */
+.form-header p {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ===== Form Sections ===== */
+.form-section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  color: #1249ff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(18, 73, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title i {
+  font-size: 1.1rem;
+}
+
+/* ===== Form Groups ===== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.form-group label i {
+  margin-right: 6px;
+  color: #1249ff;
+  width: 16px;
+}
+
+.form-group label .required {
+  color: #dc3545;
+  margin-left: 3px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #1249ff;
+  box-shadow: 0 0 0 3px rgba(18, 73, 255, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* ===== File Upload Styling ===== */
+.file-upload-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+.file-upload-wrapper input[type="file"] {
+  position: absolute;
+  left: -9999px;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border: 2px dashed #1249ff;
+  border-radius: 8px;
+  background: rgba(18, 73, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.file-upload-label:hover {
+  background: rgba(18, 73, 255, 0.1);
+  border-color: #0d38cc;
+}
+
+.file-upload-label i {
+  font-size: 2rem;
+  color: #1249ff;
+  margin-right: 15px;
+}
+
+.file-upload-text {
+  text-align: left;
+}
+
+.file-upload-text strong {
+  color: #1249ff;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.file-upload-text small {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* ===== Info Box ===== */
+.info-box {
+  background: linear-gradient(135deg, rgba(18, 73, 255, 0.05) 0%, rgba(18, 73, 255, 0.02) 100%);
+  border-left: 4px solid #1249ff;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.info-box i {
+  color: #1249ff;
+  margin-right: 10px;
+}
+
+.info-box p {
+  margin: 0;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ===== Grid Layout for Two Columns ===== */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Submit Button ===== */
+.btn-submit {
+  background: linear-gradient(135deg, #28a745 0%, #20a23a 100%);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-submit:hover {
+  background: linear-gradient(135deg, #20a23a 0%, #1e7e34 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+.btn-submit i {
+  font-size: 1.2rem;
+}
+
+/* ===== Footer ===== */
 footer {
   background: linear-gradient(
       135deg,
@@ -217,7 +417,7 @@ footer {
   animation: metalshine 6s linear infinite;
   color: #fff;
   padding: 30px 20px;
-  margin-top: 40px;
+  margin-top: 60px;
   text-align: center;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
@@ -237,7 +437,6 @@ footer img {
   filter: drop-shadow(0 3px 5px rgba(0,0,0,0.4));
 }
 
-/* ===== 3D Metallic Text ===== */
 footer p,
 footer .copyright,
 footer strong {
@@ -254,7 +453,6 @@ footer strong {
   transition: transform 0.3s ease, text-shadow 0.3s ease;
 }
 
-/* Glow and depth on hover */
 footer p:hover,
 footer strong:hover {
   transform: translateY(-2px);
@@ -268,7 +466,6 @@ footer strong:hover {
     0 0 10px rgba(255, 255, 255, 0.3);
 }
 
-/* Copyright (subtle) */
 footer .copyright {
   margin-top: 10px;
   padding-top: 10px;
@@ -281,21 +478,7 @@ footer .copyright {
     0 3px 3px rgba(0,0,0,0.6);
 }
 
-/* Metallic Shine Animation */
-@keyframes metalshine {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-
 /* ===== Responsive Design ===== */
-@media (max-width: 992px) {
-  .slideshow-container { height: 300px; }
-  .function-btn { min-height: 130px; }
-  .function-btn i { font-size: 2rem; }
-}
-
 @media (max-width: 768px) {
   .menu-toggle { display: block; }
   nav {
@@ -309,8 +492,8 @@ footer .copyright {
       #99CCFF 60%,
       #003399 80%,
       #001F3F 100%
-  );
-  animation: metalshine 6s linear infinite;
+    );
+    animation: metalshine 6s linear infinite;
     padding: 15px;
     border-radius: 10px;
     margin-top: 12px;
@@ -319,16 +502,29 @@ footer .copyright {
   nav.show { display: flex; }
   nav a { text-align: center; padding: 10px; font-size: 1rem; }
   .title { font-size: 1.2rem; }
-  .slideshow-container { height: 220px; }
-  .function-grid { gap: 18px; }
-  .function-btn { min-height: 110px; padding: 18px; }
-  .function-btn i { font-size: 1.8rem; }
-  .function-btn span { font-size: 0.9rem; }
+  
+  .card {
+    padding: 25px;
+  }
+  
+  .form-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .form-header i {
+    font-size: 2.5rem;
+  }
 }
 
 @media (max-width: 480px) {
-  .slideshow-container { height: 180px; }
-  .function-btn { padding: 15px; }
+  .card {
+    padding: 20px;
+  }
+  
+  .btn-submit {
+    padding: 12px 30px;
+    font-size: 1rem;
+  }
 }
 
   </style>
@@ -348,44 +544,132 @@ footer .copyright {
 
 <div class="container">
   <div class="card">
-    <h2><i class="fas fa-hands-helping"></i> Permohonan Geran i-PUSH</h2>
-    <p>Sila lengkapkan borang di bawah untuk membuat permohonan Geran i-TEKAD.</p>
+    <div class="form-header">
+      <i class="fas fa-hands-helping"></i>
+      <h2>Permohonan Geran i-PUSH</h2>
+      <p>Sila lengkapkan borang permohonan di bawah dengan maklumat yang tepat dan lengkap. Pastikan semua dokumen sokongan disediakan.</p>
+    </div>
+
+    <div class="info-box">
+      <i class="fas fa-info-circle"></i>
+      <p><strong>Nota Penting:</strong> Geran i-PUSH menyediakan bantuan kewangan antara RM1,000 hingga RM5,000 untuk usahawan dan usahawan baharu. Semua medan bertanda <span class="required">*</span> adalah wajib diisi.</p>
+    </div>
 
     <form action="simpan_ipush.php" method="POST" enctype="multipart/form-data">
-      <label for="nama">Nama Penuh</label>
-      <input type="text" id="nama" name="nama" required>
+      
+      <!-- Bahagian 1: Maklumat Peribadi -->
+      <div class="form-section">
+        <div class="section-title">
+          <i class="fas fa-user"></i>
+          <span>Maklumat Peribadi</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="nama">
+            <i class="fas fa-id-card"></i>
+            Nama Penuh <span class="required">*</span>
+          </label>
+          <input type="text" id="nama" name="nama" placeholder="Contoh: Ahmad Bin Abdullah" required>
+        </div>
 
-      <label for="ic">No. Kad Pengenalan</label>
-      <input type="text" id="ic" name="ic" required>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ic">
+              <i class="fas fa-id-card-alt"></i>
+              No. Kad Pengenalan <span class="required">*</span>
+            </label>
+            <input type="text" id="ic" name="ic" placeholder="XXXXXX-XX-XXXX" required>
+          </div>
 
-      <label for="telefon">No. Telefon</label>
-      <input type="text" id="telefon" name="telefon" required>
+          <div class="form-group">
+            <label for="telefon">
+              <i class="fas fa-phone"></i>
+              No. Telefon <span class="required">*</span>
+            </label>
+            <input type="text" id="telefon" name="telefon" placeholder="01X-XXXXXXX" required>
+          </div>
+        </div>
 
-      <label for="alamat">Alamat</label>
-      <textarea id="alamat" name="alamat" rows="3" required></textarea>
+        <div class="form-group">
+          <label for="alamat">
+            <i class="fas fa-map-marker-alt"></i>
+            Alamat Lengkap <span class="required">*</span>
+          </label>
+          <textarea id="alamat" name="alamat" placeholder="Masukkan alamat lengkap termasuk poskod dan negeri" required></textarea>
+        </div>
+      </div>
 
-      <label for="kategori">Kategori Pemohon</label>
-      <select id="kategori" name="kategori" required>
-        <option value="">-- Sila Pilih --</option>
-        <option value="Usahawan">Usahawan</option>
-        <option value="Usahawan Baru">Usahawan Baharu</option>
-      </select>
+      <!-- Bahagian 2: Maklumat Permohonan -->
+      <div class="form-section">
+        <div class="section-title">
+          <i class="fas fa-briefcase"></i>
+          <span>Maklumat Permohonan</span>
+        </div>
 
-      <label for="jumlah">Jumlah Geran Dimohon (RM)</label>
-      <input type="number" id="jumlah" name="jumlah" min="1000" max="5000" required>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="kategori">
+              <i class="fas fa-users"></i>
+              Kategori Pemohon <span class="required">*</span>
+            </label>
+            <select id="kategori" name="kategori" required>
+              <option value="">-- Sila Pilih --</option>
+              <option value="Usahawan">Usahawan Sedia Ada</option>
+              <option value="Usahawan Baru">Usahawan Baharu</option>
+            </select>
+          </div>
 
-      <label for="tujuan">Tujuan Permohonan</label>
-      <textarea id="tujuan" name="tujuan" rows="3" required></textarea>
+          <div class="form-group">
+            <label for="jumlah">
+              <i class="fas fa-money-bill-wave"></i>
+              Jumlah Geran Dimohon (RM) <span class="required">*</span>
+            </label>
+            <input type="number" id="jumlah" name="jumlah" min="1000" max="5000" placeholder="1000 - 5000" required>
+          </div>
+        </div>
 
-      <label for="dokumen">Muat Naik Dokumen Sokongan (PDF/JPG)</label>
-      <input type="file" id="dokumen" name="dokumen" accept=".pdf,.jpg,.jpeg,.png" required>
+        <div class="form-group">
+          <label for="tujuan">
+            <i class="fas fa-clipboard-list"></i>
+            Tujuan Permohonan <span class="required">*</span>
+          </label>
+          <textarea id="tujuan" name="tujuan" placeholder="Nyatakan dengan jelas tujuan permohonan geran ini untuk perniagaan anda" required></textarea>
+        </div>
+      </div>
 
-      <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Hantar Permohonan</button>
+      <!-- Bahagian 3: Dokumen Sokongan -->
+      <div class="form-section">
+        <div class="section-title">
+          <i class="fas fa-file-upload"></i>
+          <span>Dokumen Sokongan</span>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i class="fas fa-paperclip"></i>
+            Muat Naik Dokumen <span class="required">*</span>
+          </label>
+          <div class="file-upload-wrapper">
+            <input type="file" id="dokumen" name="dokumen" accept=".pdf,.jpg,.jpeg,.png" required>
+            <label for="dokumen" class="file-upload-label">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <div class="file-upload-text">
+                <strong>Klik untuk memuat naik dokumen</strong>
+                <small>Format yang diterima: PDF, JPG, PNG (Maks: 5MB)</small>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i class="fas fa-paper-plane"></i>
+        <span>Hantar Permohonan</span>
+      </button>
     </form>
   </div>
 </div>
 
-<!-- ===== Footer Rasmi ===== -->
 <footer>
   <div class="footer-content">
     <img src="assets/img/jatapahang.png" alt="Jata Negeri Pahang">
@@ -394,7 +678,7 @@ footer .copyright {
     Kompleks SUK, 25503 Kuantan, Pahang Darul Makmur</p>
     <p>Telefon: 09-1234567 | Emel: info@pahang.gov.my</p>
     <div class="copyright">
-      © <?= date("Y") ?> Kerajaan Negeri Pahang. Hak cipta terpelihara.
+      © 2025 Kerajaan Negeri Pahang. Hak cipta terpelihara.
     </div>
   </div>
 </footer>
@@ -403,6 +687,21 @@ footer .copyright {
   function toggleMenu() {
     document.getElementById('navMenu').classList.toggle('show');
   }
+
+  // File upload display
+  document.getElementById('dokumen').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name;
+    if (fileName) {
+      const label = document.querySelector('.file-upload-label');
+      label.innerHTML = `
+        <i class="fas fa-check-circle" style="color: #28a745;"></i>
+        <div class="file-upload-text">
+          <strong style="color: #28a745;">Fail dipilih: ${fileName}</strong>
+          <small>Klik untuk tukar fail</small>
+        </div>
+      `;
+    }
+  });
 </script>
 
 </body>
