@@ -11,6 +11,9 @@ if ($conn->connect_error) {
   die("Sambungan gagal: " . $conn->connect_error);
 }
 
+$sql_lokasi = "SELECT DISTINCT lokasi FROM produk ORDER BY lokasi DESC";
+$result_lokasi = $conn->query($sql_lokasi);
+
 // 🔹 Semak sama ada user sudah login
 $is_logged_in = isset($_SESSION['usahawan_id']);
 $user_id = $is_logged_in ? $_SESSION['usahawan_id'] : null;
@@ -23,17 +26,21 @@ if ($is_logged_in) {
 }
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
+$lokasi_filter = isset($_GET['lokasi']) ? $_GET['lokasi'] : '';
+
+$sql = "SELECT * FROM produk WHERE 1";
 
 if (!empty($search)) {
-  $sql = "SELECT * FROM produk 
-          WHERE nama LIKE '%$search%' 
-          ORDER BY id DESC";
-} else {
-  $sql = "SELECT * FROM produk ORDER BY id DESC";
+  $sql .= " AND nama LIKE '$search%'";
 }
 
-$result = $conn->query($sql);
+if (!empty($lokasi_filter)) {
+  $sql .= " AND lokasi = '$lokasi_filter'";
+}
 
+$sql .= " ORDER BY id DESC";
+
+$result = $conn->query($sql);
 ?>
 
 
@@ -94,43 +101,6 @@ body::after {
   animation: watermarkFloat 40s linear infinite;
   z-index: -2;
 }
-
-/* ===== SEARCH BAR ===== */
-.search-wrapper {
-  max-width: 1200px;
-  margin: 20px auto 10px auto;
-  padding: 0 20px;
-}
-
-.search-box {
-  position: relative;
-  width: 100%;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 12px 15px 12px 45px;
-  border-radius: 30px;
-  border: 1px solid #ccc;
-  font-size: 15px;
-  outline: none;
-  transition: 0.3s;
-}
-
-.search-box input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0,123,255,0.3);
-}
-
-.search-icon {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 16px;
-  color: #777;
-}
-
 
 /* 🌫️ Animasi lembut watermark */
 @keyframes watermarkFloat {
@@ -276,6 +246,43 @@ header .title::after {
   transform: scale(1.15);
   color: #ffd700;
 }
+
+/* ===== SEARCH BAR ===== */
+.search-wrapper {
+  max-width: 1200px;
+  margin: 20px auto 10px auto;
+  padding: 0 20px;
+}
+
+.search-box {
+  position: relative;
+  width: 100%;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border-radius: 30px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.search-box input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+.search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #777;
+}
+
 
 /* ===== PRODUK GRID ===== */
 .produk-container {
@@ -528,13 +535,41 @@ footer .copyright {
 
 <!-- ===== PRODUK LIST ===== -->
 <main>
-    <!-- ===== SEARCH BAR ===== -->
-  <div class="search-wrapper">
-    <div class="search-box">
+  <!-- ===== SEARCH BAR ===== -->
+<div class="search-wrapper">
+  <div style="display:flex; gap:10px; align-items:center;">
+
+    <!-- SEARCH -->
+    <div class="search-box" style="flex:2;">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Cari produk..." autocomplete="off">
     </div>
+
+    <!-- FILTER LOKASI -->
+    <select id="lokasiFilter" style="
+      flex:1;
+      padding:12px;
+      border-radius:25px;
+      border:1px solid #ccc;
+      font-size:14px;
+      outline:none;
+      height:45px;
+    ">
+      <option value="">📍 Semua Lokasi</option>
+
+      <?php if ($result_lokasi && $result_lokasi->num_rows > 0): ?>
+        <?php while ($lok = $result_lokasi->fetch_assoc()): ?>
+          <option value="<?= htmlspecialchars($lok['lokasi']) ?>">
+            <?= htmlspecialchars($lok['lokasi']) ?>
+          </option>
+        <?php endwhile; ?>
+      <?php endif; ?>
+    </select>
+
   </div>
+</div>
+
+
 
   <div class="produk-container" id="produkContainer">
     <?php if ($result && $result->num_rows > 0): ?>
@@ -603,24 +638,31 @@ function toggleMenu(){
   document.getElementById("navMenu").classList.toggle("show");
 }
 
-// ========== SEARCH BAR ========== //
+// ========== REAL TIME SEARCH  ========== //
 const searchInput = document.getElementById("searchInput");
+const lokasiFilter = document.getElementById("lokasiFilter");
 const produkContainer = document.getElementById("produkContainer");
 
-searchInput.addEventListener("keyup", function() {
-  const value = this.value;
+function loadProduk() {
+  const searchValue = searchInput.value;
+  const lokasiValue = lokasiFilter.value;
 
-  fetch("?search=" + value)
+  fetch(`?search=${searchValue}&lokasi=${lokasiValue}`)
     .then(res => res.text())
     .then(data => {
-      // Ambil hanya bahagian produk sahaja
       const parser = new DOMParser();
       const html = parser.parseFromString(data, "text/html");
       const newProduk = html.querySelector("#produkContainer").innerHTML;
 
       produkContainer.innerHTML = newProduk;
     });
-});
+}
+
+// ✅ Auto reload bila taip
+searchInput.addEventListener("keyup", loadProduk);
+
+// ✅ Auto reload bila tukar lokasi
+lokasiFilter.addEventListener("change", loadProduk);
 
 // ========== FUNGSI TAMBAH KE CART ========== //
 async function tambahKeCart(produk_id, nama, harga, gambar_url) {
