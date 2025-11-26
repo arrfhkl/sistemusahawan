@@ -22,8 +22,18 @@ if ($is_logged_in) {
   $cart_count = $result_cart ? $result_cart->fetch_assoc()['total'] : 0;
 }
 
-$sql = "SELECT * FROM produk ORDER BY id DESC";
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+
+if (!empty($search)) {
+  $sql = "SELECT * FROM produk 
+          WHERE nama LIKE '%$search%' 
+          ORDER BY id DESC";
+} else {
+  $sql = "SELECT * FROM produk ORDER BY id DESC";
+}
+
 $result = $conn->query($sql);
+
 ?>
 
 
@@ -84,6 +94,43 @@ body::after {
   animation: watermarkFloat 40s linear infinite;
   z-index: -2;
 }
+
+/* ===== SEARCH BAR ===== */
+.search-wrapper {
+  max-width: 1200px;
+  margin: 20px auto 10px auto;
+  padding: 0 20px;
+}
+
+.search-box {
+  position: relative;
+  width: 100%;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border-radius: 30px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.search-box input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+.search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #777;
+}
+
 
 /* 🌫️ Animasi lembut watermark */
 @keyframes watermarkFloat {
@@ -481,7 +528,15 @@ footer .copyright {
 
 <!-- ===== PRODUK LIST ===== -->
 <main>
-  <div class="produk-container">
+    <!-- ===== SEARCH BAR ===== -->
+  <div class="search-wrapper">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Cari produk..." autocomplete="off">
+    </div>
+  </div>
+
+  <div class="produk-container" id="produkContainer">
     <?php if ($result && $result->num_rows > 0): ?>
       <?php while ($row = $result->fetch_assoc()): ?>
         <div class="produk-card" onclick="bukaPopup(<?= htmlspecialchars(json_encode($row)) ?>)">
@@ -547,6 +602,25 @@ footer .copyright {
 function toggleMenu(){
   document.getElementById("navMenu").classList.toggle("show");
 }
+
+// ========== SEARCH BAR ========== //
+const searchInput = document.getElementById("searchInput");
+const produkContainer = document.getElementById("produkContainer");
+
+searchInput.addEventListener("keyup", function() {
+  const value = this.value;
+
+  fetch("?search=" + value)
+    .then(res => res.text())
+    .then(data => {
+      // Ambil hanya bahagian produk sahaja
+      const parser = new DOMParser();
+      const html = parser.parseFromString(data, "text/html");
+      const newProduk = html.querySelector("#produkContainer").innerHTML;
+
+      produkContainer.innerHTML = newProduk;
+    });
+});
 
 // ========== FUNGSI TAMBAH KE CART ========== //
 async function tambahKeCart(produk_id, nama, harga, gambar_url) {
