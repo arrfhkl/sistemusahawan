@@ -465,7 +465,9 @@ footer .copyright {
     <input type="number" name="harga" step="0.01" value="<?= htmlspecialchars($produk['harga']) ?>" required>
 
     <label>Gambar Produk</label>
-    <input type="file" name="gambar" accept="image/*">
+   
+    <input type="file" name="gambar" accept="image/*" required onchange="previewImage(event)">
+    <img id="preview" style="display:none; margin-top:15px; max-width:200px; border-radius:10px;">
     <div class="preview">
       <p>Gambar sedia ada:</p>
       <?php
@@ -495,6 +497,17 @@ footer .copyright {
 function toggleMenu() {
   document.getElementById("navMenu").classList.toggle("show");
 }
+
+    //preview gambar upload
+    function previewImage(event) {
+    const reader = new FileReader();
+    reader.onload = function(){
+        const output = document.getElementById('preview');
+        output.src = reader.result;
+        output.style.display = 'block';
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
 </script>
 
 </body>
