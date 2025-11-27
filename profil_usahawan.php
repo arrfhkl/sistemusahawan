@@ -461,12 +461,14 @@ header .title::after {
   }
 }
 
-
-
+  .produk-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr);  /* 1/3 layout tetap */
+    gap: 20px; 
+  }
 
     /* ===== Produk Section ===== */
     .produk-section { margin-top: 40px; }
-    .produk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
     .produk-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
     .produk-card img { width: 100%; height: 180px; object-fit: cover; }
     .produk-card-content { padding: 15px; }
@@ -610,6 +612,19 @@ footer .copyright {
   .slideshow-container { height: 180px; }
   .function-btn { padding: 15px; }
 }
+
+@media (max-width: 992px) {
+  .produk-grid {
+    grid-template-columns: repeat(2, 1fr); /* Tablet = 2 kolum */
+  }
+}
+
+@media (max-width: 576px) {
+  .produk-grid {
+    grid-template-columns: repeat(1, 1fr); /* Phone = 1 kolum */
+  }
+}
+
   </style>
 </head>
 <body>

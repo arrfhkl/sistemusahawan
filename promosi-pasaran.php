@@ -473,6 +473,7 @@ footer .copyright {
   padding:20px;
   box-shadow:0 5px 25px rgba(0,0,0,0.3);
   animation: fadeIn 0.3s ease;
+  position: relative;
 }
 .modal-content img {
   width:100%;
@@ -498,13 +499,29 @@ footer .copyright {
   margin-top:15px;
 }
 .modal-close {
-  position:absolute;
-  top:15px; right:20px;
-  background:none;
-  border:none;
-  font-size:24px;
-  color:#333;
-  cursor:pointer;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #dc3545; /* Merah */
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: 0.25s ease;
+  z-index: 10;
+}
+
+.modal-close:hover {
+  background: #b02a37;
+  transform: scale(1.1);
 }
 
 /*supaya responsive*/
