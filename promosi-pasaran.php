@@ -287,7 +287,7 @@ header .title::after {
 /* ===== PRODUK GRID ===== */
 .produk-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr); /* Sentiasa 4 kolum */
   gap:20px;
   padding:20px;
   max-width:1200px;
@@ -506,6 +506,26 @@ footer .copyright {
   color:#333;
   cursor:pointer;
 }
+
+/*supaya responsive*/
+@media (max-width: 992px) {
+  .produk-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .produk-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .produk-container {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
 </style>
 </head>
 <body>
