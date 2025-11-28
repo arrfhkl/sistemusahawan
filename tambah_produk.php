@@ -444,7 +444,9 @@ footer .copyright {
         <textarea name="deskripsi" rows="4"></textarea>
 
         <label>Muat Naik Gambar:</label>
-        <input type="file" name="gambar" accept="image/*">
+        <input type="file" name="gambar" accept="image/*" onchange="previewImage(event)">
+        <img id="preview" src="" style="display:none; width:180px; margin-top:12px; border-radius:10px; border:2px solid #ccc;">
+
 
         <label>Lokasi:</label>
         <input type="text" name="lokasi">
@@ -480,9 +482,21 @@ footer .copyright {
 </footer>
 
 <script>
-function toggleMenu() {
-  document.getElementById("navMenu").classList.toggle("show");
-}
+  function toggleMenu() {
+    document.getElementById("navMenu").classList.toggle("show");
+  }
+
+  // preview gambar 
+  function previewImage(event) {
+    const reader = new FileReader();
+      reader.onload = function(){
+        const output = document.getElementById('preview');
+        output.src = reader.result;
+        output.style.display = 'block';
+      };
+    reader.readAsDataURL(event.target.files[0]);
+    }
+  
 </script>
 
 </body>
