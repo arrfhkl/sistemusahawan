@@ -244,10 +244,35 @@ header .title::after {
   100% { background-position: 0% 50%; }
 }
 
+/* ===== Back Button (Premium Style) ===== */
+.back-btn {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #003366;
+  padding: 6px 14px;
+  border: 2px solid #003366;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ffffff, #f1f1f1);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  transition: all 0.25s ease;
+}
+
+.back-btn:hover {
+  background: #003366;
+  color: #fff;
+  transform: translateX(-2px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
 
     /* ===== Container ===== */
     .container { max-width: 600px; margin: 50px auto; background: #fff; border-radius: 15px;
-      padding: 30px; box-shadow: 0 6px 25px rgba(0,0,0,0.1); border: 2px solid #003366; }
+      padding: 30px; box-shadow: 0 6px 25px rgba(0,0,0,0.1); border: 2px solid #003366; position: relative;
+ }
 
     h2 { text-align: center; color: #003366; margin-bottom: 20px; }
 
@@ -308,7 +333,7 @@ header .title::after {
       border-radius: 10px;
       border: 2px solid #003366;
     }
-    
+
     /* ===== Footer ===== */
 footer {
   background: linear-gradient(
@@ -453,6 +478,11 @@ footer .copyright {
 </header>
 
 <div class="container">
+
+  <a href="profil_usahawan.php?id=<?= $produk['usahawan_id'] ?>" class="back-btn">
+    ← Kembali
+  </a>
+
   <h2>Edit Produk</h2>
   <form method="post" enctype="multipart/form-data">
     <label>Nama Produk</label>
