@@ -308,7 +308,7 @@ header .title::after {
       border-radius: 10px;
       border: 2px solid #003366;
     }
-
+    
     /* ===== Footer ===== */
 footer {
   background: linear-gradient(
@@ -467,8 +467,16 @@ footer .copyright {
     <label>Gambar Produk</label>
    
     <input type="file" name="gambar" accept="image/*" required onchange="previewImage(event)">
-    <img id="preview" style="display:none; margin-top:15px; max-width:200px; border-radius:10px;">
-    <div class="preview">
+    <!-- Teks ini HIDDEN dulu -->
+    <p id="newImageText" class="new-upload-text" style="display:none; text-align:center; margin-top:15px; font-weight:600; color:#003366;">
+      Muat turun gambar baharu:
+    </p>
+    
+    <div class="preview" id="previewWrap" style="display:none;">
+      <img id="preview" alt="Preview gambar baharu">
+    </div>
+
+    <div class="preview" style="margin-top: 20px;">
       <p>Gambar sedia ada:</p>
       <?php
       $gambarPath = $produk['gambar_url'];
@@ -498,16 +506,25 @@ function toggleMenu() {
   document.getElementById("navMenu").classList.toggle("show");
 }
 
-    //preview gambar upload
-    function previewImage(event) {
-    const reader = new FileReader();
-    reader.onload = function(){
-        const output = document.getElementById('preview');
-        output.src = reader.result;
-        output.style.display = 'block';
-    };
-    reader.readAsDataURL(event.target.files[0]);
-  }
+// Preview gambar upload
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (!file) return; // kalau user cancel, jangan buat apa-apa
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const output = document.getElementById('preview');
+    const previewWrap = document.getElementById('previewWrap');
+    const newImageText = document.getElementById('newImageText');
+
+    output.src = e.target.result;
+
+    // Tunjuk teks + kotak preview bila user pilih gambar
+    previewWrap.style.display = 'block';
+    newImageText.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
 </script>
 
 </body>
