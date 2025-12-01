@@ -370,56 +370,110 @@ footer .copyright {
 </header>
 
   <!-- Content -->
+  <!-- Content -->
   <div class="container">
     <div class="card">
-      <h2>Pendaftaran Pengguna</h2>
+      <h2>📝 Pendaftaran Pengguna</h2>
       <form action="save_pendaftaran.php" method="POST" onsubmit="return semakKataLaluan()">
         
         <!-- Pilihan Jenis Pendaftaran -->
-        <label>Jenis Pendaftaran <span style="color:red;">*</span></label>
-        <select name="jenis_pendaftaran" id="jenis_pendaftaran" required onchange="toggleBusinessFields()">
-          <option value="">-- Pilih Jenis Pendaftaran --</option>
-          <option value="Usahawan">Usahawan</option>
-          <option value="Pengguna">Pengguna</option>
-        </select>
-
-        <label>Nama</label>
-        <input type="text" name="nama" required>
-
-        <label>No. Kad Pengenalan</label>
-        <input type="text" name="ic" required>
-
-        <!-- Bahagian Perniagaan (hanya untuk Usahawan) -->
-        <div id="businessFields" style="display:none;">
-          <label>Nama Perniagaan</label>
-          <input type="text" name="perniagaan" id="perniagaan">
-
-          <label>Jenis Perniagaan</label>
-          <select name="jenis" id="jenis">
-            <option value="">-- Pilih --</option>
-            <option value="Makanan">Makanan</option>
-            <option value="Pakaian">Pakaian</option>
-            <option value="Perkhidmatan">Perkhidmatan</option>
-            <option value="Lain-lain">Lain-lain</option>
+        <div class="form-group">
+          <label>
+            <i class="fas fa-user-tag"></i>
+            Jenis Pendaftaran <span class="required">*</span>
+          </label>
+          <select name="jenis_pendaftaran" id="jenis_pendaftaran" required onchange="toggleBusinessFields()">
+            <option value="">-- Pilih Jenis Pendaftaran --</option>
+            <option value="Usahawan">🏢 Usahawan</option>
+            <option value="Pengguna">👤 Pengguna</option>
           </select>
         </div>
 
-        <label>Alamat</label>
-        <textarea name="alamat" rows="3"></textarea>
+        <div class="form-group">
+          <label>
+            <i class="fas fa-user"></i>
+            Nama Penuh <span class="required">*</span>
+          </label>
+          <input type="text" name="nama" placeholder="Masukkan nama penuh anda" required>
+        </div>
 
-        <label>No. Telefon</label>
-        <input type="text" name="telefon" required>
+        <div class="form-group">
+          <label>
+            <i class="fas fa-id-card"></i>
+            No. Kad Pengenalan <span class="required">*</span>
+          </label>
+          <input type="text" name="ic" placeholder="Contoh: 990101-01-1234" required>
+        </div>
 
-        <label>Email</label>
-        <input type="email" name="email">
+        <!-- Bahagian Perniagaan (hanya untuk Usahawan) -->
+        <div id="businessFields" style="display:none;">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-store"></i>
+              Nama Perniagaan <span class="required">*</span>
+            </label>
+            <input type="text" name="perniagaan" id="perniagaan" placeholder="Nama syarikat/perniagaan">
+          </div>
 
-        <label>Kata Laluan</label>
-        <input type="password" name="password" id="password" required>
+          <div class="form-group">
+            <label>
+              <i class="fas fa-tags"></i>
+              Jenis Perniagaan <span class="required">*</span>
+            </label>
+            <select name="jenis" id="jenis">
+              <option value="">-- Pilih Kategori --</option>
+              <option value="Makanan">🍔 Makanan & Minuman</option>
+              <option value="Pakaian">👕 Pakaian & Fesyen</option>
+              <option value="Perkhidmatan">🛠️ Perkhidmatan</option>
+              <option value="Lain-lain">📦 Lain-lain</option>
+            </select>
+          </div>
+        </div>
 
-        <label>Sahkan Kata Laluan</label>
-        <input type="password" name="confirm_password" id="confirm_password" required>
+        <div class="form-group">
+          <label>
+            <i class="fas fa-map-marker-alt"></i>
+            Alamat
+          </label>
+          <textarea name="alamat" rows="3" placeholder="Masukkan alamat lengkap"></textarea>
+        </div>
 
-        <button type="submit">Hantar Pendaftaran</button>
+        <div class="form-group">
+          <label>
+            <i class="fas fa-phone"></i>
+            No. Telefon <span class="required">*</span>
+          </label>
+          <input type="text" name="telefon" placeholder="Contoh: 012-3456789" required>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i class="fas fa-envelope"></i>
+            Email
+          </label>
+          <input type="email" name="email" placeholder="nama@email.com">
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i class="fas fa-lock"></i>
+            Kata Laluan <span class="required">*</span>
+          </label>
+          <input type="password" name="password" id="password" placeholder="Minimum 6 aksara" required>
+          <div class="password-hint">💡 Gunakan kombinasi huruf, nombor dan simbol untuk keselamatan</div>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i class="fas fa-lock"></i>
+            Sahkan Kata Laluan <span class="required">*</span>
+          </label>
+          <input type="password" name="confirm_password" id="confirm_password" placeholder="Taip semula kata laluan" required>
+        </div>
+
+        <button type="submit">
+          <i class="fas fa-paper-plane"></i> Hantar Pendaftaran
+        </button>
       </form>
     </div>
   </div>
