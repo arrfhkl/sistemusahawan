@@ -1,4 +1,42 @@
 <?php
+session_start();
+include "connection.php";
+
+// Get user ID from URL or session
+$user_id = isset($_GET['id']) ? $_GET['id'] : $_SESSION['user_id'];
+
+// Check if user is Usahawan
+$sql = "SELECT jenis, perniagaan, nama FROM usahawan WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+
+// Block access if Pengguna
+if ($user['jenis'] === 'Pengguna' || $user['perniagaan'] === 'Pengguna') {
+    echo "<script>
+            alert('⚠️ AKSES DITOLAK!\\n\\nFungsi Tambah Produk hanya untuk Usahawan sahaja.\\n\\nSila daftar sebagai Usahawan untuk mengakses ciri ini.');
+            window.location = 'profil_usahawan.php?id=" . $user_id . "';
+          </script>";
+    exit();
+}
+
+$stmt->close();
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tambah Produk</title>
+</head>
+<body>
+    <h2>Tambah Produk Baru</h2>
+    <!-- Rest of your form -->
+</body>
+</html>
+
+<?php
 // Sambungan ke pangkalan data
 include "connection.php";
 if ($conn->connect_error) {

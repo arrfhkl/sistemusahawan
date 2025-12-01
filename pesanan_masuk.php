@@ -2,6 +2,32 @@
 session_start();
 include "connection.php";
 
+// Get user ID from URL or session
+$user_id = isset($_GET['id']) ? $_GET['id'] : $_SESSION['user_id'];
+
+// Check if user is Usahawan
+$sql = "SELECT jenis, perniagaan, nama FROM usahawan WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+
+// Block access if Pengguna
+if ($user['jenis'] === 'Pengguna' || $user['perniagaan'] === 'Pengguna') {
+    echo "<script>
+            alert('⚠️ AKSES DITOLAK!\\n\\nFungsi Pesanan Masuk hanya untuk Usahawan sahaja.\\n\\nAnda perlu mempunyai perniagaan untuk menerima pesanan.');
+            window.location = 'profil_usahawan.php?id=" . $user_id . "';
+          </script>";
+    exit();
+}
+
+$stmt->close();
+?>
+
+<?php
+include "connection.php";
+
 if (!isset($_SESSION['usahawan_id'])) {
     echo "<script>alert('Sila log masuk terlebih dahulu.'); window.location.href='login.php';</script>";
     exit;
