@@ -292,6 +292,7 @@ header .title::after {
   padding:20px;
   max-width:1200px;
   margin:auto;
+  align-items: stretch; 
 }
 
 .produk-card {
@@ -301,10 +302,20 @@ header .title::after {
   box-shadow:0 2px 10px rgba(0,0,0,0.1);
   transition: transform 0.2s ease;
   cursor: pointer;
+    height: 370px;
+  display: flex;
+  flex-direction: column;
 }
+.produk-info {
+  padding:15px;
+  flex: 1;                 
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 .produk-card:hover { transform:translateY(-5px); }
 .produk-card img { width:100%; height:200px; object-fit:cover; }
-.produk-info { padding:15px; }
 .produk-info h3 { font-size:1.1em; color:#222; }
 .harga { font-weight:bold; color:#e67e22; margin:6px 0; }
 .lokasi { color:#666; font-size:13px; margin-bottom:8px; }

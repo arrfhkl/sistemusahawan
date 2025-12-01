@@ -373,7 +373,7 @@ footer .copyright {
   <div class="container">
     <div class="card">
       <h2>Pendaftaran & Profil Usahawan</h2>
-      <form action="save_pendaftaran.php" method="POST">
+      <form action="save_pendaftaran.php" method="POST" onsubmit="return semakKataLaluan()">
         <label>Nama Usahawan</label>
         <input type="text" name="nama" required>
 
@@ -402,7 +402,10 @@ footer .copyright {
         <input type="email" name="email">
 
         <label>Kata Laluan</label>
-        <input type="password" name="password">
+        <input type="password" name="password" id="password" required>
+
+        <label>Sahkan Kata Laluan</label>
+        <input type="password" name="confirm_password" id="confirm_password" required>
 
         <button type="submit">Hantar Pendaftaran</button>
       </form>
@@ -427,6 +430,18 @@ footer .copyright {
     function toggleMenu(){
       document.getElementById('navMenu').classList.toggle('show');
     }
+
+    function semakKataLaluan() {
+      var pass = document.getElementById("password").value;
+      var confirm = document.getElementById("confirm_password").value;
+
+      if (pass !== confirm) {
+        alert("Kata laluan dan pengesahan kata laluan tidak sepadan. Sila cuba semula.");
+        return false; 
+      }else
+      return true;    
+     }
+
   </script>
 </body>
 </html>
