@@ -372,25 +372,37 @@ footer .copyright {
   <!-- Content -->
   <div class="container">
     <div class="card">
-      <h2>Pendaftaran & Profil Usahawan</h2>
+      <h2>Pendaftaran Pengguna</h2>
       <form action="save_pendaftaran.php" method="POST" onsubmit="return semakKataLaluan()">
-        <label>Nama Usahawan</label>
+        
+        <!-- Pilihan Jenis Pendaftaran -->
+        <label>Jenis Pendaftaran <span style="color:red;">*</span></label>
+        <select name="jenis_pendaftaran" id="jenis_pendaftaran" required onchange="toggleBusinessFields()">
+          <option value="">-- Pilih Jenis Pendaftaran --</option>
+          <option value="Usahawan">Usahawan</option>
+          <option value="Pengguna">Pengguna</option>
+        </select>
+
+        <label>Nama</label>
         <input type="text" name="nama" required>
 
         <label>No. Kad Pengenalan</label>
         <input type="text" name="ic" required>
 
-        <label>Nama Perniagaan</label>
-        <input type="text" name="perniagaan" required>
+        <!-- Bahagian Perniagaan (hanya untuk Usahawan) -->
+        <div id="businessFields" style="display:none;">
+          <label>Nama Perniagaan</label>
+          <input type="text" name="perniagaan" id="perniagaan">
 
-        <label>Jenis Perniagaan</label>
-        <select name="jenis" required>
-          <option value="">-- Pilih --</option>
-          <option value="Makanan">Makanan</option>
-          <option value="Pakaian">Pakaian</option>
-          <option value="Perkhidmatan">Perkhidmatan</option>
-          <option value="Lain-lain">Lain-lain</option>
-        </select>
+          <label>Jenis Perniagaan</label>
+          <select name="jenis" id="jenis">
+            <option value="">-- Pilih --</option>
+            <option value="Makanan">Makanan</option>
+            <option value="Pakaian">Pakaian</option>
+            <option value="Perkhidmatan">Perkhidmatan</option>
+            <option value="Lain-lain">Lain-lain</option>
+          </select>
+        </div>
 
         <label>Alamat</label>
         <textarea name="alamat" rows="3"></textarea>
@@ -411,6 +423,60 @@ footer .copyright {
       </form>
     </div>
   </div>
+
+  <script>
+  function toggleMenu(){
+    document.getElementById('navMenu').classList.toggle('show');
+  }
+
+  // Toggle Business Fields based on registration type
+  function toggleBusinessFields() {
+    var jenisPendaftaran = document.getElementById("jenis_pendaftaran").value;
+    var businessFields = document.getElementById("businessFields");
+    var perniagaanInput = document.getElementById("perniagaan");
+    var jenisInput = document.getElementById("jenis");
+
+    console.log("Jenis Pendaftaran dipilih:", jenisPendaftaran); // Debug
+
+    if (jenisPendaftaran === "Usahawan") {
+      businessFields.style.display = "block";
+      perniagaanInput.required = true;
+      jenisInput.required = true;
+      console.log("Field perniagaan ditunjukkan"); // Debug
+    } else if (jenisPendaftaran === "Pengguna") {
+      businessFields.style.display = "none";
+      perniagaanInput.required = false;
+      jenisInput.required = false;
+      // Reset values
+      perniagaanInput.value = "";
+      jenisInput.value = "";
+      console.log("Field perniagaan disembunyikan"); // Debug
+    } else {
+      // Jika tiada pilihan
+      businessFields.style.display = "none";
+      perniagaanInput.required = false;
+      jenisInput.required = false;
+    }
+  }
+
+  function semakKataLaluan() {
+    var pass = document.getElementById("password").value;
+    var confirm = document.getElementById("confirm_password").value;
+
+    if (pass !== confirm) {
+      alert("Kata laluan dan pengesahan kata laluan tidak sepadan. Sila cuba semula.");
+      return false; 
+    }
+    return true;    
+  }
+
+  // Test on page load
+  window.onload = function() {
+    console.log("Page loaded successfully");
+    var testField = document.getElementById("businessFields");
+    console.log("Business field element:", testField);
+  }
+</script>
 
   <!-- ===== Footer Rasmi ===== -->
 <footer>
