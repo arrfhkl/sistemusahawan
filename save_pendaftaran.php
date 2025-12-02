@@ -40,28 +40,44 @@ if ($jenis_pendaftaran === 'Usahawan' && (empty($perniagaan) || empty($jenis))) 
 // Uncomment line below to use password hashing
 // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-// === Prepare and bind ===
-$sql = "INSERT INTO usahawan (nama, ic, perniagaan, jenis, alamat, telefon, email, password) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ssssssss", $nama, $ic, $perniagaan, $jenis, $alamat, $telefon, $email, $password);
-// If using hashed password, replace $password with $hashed_password
-
-// Execute and check
-if ($stmt->execute()) {
-    $message = ($jenis_pendaftaran === 'Usahawan') 
-        ? 'Pendaftaran Usahawan Berjaya!' 
-        : 'Pendaftaran Pengguna Berjaya!';
+// === Process based on registration type ===
+if ($jenis_pendaftaran === 'Pengguna') {
+    // Insert directly into usahawan table for Pengguna
+    $sql = "INSERT INTO usahawan (nama, ic, perniagaan, jenis, alamat, telefon, email, password, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'aktif')";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssssss", $nama, $ic, $perniagaan, $jenis, $alamat, $telefon, $email, $password);
     
-    echo "<script>
-            alert('$message Maklumat anda telah disimpan.');
-            window.location = 'login.php';
-          </script>";
+    if ($stmt->execute()) {
+        echo "<script>
+                alert('Pendaftaran Pengguna Berjaya! Anda boleh log masuk sekarang.');
+                window.location = 'login.php';
+              </script>";
+    } else {
+        echo "<script>
+                alert('Ralat: " . addslashes($stmt->error) . "');
+                window.location = 'daftar.php';
+              </script>";
+    }
+    
 } else {
-    echo "<script>
-            alert('Ralat: " . addslashes($stmt->error) . "');
-            window.location = 'daftar.php';
-          </script>";
+    // Insert into pending_usahawan table for Usahawan (pending approval)
+    $sql = "INSERT INTO pending_usahawan (nama, ic, perniagaan, jenis, alamat, telefon, email, password, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssssss", $nama, $ic, $perniagaan, $jenis, $alamat, $telefon, $email, $password);
+    
+    if ($stmt->execute()) {
+        echo "<script>
+                alert('Pendaftaran Usahawan Berjaya! Akaun anda sedang menunggu kelulusan daripada admin.');
+                window.location = 'login.php';
+              </script>";
+    } else {
+        echo "<script>
+                alert('Ralat: " . addslashes($stmt->error) . "');
+                window.location = 'daftar.php';
+              </script>";
+    }
 }
 
 $stmt->close();
