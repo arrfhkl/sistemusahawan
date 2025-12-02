@@ -62,6 +62,7 @@ if (empty($items)) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout - Sistem Usahawan Pahang</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
 <style>
 * {
@@ -362,17 +363,28 @@ footer .copyright {
       #99CCFF 60%,
       #003399 80%,
       #001F3F 100%
-  );
-  animation: metalshine 6s linear infinite;
+    );
+    animation: metalshine 6s linear infinite;
     padding: 15px;
     border-radius: 10px;
     margin-top: 12px;
     width: 100%;
   }
+
   nav.show { display: flex; }
   nav a { text-align: center; padding: 10px; font-size: 1rem; }
   .title { font-size: 1.2rem; }
 }
+
+
+#map {
+  width: 100%;
+  height: 300px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+}
+
+
 </style>
 </head>
 <body>
@@ -438,9 +450,27 @@ footer .copyright {
                 <input type="text" name="no_telefon" class="form-control" required value="<?= htmlspecialchars($user['telefon']) ?>" pattern="[0-9]{10,11}" title="Sila masukkan nombor telefon yang sah (10-11 digit)">
             </div>
             <div class="mb-3">
-                <label class="form-label">Alamat Penuh <span style="color: red;">*</span></label>
-                <textarea name="alamat" class="form-control" rows="3" required><?= htmlspecialchars($user['alamat']) ?></textarea>
+              <label class="form-label">Alamat Penghantaran <span style="color:red">*</span></label>
+
+              <!-- Input taip alamat -->
+              <input type="text" id="alamat" name="alamat" class="form-control mb-2"
+                    placeholder="Taip alamat atau tekan butang lokasi..." required>
+              <div id="suggestions" class="list-group"></div>
+      
+
+              <!-- Butang GPS -->
+              <button type="button" class="btn btn-sm btn-primary mb-2" onclick="getLocation()">
+                📍 Guna Lokasi Semasa
+              </button>
+
+              <!-- Map -->
+              <div id="map" style="height: 300px; border-radius: 10px;"></div>
             </div>
+
+            <!-- Hidden untuk simpan koordinat -->
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+
             <div class="mb-3">
                 <label class="form-label">Nota / Permintaan Khas</label>
                 <textarea name="nota" class="form-control" rows="2" placeholder="Contoh: Hantar pada waktu petang"></textarea>
@@ -514,24 +544,173 @@ function validateForm() {
     const submitBtn = document.getElementById('submitBtn');
     const nama = document.querySelector('input[name="nama_pelanggan"]').value.trim();
     const telefon = document.querySelector('input[name="no_telefon"]').value.trim();
-    const alamat = document.querySelector('textarea[name="alamat"]').value.trim();
+    const alamat = document.querySelector('input[name="alamat"]').value.trim();
+    const lat = document.getElementById("latitude").value;
+    const lng = document.getElementById("longitude").value;
+    const poskodMatch = alamat.match(/\b\d{5}\b/);
     
     if (!nama || !telefon || !alamat) {
         alert('Sila lengkapkan semua maklumat yang diperlukan.');
         return false;
     }
     
+    if (!lat || !lng) {
+      alert("Sila pin lokasi anda di map untuk ketepatan penghantaran.");
+      return false;
+    }
+
+        if (!poskodMatch) {
+      alert("Poskod tidak sah. Sila pin lokasi pada map.");
+      return false;
+    }
+
     // Disable button to prevent double submission
     submitBtn.disabled = true;
     submitBtn.innerHTML = '⏳ Memproses...';
     
     return true;
 }
+
 </script>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+let debounceTimer;
+
+document.getElementById("alamat").addEventListener("input", function () {
+  clearTimeout(debounceTimer);
+  const query = this.value.trim();
+
+  if (query.length < 3) {
+    document.getElementById("suggestions").innerHTML = "";
+    return;
+  }
+
+  debounceTimer = setTimeout(() => {
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=my&limit=5`, {
+      headers: {
+        "Accept": "application/json"
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const suggestionBox = document.getElementById("suggestions");
+      suggestionBox.innerHTML = "";
+
+      data.forEach(place => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "list-group-item list-group-item-action";
+        item.textContent = place.display_name;
+
+        item.onclick = function () {
+          document.getElementById("alamat").value = place.display_name;
+
+          const lat = parseFloat(place.lat);
+          const lng = parseFloat(place.lon);
+
+          setMarker(lat, lng);
+          map.setView([lat, lng], 17);
+
+          suggestionBox.innerHTML = "";
+        };
+
+        suggestionBox.appendChild(item);
+      });
+    })
+    .catch(err => console.error("Nominatim error:", err));
+  }, 400);
+});
+
+
+var map, marker;
+
+// ✅ INIT MAP TERUS (TAK GUNA DOMContentLoaded)
+map = L.map('map').setView([3.8077, 103.3260], 13);
+
+// Load tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// Klik atas map untuk pin
+map.on('click', function (e) {
+  setMarker(e.latlng.lat, e.latlng.lng);
+});
+
+function setMarker(lat, lng) {
+  if (marker) {
+    marker.setLatLng([lat, lng]);
+  } else {
+    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+    marker.on('dragend', function (e) {
+      const pos = e.target.getLatLng();
+      updateLatLng(pos.lat, pos.lng);
+      autoDetectAddress(pos.lat, pos.lng); // ✅ bila drag, auto dapat alamat
+    });
+  }
+
+  updateLatLng(lat, lng);
+  autoDetectAddress(lat, lng); // ✅ bila klik, auto dapat alamat
+}
+
+
+function updateLatLng(lat, lng) {
+  document.getElementById("latitude").value = lat;
+  document.getElementById("longitude").value = lng;
+}
+
+function autoDetectAddress(lat, lng) {
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.display_name) {
+        document.getElementById("alamat").value = data.display_name;
+      }
+    })
+    .catch(err => console.error("Reverse geocode error:", err));
+}
+
+
+function getLocation() {
+  if (!navigator.geolocation) {
+    alert("GPS tidak disokong.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      map.setView([lat, lng], 18); // zoom lebih dekat
+      setMarker(lat, lng);
+
+      autoDetectAddress(lat, lng);
+    },
+    function (error) {
+      alert("Gagal mendapatkan lokasi: " + error.message);
+    },
+    {
+      enableHighAccuracy: true,  // ✅ INI PALING PENTING
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
+</script>
+
 
 <script>
 function submitCheckout() {
     const method = document.querySelector('input[name="cara_bayar"]:checked').value;
+
+    if (!validateForm()) {
+        return;
+    }
 
     if (method === "online") {
         // Online Payment → Stripe
@@ -543,6 +722,7 @@ function submitCheckout() {
 
     document.getElementById('checkoutForm').submit();
 }
+
 </script>
 
 

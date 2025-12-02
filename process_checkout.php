@@ -13,10 +13,14 @@ $usahawan_id = $_SESSION['usahawan_id'];
 // Ambil data dari form
 $nama_pelanggan = trim($_POST['nama_pelanggan']);
 $no_telefon = trim($_POST['no_telefon']);
-$alamat = trim($_POST['alamat']);
 $nota = isset($_POST['nota']) ? trim($_POST['nota']) : '';
 $cara_hantar = $_POST['cara_hantar'];
 $cara_bayar = $_POST['cara_bayar'];
+$alamat = trim($_POST['alamat']);
+$latitude  = $_POST['latitude'];
+$longitude = $_POST['longitude'];
+
+
 
 // Validasi input
 if (empty($nama_pelanggan) || empty($no_telefon) || empty($alamat)) {
