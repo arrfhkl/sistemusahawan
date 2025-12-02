@@ -20,35 +20,43 @@ if (!isset($_SESSION['admin_id'])) {
 // ====== Fetch Orders with Related Data ======
 $query = "SELECT 
     p.*,
-    uw.nama as nama_pelanggan,
-    us.telefon as telefon_pelanggan,
-    us.email as email_pelanggan,
-    uw.nama as nama_usahawan
+    u_pelanggan.nama as nama_pelanggan,
+    u_pelanggan.telefon as telefon_pelanggan,
+    u_pelanggan.email as email_pelanggan
 FROM pesanan p
-LEFT JOIN users us ON p.id = us.id
-LEFT JOIN usahawan uw ON p.usahawan_id = uw.id
+LEFT JOIN usahawan u_pelanggan ON p.usahawan_id = u_pelanggan.id
 ORDER BY p.tarikh_pesanan DESC";
 
 $result = $conn->query($query);
 $orders = [];
 if ($result) {
     while ($row = $result->fetch_assoc()) {
-        // Get products for each order
+        // Get products and usahawan info for each order
         $produkQuery = "SELECT 
-            pp.*,
+            pi.*,
             pr.nama as nama_produk,
-            pr.gambar_url
-        FROM pesanan_item pp
-        LEFT JOIN produk pr ON pp.produk_id = pr.id
-        WHERE pp.pesanan_id = " . $row['id'];
+            pr.gambar_url,
+            u_usahawan.nama as nama_usahawan,
+            u_usahawan.id as usahawan_produk_id
+        FROM pesanan_item pi
+        LEFT JOIN produk pr ON pi.produk_id = pr.id
+        LEFT JOIN usahawan u_usahawan ON pr.usahawan_id = u_usahawan.id
+        WHERE pi.pesanan_id = " . $row['id'];
         
         $produkResult = $conn->query($produkQuery);
         $row['produk'] = [];
+        $usahawanList = [];
         if ($produkResult) {
             while ($produk = $produkResult->fetch_assoc()) {
                 $row['produk'][] = $produk;
+                // Collect unique usahawan names
+                if (!empty($produk['nama_usahawan'])) {
+                    $usahawanList[$produk['usahawan_produk_id']] = $produk['nama_usahawan'];
+                }
             }
         }
+        // Store usahawan names as comma-separated string
+        $row['nama_usahawan'] = !empty($usahawanList) ? implode(', ', $usahawanList) : 'N/A';
         $orders[] = $row;
     }
 }
@@ -537,7 +545,7 @@ footer {
                   </span>
                 </td>
                 <td><?= htmlspecialchars($order['nama_pelanggan'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($order['no_telefon'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($order['telefon_pelanggan'] ?? 'N/A') ?></td>
                 <td><?= date('d/m/Y H:i', strtotime($order['tarikh_pesanan'])) ?></td>
                 <td><strong>RM <?= number_format($order['jumlah_bayaran'], 2) ?></strong></td>
                 <td>
@@ -602,16 +610,26 @@ function viewOrder(order) {
 
   let productsHTML = '';
   let totalAmount = 0;
+  let usahawanInfo = {};
 
   if (order.produk && order.produk.length > 0) {
     productsHTML = order.produk.map(p => {
       totalAmount += parseFloat(p.subtotal || 0);
+      
+      // Collect usahawan info
+      if (p.nama_usahawan && p.usahawan_produk_id) {
+        usahawanInfo[p.usahawan_produk_id] = p.nama_usahawan;
+      }
+      
       return `
         <tr>
           <td>
             ${p.gambar_url ? `<img src="uploads/${p.gambar_url}" class="product-img" alt="${p.nama_produk}">` : '📦'}
           </td>
-          <td>${p.nama_produk || 'N/A'}</td>
+          <td>
+            ${p.nama_produk || 'N/A'}
+            ${p.nama_usahawan ? `<br><small style="color: #2e7d32;">Usahawan: ${p.nama_usahawan}</small>` : ''}
+          </td>
           <td>RM ${parseFloat(p.harga || 0).toFixed(2)}</td>
           <td>${p.kuantiti || 0}</td>
           <td>RM ${parseFloat(p.subtotal || 0).toFixed(2)}</td>
@@ -622,16 +640,17 @@ function viewOrder(order) {
     productsHTML = '<tr><td colspan="5" style="text-align:center;">Tiada produk</td></tr>';
   }
 
+  // Create usahawan list HTML
+  const usahawanListHTML = Object.keys(usahawanInfo).length > 0 
+    ? Object.values(usahawanInfo).map(nama => `<span class="usahawan-tag">🏪 ${nama}</span>`).join(' ')
+    : '<span class="usahawan-tag">🏪 N/A</span>';
+
   modalBody.innerHTML = `
     <div class="detail-group">
       <h3>Maklumat Usahawan</h3>
       <div class="detail-item">
-        <strong>Nama Usahawan:</strong>
-        <span><span class="usahawan-tag">🏪 ${order.nama_usahawan || 'N/A'}</span></span>
-      </div>
-      <div class="detail-item">
-        <strong>ID Usahawan:</strong>
-        <span>${order.usahawan_id || 'N/A'}</span>
+        <strong>Usahawan Terlibat:</strong>
+        <span>${usahawanListHTML}</span>
       </div>
     </div>
 
@@ -643,7 +662,7 @@ function viewOrder(order) {
       </div>
       <div class="detail-item">
         <strong>No. Telefon:</strong>
-        <span>${order.no_telefon || 'N/A'}</span>
+        <span>${order.telefon_pelanggan || 'N/A'}</span>
       </div>
       <div class="detail-item">
         <strong>Email:</strong>
