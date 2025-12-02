@@ -686,7 +686,6 @@ footer .copyright {
           <th>Kategori</th>
           <th>Jumlah (RM)</th>
           <th>Tujuan</th>
-          <th>Dokumen</th>
           <th>Tarikh Permohonan</th>
           <th>Status</th>
         </tr>
@@ -696,13 +695,6 @@ footer .copyright {
   <td data-label="Kategori"><?= htmlspecialchars($row['kategori']) ?></td>
   <td data-label="Jumlah (RM)"><?= number_format($row['jumlah'], 2) ?></td>
   <td data-label="Tujuan"><?= htmlspecialchars($row['tujuan']) ?></td>
-  <td data-label="Dokumen">
-    <?php if (!empty($row['dokumen'])): ?>
-      <a href="uploads/<?= htmlspecialchars($row['dokumen']) ?>" target="_blank">Muat Turun</a>
-    <?php else: ?>
-      Tiada
-    <?php endif; ?>
-  </td>
   <td data-label="Tarikh Permohonan"><?= htmlspecialchars($row['tarikh_permohonan']) ?></td>
   <td data-label="Status"><?= htmlspecialchars($row['status']) ?></td>
 </tr>
