@@ -26,7 +26,7 @@ $user_id = intval($_SESSION['usahawan_id']);
 
 // Validate POST
 if (empty($_POST['produk_id'])) {
-    $response['message'] = "Produk ID tidak wujud dalam POST";
+    $response['message'] = "Data produk tidak lengkap.";
     echo json_encode($response);
     exit;
 }
@@ -43,16 +43,48 @@ $nama = $conn->real_escape_string($_POST['nama']);
 $harga = isset($_POST['harga']) ? floatval($_POST['harga']) : 0;
 $gambar = isset($_POST['gambar_url']) ? $conn->real_escape_string($_POST['gambar_url']) : '';
 
-// Simple insert (no check for existing)
-$sql = "INSERT INTO cart (usahawan_id, produk_id, nama_produk, harga, gambar_url, kuantiti) 
-        VALUES ($user_id, '$produk_id', '$nama', $harga, '$gambar', 1)";
+//Check kalau produk dah ada dalam cart
+$check = $conn->query("
+    SELECT id, kuantiti 
+    FROM cart 
+    WHERE usahawan_id = $user_id AND produk_id = '$produk_id'
+");
 
-if ($conn->query($sql) === TRUE) {
-    $response['success'] = true;
-    $response['message'] = "Berjaya! User ID: $user_id, Produk: $nama";
+if ($check->num_rows > 0) {
+
+    // ✅ JIKA ADA → TAMBAH KUANTITI
+    $row = $check->fetch_assoc();
+    $new_qty = $row['kuantiti'] + 1;
+
+    $update = $conn->query("
+        UPDATE cart 
+        SET kuantiti = $new_qty 
+        WHERE id = " . $row['id']
+    );
+
+    if ($update) {
+        $response['success'] = true;
+        $response['message'] = "Kuantiti produk berjaya ditambah.";
+    } else {
+        $response['message'] = "Gagal kemas kini kuantiti.";
+    }
+
 } else {
-    $response['message'] = "Error SQL: " . $conn->error;
+
+    // ✅ JIKA BELUM ADA → INSERT BARU
+    $insert = $conn->query("
+        INSERT INTO cart (usahawan_id, produk_id, nama_produk, harga, gambar_url, kuantiti)
+        VALUES ($user_id, '$produk_id', '$nama', $harga, '$gambar', 1)
+    ");
+
+    if ($insert) {
+        $response['success'] = true;
+        $response['message'] = "Produk berjaya dimasukkan ke cart.";
+    } else {
+        $response['message'] = "Gagal insert ke cart.";
+    }
 }
+
 
 $conn->close();
 echo json_encode($response);
