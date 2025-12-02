@@ -609,7 +609,7 @@ function viewOrder(order) {
       return `
         <tr>
           <td>
-            ${p.gambar_url ? `<img src="${p.gambar_url}" class="product-img" alt="${p.nama_produk}">` : '📦'}
+            ${p.gambar_url ? `<img src="uploads/${p.gambar_url}" class="product-img" alt="${p.nama_produk}">` : '📦'}
           </td>
           <td>${p.nama_produk || 'N/A'}</td>
           <td>RM ${parseFloat(p.harga || 0).toFixed(2)}</td>

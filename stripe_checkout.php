@@ -100,18 +100,24 @@ $_SESSION['pending_order'] = [
     'tarikh_pesanan' => date('Y-m-d H:i:s')
 ];
 
-// Create Stripe checkout session
 $session = \Stripe\Checkout\Session::create([
-    'payment_method_types' => ['card'],
+    'payment_method_types' => [
+        'card',
+        'fpx',
+        'grabpay'
+    ],
     'line_items' => $line_items,
     'mode' => 'payment',
+
     'success_url' => 'http://localhost/sups/success.php?session_id={CHECKOUT_SESSION_ID}',
     'cancel_url'  => 'http://localhost/sups/cart.php',
+
     'billing_address_collection' => 'required',
     'phone_number_collection' => [
         'enabled' => true,
     ],
 ]);
+
 
 // Redirect to Stripe payment page
 header("Location: " . $session->url);
