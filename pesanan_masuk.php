@@ -3,7 +3,7 @@ session_start();
 include "connection.php";
 
 // Get user ID from URL or session
-$user_id = isset($_GET['id']) ? $_GET['id'] : $_SESSION['user_id'];
+$user_id = isset($_GET['id']) ? $_GET['id'] : $_SESSION['usahawan_id'];
 
 // Check if user is Usahawan
 $sql = "SELECT jenis, perniagaan, nama FROM usahawan WHERE id = ?";
