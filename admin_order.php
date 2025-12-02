@@ -454,6 +454,7 @@ footer {
   <a href="admin_tambah_ruang.php">Tambah Ruang</a>
   <a href="admin_tempahan_ruang.php">Tempahan Ruang</a>
   <a href="admin_pesanan.php" class="active">Pengurusan Pesanan</a>
+  <a href="pending_usahawan.php">Pengesahan Usahawan</a>
   <a href="logout_admin.php">Log Keluar</a>
 </div>
 

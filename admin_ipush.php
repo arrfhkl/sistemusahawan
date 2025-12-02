@@ -48,6 +48,56 @@ $total_pages = ceil($total_records / $limit);
 // Ambil data mengikut halaman
 $sql = "SELECT * FROM permohonan_ipush ORDER BY tarikh_permohonan DESC LIMIT $limit OFFSET $offset";
 $result = $conn->query($sql);
+
+// ====== FUNCTION TO GET FILE ICON ======
+function getFileIcon($filename) {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    switch($ext) {
+        case 'pdf':
+            return '📄';
+        case 'doc':
+        case 'docx':
+            return '📝';
+        case 'xls':
+        case 'xlsx':
+            return '📊';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+            return '🖼️';
+        case 'zip':
+        case 'rar':
+            return '📦';
+        default:
+            return '📎';
+    }
+}
+
+// ====== FUNCTION TO GET FILE TYPE ======
+function getFileType($filename) {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    switch($ext) {
+        case 'pdf':
+            return 'PDF';
+        case 'doc':
+        case 'docx':
+            return 'Word';
+        case 'xls':
+        case 'xlsx':
+            return 'Excel';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+            return 'Gambar';
+        case 'zip':
+        case 'rar':
+            return 'Arkib';
+        default:
+            return 'Fail';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -82,6 +132,7 @@ $result = $conn->query($sql);
       box-shadow: 3px 0 10px rgba(0,0,0,0.1);
       transition: transform 0.3s ease;
       z-index: 1000;
+      overflow-y: auto;
     }
     .sidebar h2 {
       text-align: center;
@@ -178,9 +229,114 @@ $result = $conn->query($sql);
       cursor: pointer;
       font-size: 0.85rem;
       transition: 0.3s;
+      margin-top: 5px;
     }
     .update-btn:hover {
       background: #00264d;
+    }
+
+    /* File Link Styles */
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: #e7f3ff;
+      color: var(--primary);
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      border: 1px solid #b3d9ff;
+    }
+    .file-link:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    .file-icon {
+      font-size: 1.2rem;
+    }
+    .file-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      transition: 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    .download-btn:hover {
+      background: #218838;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      overflow: auto;
+    }
+    .modal-content {
+      position: relative;
+      margin: 2% auto;
+      padding: 0;
+      width: 90%;
+      max-width: 1200px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+    }
+    .modal-header {
+      padding: 15px 20px;
+      background: var(--primary);
+      color: white;
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 20px;
+      max-height: 80vh;
+      overflow: auto;
+    }
+    .close {
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .close:hover {
+      color: #ff6b6b;
+    }
+    .modal-body iframe {
+      width: 100%;
+      height: 70vh;
+      border: none;
+      border-radius: 5px;
+    }
+    .modal-body img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
     }
 
     /* Pagination */
@@ -231,23 +387,28 @@ $result = $conn->query($sql);
       header h1 {
         font-size: 1.1rem;
       }
+      .modal-content {
+        width: 95%;
+        margin: 5% auto;
+      }
     }
   </style>
 </head>
 <body>
   <div class="sidebar" id="sidebar">
-    <h2>Admin Panel</h2>
-    <a href="admin_dashboard.php">Dashboard</a>
-    <a href="senarai_usahawan.php">Senarai Usahawan</a>
-    <a href="admin_agro.php">Permohonan Agro</a>
-    <a href="admin_ipush.php" class="active">Permohonan iPush</a>
-    <a href="admin_itekad.php">Permohonan iTekad</a>
-    <a href="tambah_berita.php">Tambah Berita</a>
-    <a href="admin_tambah_ruang.php">Tambah Ruang</a>
-    <a href="admin_tempahan_ruang.php">Tempahan Ruang</a>
-    <a href="admin_order.php">Pengurusan Pesanan</a>
-    <a href="logout_admin.php">Log Keluar</a>
-  </div>
+  <h2>Admin Panel</h2>
+  <a href="admin_dashboard.php">Dashboard</a>
+  <a href="senarai_usahawan.php">Senarai Usahawan</a>
+  <a href="admin_agro.php">Permohonan Agro</a>
+  <a href="admin_ipush.php" class="active">Permohonan iPush</a>
+  <a href="admin_itekad.php">Permohonan iTekad</a>
+  <a href="tambah_berita.php">Tambah Berita</a>
+  <a href="admin_tambah_ruang.php">Tambah Ruang</a>
+  <a href="admin_tempahan_ruang.php">Tempahan Ruang</a>
+  <a href="admin_order.php">Pengurusan Pesanan</a>
+  <a href="pending_usahawan.php">Pengesahan Usahawan</a>
+  <a href="logout_admin.php">Log Keluar</a>
+</div>
 
   <div class="main-content">
     <header>
@@ -287,12 +448,20 @@ $result = $conn->query($sql);
                 <td><?= htmlspecialchars($row["tujuan"]); ?></td>
                 <td>
                   <?php if ($row["dokumen"]): ?>
-                    <a href="uploads/<?= htmlspecialchars($row["dokumen"]); ?>" target="_blank">Lihat</a>
+                    <div class="file-actions">
+                      <a href="#" class="file-link" onclick="viewDocument('uploads/<?= htmlspecialchars($row["dokumen"]); ?>', '<?= htmlspecialchars($row["dokumen"]); ?>'); return false;">
+                        <span class="file-icon"><?= getFileIcon($row["dokumen"]); ?></span>
+                        <span>Lihat <?= getFileType($row["dokumen"]); ?></span>
+                      </a>
+                      <a href="uploads/<?= htmlspecialchars($row["dokumen"]); ?>" class="download-btn" download>
+                        <span>⬇</span> Muat Turun
+                      </a>
+                    </div>
                   <?php else: ?>
-                    Tiada
+                    <span style="color: #999;">Tiada Dokumen</span>
                   <?php endif; ?>
                 </td>
-                <td><?= $row["tarikh_permohonan"]; ?></td>
+                <td><?= date('d/m/Y', strtotime($row["tarikh_permohonan"])); ?></td>
                 <td>
                   <select class="status-select" id="status_<?= $row["id"]; ?>">
                     <?php
@@ -337,10 +506,24 @@ $result = $conn->query($sql);
     <footer>© 2025 Sistem Usahawan Pahang | Dibangunkan untuk Kegunaan Rasmi</footer>
   </div>
 
+  <!-- Modal for Document Viewer -->
+  <div id="documentModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="documentTitle">Dokumen</h2>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body" id="documentBody">
+        <!-- Content will be loaded here -->
+      </div>
+    </div>
+  </div>
+
   <script>
     function toggleMenu() {
       document.getElementById('sidebar').classList.toggle('active');
     }
+
     function updateStatus(id) {
       const status = document.getElementById('status_' + id).value;
       const formData = new FormData();
@@ -349,11 +532,71 @@ $result = $conn->query($sql);
       fetch('', { method: 'POST', body: formData })
         .then(res => res.text())
         .then(res => {
-          if (res.trim() === 'success') alert('Status berjaya dikemas kini!');
-          else alert('Gagal mengemas kini status.');
+          if (res.trim() === 'success') {
+            alert('Status berjaya dikemas kini!');
+          } else {
+            alert('Gagal mengemas kini status.');
+          }
         })
         .catch(() => alert('Ralat rangkaian!'));
     }
+
+    function viewDocument(filepath, filename) {
+      const modal = document.getElementById('documentModal');
+      const documentBody = document.getElementById('documentBody');
+      const documentTitle = document.getElementById('documentTitle');
+      
+      documentTitle.textContent = filename;
+      
+      // Get file extension
+      const ext = filename.split('.').pop().toLowerCase();
+      
+      // Clear previous content
+      documentBody.innerHTML = '';
+      
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) {
+        // Display image
+        documentBody.innerHTML = `<img src="${filepath}" alt="${filename}">`;
+      } else if (ext === 'pdf') {
+        // Display PDF in iframe
+        documentBody.innerHTML = `<iframe src="${filepath}" type="application/pdf"></iframe>`;
+      } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
+        // Use Google Docs Viewer for Office documents
+        documentBody.innerHTML = `<iframe src="https://docs.google.com/viewer?url=${encodeURIComponent(window.location.origin + '/' + filepath)}&embedded=true"></iframe>`;
+      } else {
+        // For other file types, provide download option
+        documentBody.innerHTML = `
+          <div style="text-align: center; padding: 40px;">
+            <p style="font-size: 3rem; margin-bottom: 20px;">📄</p>
+            <p style="font-size: 1.1rem; margin-bottom: 20px;">Fail jenis ini tidak dapat dipaparkan dalam pelayar.</p>
+            <a href="${filepath}" download class="download-btn" style="display: inline-flex; padding: 10px 20px; font-size: 1rem;">
+              <span>⬇</span> Muat Turun Fail
+            </a>
+          </div>
+        `;
+      }
+      
+      modal.style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('documentModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('documentModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    });
   </script>
 </body>
 </html>
