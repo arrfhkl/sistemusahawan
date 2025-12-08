@@ -17,8 +17,10 @@ $user_id = $is_logged_in ? $_SESSION['usahawan_id'] : null;
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 $usahawan = $conn->query("SELECT * FROM usahawan WHERE id=$id")->fetch_assoc();
 
-// Dapatkan produk usahawan
+// Dapatkan produk usahawan dan servis
 $produk = $conn->query("SELECT * FROM produk WHERE usahawan_id=$id");
+$servis = $conn->query("SELECT * FROM servis WHERE usahawan_id=$id");
+
 
 // Dapatkan semua permohonan ikut IC
 $ic = $usahawan['ic'];
@@ -670,6 +672,7 @@ footer .copyright {
     </div>
 
     <a class="btn-add" href="tambah_produk.php?id=<?= $usahawan['id'] ?>">+ Tambah Produk</a>
+    <a class="btn-add" href="tambah_servis.php?id=<?= $usahawan['id'] ?>">+ Tambah Servis</a>
     <a class="btn-add" href="pesanan_detail.php?id=<?= $usahawan['id'] ?>">Pesanan Saya</a>
     <a class="btn-add" href="pesanan_masuk.php?id=<?= $usahawan['id'] ?>">Pesanan Masuk</a>
   </div>
@@ -735,7 +738,56 @@ if (strpos($gambarPath, 'uploads/') === false) {
       <?php endforeach; ?>
     </div>
   </div>
+
+
+<!-- ===== Servis Section ===== -->
+<div class="produk-section">
+  <h2>Servis</h2>
+
+  <?php if ($servis->num_rows > 0): ?>
+  <div class="produk-grid">
+    <?php foreach ($servis as $s): ?>
+      <div class="produk-card">
+
+        <?php
+        $gambarServis = $s['gambar_servis_url'];
+        if (!empty($gambarServis) && strpos($gambarServis, 'uploads/') === false) {
+          $gambarServis = 'uploads/' . $gambarServis;
+        }
+        ?>
+
+        <?php if (!empty($gambarServis)): ?>
+          <img src="<?= htmlspecialchars($gambarServis) ?>" alt="<?= htmlspecialchars($s['nama']) ?>">
+        <?php else: ?>
+          <img src="https://via.placeholder.com/300x200?text=Tiada+Gambar">
+        <?php endif; ?>
+
+        <div class="produk-card-content">
+          <h3><?= htmlspecialchars($s['nama']) ?></h3>
+          <p><?= htmlspecialchars($s['deskripsi']) ?></p>
+          <p><strong>Lokasi:</strong> <?= htmlspecialchars($s['lokasi']) ?></p>
+          <p class="harga">RM <?= number_format($s['harga'], 2) ?></p>
+
+          <div class="produk-actions">
+            <a class="btn-edit" href="edit_servis.php?id=<?= $s['id'] ?>">Edit</a>
+            <a class="btn-delete" 
+               href="delete_servis.php?id=<?= $s['id'] ?>&usahawan_id=<?= $usahawan['id'] ?>" 
+               onclick="return confirm('Padam servis ini?')">
+               Delete
+            </a>
+          </div>
+        </div>
+
+      </div>
+    <?php endforeach; ?>
+  </div>
+  <?php else: ?>
+    <p>Usahawan ini belum menambah sebarang servis.</p>
+  <?php endif; ?>
 </div>
+</div>
+
+
 
 <!-- ===== Footer Rasmi ===== -->
 <footer>
