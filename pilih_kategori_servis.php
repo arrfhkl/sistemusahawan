@@ -7,7 +7,7 @@ include "connection.php";
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-     <title>Template - Sistem Usahawan Pahang</title>
+     <title>Pilih Kategori Servis - Sistem Usahawan Pahang</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
   <style>
