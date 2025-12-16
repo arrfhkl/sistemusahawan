@@ -1,0 +1,44 @@
+CREATE TABLE servis (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    kategori_servis_id INT(11) DEFAULT NULL,
+    usahawan_id INT(11) DEFAULT NULL,
+    nama VARCHAR(150) DEFAULT NULL,
+    harga DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    deskripsi TEXT DEFAULT NULL,
+    lokasi VARCHAR(100) DEFAULT NULL,
+    gambar_servis_url VARCHAR(255) DEFAULT NULL,
+    PRIMARY KEY (id)
+) 
+
+CREATE TABLE servis_booking (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    service_id INT(11) DEFAULT NULL,
+    usahawan_id INT(11) DEFAULT NULL,
+    nama_pelanggan VARCHAR(100) DEFAULT NULL,
+    telefon VARCHAR(20) DEFAULT NULL,
+    alamat TEXT DEFAULT NULL,
+    tarikh DATE DEFAULT NULL,
+    masa VARCHAR(20) DEFAULT NULL,
+    masalah TEXT DEFAULT NULL,
+    imej VARCHAR(255) DEFAULT NULL,
+    status ENUM('pending','accepted','on-going','completed','cancelled') DEFAULT 'pending',
+    PRIMARY KEY (id)
+) 
+
+CREATE TABLE servis_gallery (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    service_id INT(11) DEFAULT NULL,
+    gambar VARCHAR(255) DEFAULT NULL,
+    PRIMARY KEY (id)
+)
+
+CREATE TABLE servis_review (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    service_id INT(11) DEFAULT NULL,
+    usahawan_id INT(11) DEFAULT NULL,
+    nama_pelanggan VARCHAR(100) DEFAULT NULL,
+    rating INT(11) DEFAULT NULL,
+    komen TEXT DEFAULT NULL,
+    tarikh DATE DEFAULT NULL,
+    PRIMARY KEY (id)
+) 
