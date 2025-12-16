@@ -244,7 +244,7 @@ header .title::after {
   100% { background-position: 0% 50%; }
 }
 
-/* ===== Back Button (Premium Style) ===== */
+/* ===== Back Button  ===== */
 .back-btn {
   position: absolute;
   top: 18px;

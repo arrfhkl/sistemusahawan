@@ -1,95 +1,65 @@
 <?php
-$conn = new mysqli("localhost", "root", "", "sistem_usahawan_pahang");
-if ($conn->connect_error) die("DB Error");
+session_start();
+include("connection.php");
 
-$kategori_id = isset($_GET['kategori_id']) ? (int)$_GET['kategori_id'] : 0;
-
-// =======================
-// ✅ PART 1: AJAX REQUEST
-// =======================
-if (isset($_GET['ajax'])) {
-
-  $search  = $_GET['search'] ?? '';
-  $lokasi  = $_GET['lokasi'] ?? '';
-  $kategori_id = (int)($_GET['kategori_id'] ?? 0);
-
-  // ✅ Jika kategori kosong → hentikan
-  if ($kategori_id == 0) {
-    echo "<p style='grid-column:1/-1;text-align:center;'>Kategori tidak sah.</p>";
-    exit;
-  }
-
-  $sql = "SELECT * FROM servis WHERE kategori_servis_id = ?";
-  $params = [$kategori_id];
-  $types = "i";
-
-  if (!empty($search)) {
-    $sql .= " AND nama LIKE ?";
-    $params[] = "%$search%";
-    $types .= "s";
-  }
-
-  if (!empty($lokasi)) {
-    $sql .= " AND lokasi = ?";
-    $params[] = $lokasi;
-    $types .= "s";
-  }
-
-  $sql .= " ORDER BY id DESC";
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param($types, ...$params);
-  $stmt->execute();
-  $result = $stmt->get_result();
-
-  if ($result->num_rows > 0):
-    while($row = $result->fetch_assoc()):
-?>
-
-  <!-- ✅ INI YANG SEBELUM INI HILANG -->
-  <div class="service-card">
-    <img src="uploads/<?= htmlspecialchars($row['gambar_servis_url']) ?>">
-    <div class="service-info">
-      <h3><?= htmlspecialchars($row['nama']) ?></h3>
-      <p>📍 <?= htmlspecialchars($row['lokasi']) ?></p>
-
-      <button class="btn-butiran"
-        onclick="window.location.href='butiran_servis.php?id=<?= $row['id'] ?>'">
-        Butiran Servis
-      </button>
-    </div>
-  </div>
-
-<?php
-    endwhile;
-  else:
-    echo "<p style='grid-column:1/-1; text-align:center;'>Tiada servis ditemui.</p>";
-  endif;
-
-  exit;
+if (!isset($_GET['id'])) {
+  die("Servis tidak ditemui.");
 }
 
-// =======================
-//  PART 2: PAGE BIASA
-// =======================
-$result_lokasi = $conn->query("
-  SELECT DISTINCT lokasi 
-  FROM servis 
-  WHERE kategori_servis_id = $kategori_id 
-  ORDER BY lokasi ASC
-");
+$id = (int)$_GET['id'];
 
+$stmt = $conn->prepare("
+SELECT 
+  s.*, 
+  u.nama AS nama_tukang,
+  u.perniagaan,
+  u.jenis,
+  u.telefon,
+  u.avatar,
+  u.tarikh_daftar
+FROM servis s
+LEFT JOIN usahawan u ON s.usahawan_id = u.id
+WHERE s.id = ?
+");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$service = $stmt->get_result()->fetch_assoc();
+
+if (!$service) {
+  die("Servis tidak ditemui.");
+}
+
+/* total customer */
+$total_customer = 0;
+$check = $conn->query("SHOW TABLES LIKE 'servis_booking'");
+if ($check->num_rows > 0) {
+  $stmt2 = $conn->prepare("SELECT COUNT(*) AS total FROM servis_booking WHERE service_id = ?");
+  $stmt2->bind_param("i", $id);
+  $stmt2->execute();
+  $total_customer = (int)$stmt2->get_result()->fetch_assoc()['total'];
+}
+
+/* ✅ GALLERY */
+$gallery = false;
+$check2 = $conn->query("SHOW TABLES LIKE 'servis_gallery'");
+if ($check2->num_rows > 0) {
+  $stmt3 = $conn->prepare("SELECT * FROM servis_gallery WHERE service_id = ?");
+  $stmt3->bind_param("i", $id);
+  $stmt3->execute();
+  $gallery = $stmt3->get_result();
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="ms">
 <head>
 <meta charset="UTF-8">
-<title>Senarai Servis</title>
+<title><?= htmlspecialchars($service['nama']) ?> - Butiran Servis</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-/* ====== GLOBAL ====== */
-* {
+
+   * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -98,17 +68,14 @@ $result_lokasi = $conn->query("
 /* ===== Background Premium dengan Watermark Jata Pahang ===== */
 body {
   margin: 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-
-  font-family: Arial;
   background: linear-gradient(135deg, #fdfdfd 0%, #f8f8f6 40%, #ede8dc 100%);
   background-attachment: fixed;
   color: #111;
   overflow-x: hidden;
   position: relative;
-  padding-top: 90px; /* Jarak untuk header fixed */
+  font-family: Arial;
+  margin-top: 90px;
+  line-height: 1.7; 
 }
 
 /* ✨ Cahaya lembut keemasan & hitam bergerak */
@@ -271,56 +238,7 @@ header .title::after {
   100% { background-position: 0% 50%; }
 }
 
-.search-wrapper input, .search-wrapper select {
-  padding: 12px;
-  border-radius: 20px;
-  border: 1px solid #ccc;
-  width: 100%;
-}
-.service-container {
-  max-width: 1200px;
-  margin: auto;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  padding: 20px;
-}
-.service-card {
-  background:#fff;
-  border-radius: 12px;
-  overflow:hidden;
-  box-shadow:0 4px 10px rgba(0,0,0,.1);
-}
-.service-card img {
-  width:100%;
-  height:200px;
-  object-fit:cover;
-}
-.service-info {
-  padding: 15px;
-}
-.btn-butiran {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.btn-butiran:hover { background:#0056b3; }
-
-@media(max-width:768px){
-  .service-container { grid-template-columns: repeat(2,1fr); }
-}
-@media(max-width:480px){
-  .service-container { grid-template-columns: repeat(1,1fr); }
-}
-
-
-
-/* ===== Footer ===== */
+    /* ===== Footer ===== */
 footer {
   background: linear-gradient(
       135deg,
@@ -448,224 +366,164 @@ footer .copyright {
   .function-btn { padding: 15px; }
 }
 
-/* ===== SEARCH BAR ===== */
-.search-wrapper {
-  max-width: 1200px;
-  margin: 20px auto 10px auto;
-  padding: 0 20px;
-}
-
-.search-box {
-  position: relative;
-  width: 100%;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 12px 15px 12px 45px;
-  border-radius: 30px;
-  border: 1px solid #ccc;
-  font-size: 15px;
-  outline: none;
-  transition: 0.3s;
-}
-
-.search-box input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0,123,255,0.3);
-}
-
-.search-icon {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 16px;
-  color: #777;
+.container { 
+  max-width: 1100px; 
+  background: white; 
+  margin: 30px auto; 
+  padding: 30px;          
+  border-radius: 14px; 
+  border: 2px solid #003366; 
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
 
+.cover img { width: 100%; height: 380px; object-fit: cover; border-radius: 12px; }
 
-/* ===== MODAL (POPUP) ===== */
-.modal {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  align-items:center;
-  justify-content:center;
-  z-index:2000;
+.tukang-card {
+  display: flex; 
+  gap: 20px; 
+  background: #eef4ff;
+  padding: 25px;              
+  border-radius: 14px; 
+  margin-top: 25px;
+  border: 2px solid #007bff;   
 }
-.modal-content {
-  background:#fff;
-  border-radius:10px;
-  max-width:600px;
-  width:90%;
-  padding:20px;
-  box-shadow:0 5px 25px rgba(0,0,0,0.3);
-  animation: fadeIn 0.3s ease;
-  position: relative;
+
+.tukang-card img {
+  width: 90px; height: 90px; border-radius: 50%;
+  object-fit: cover; border: 3px solid #007bff;
 }
-.modal-content img {
-  width:100%;
-  border-radius:10px;
-  height:300px;
-  object-fit:cover;
+
+.stats {
+  margin-top: 25px; display: grid;
+  grid-template-columns: repeat(3,1fr); gap: 15px;
 }
-.modal-details {
-  margin-top:15px;
-}
-.modal-details h2 {
-  font-size:1.4rem;
-  margin-bottom:5px;
-}
-.modal-details .harga {
-  color:#e67e22;
-  font-weight:bold;
-  margin-bottom:10px;
-}
-.modal-buttons {
-  display:flex;
-  gap:10px;
-  margin-top:15px;
-}
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #dc3545; /* Merah */
-  border: none;
-  color: #fff;
-  font-size: 22px;
+
+.stat-box {
+  background: #fafafa; 
+  padding: 18px;                 
+  border-radius: 12px; 
+  text-align: center;
   font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-  transition: 0.25s ease;
-  z-index: 10;
+  border: 1.5px solid #ccc;    
 }
 
-.modal-close:hover {
-  background: #b02a37;
-  transform: scale(1.1);
+
+.gallery-grid {
+  margin-top: 10px;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+}
+.gallery-grid img {
+  width: 100%; height: 180px;
+  object-fit: cover; border-radius: 10px;
 }
 
-.main-content {
-  flex: 1;  
+.btn-tempah, .btn-chat {
+  width: 100%; margin-top: 15px;
+  padding: 14px; border-radius: 8px;
+  border: none; font-size: 16px; cursor: pointer;
 }
+.btn-tempah { background: #007bff; color: white; }
+.btn-chat { background: #25D366; color: white; }
 
-/*supaya responsive*/
-@media (max-width: 992px) {
-  .produk-container {
-    grid-template-columns: repeat(3, 1fr);
-  }
+@media(max-width:768px){
+  .gallery-grid { grid-template-columns: repeat(2,1fr); }
+  .stats { grid-template-columns: repeat(2,1fr); }
+  .tukang-card { flex-direction: column; text-align: center; }
 }
-
-@media (max-width: 768px) {
-  .produk-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .produk-container {
-    grid-template-columns: repeat(1, 1fr);
-  }
 </style>
 </head>
 <body>
 
-<!-- ===== HEADER ===== -->
 <header>
   <img src="assets/img/jatapahang.png" alt="Jata Negeri Pahang" class="jata">
-  <h1 class="title">Senarai Servis- Sistem Usahawan Pahang</h1>
-
-  <!-- Butang menu (mobile) -->
+  <h1 class="title">Sistem Usahawan Pahang</h1>
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-
-  <!-- Navigation -->
   <nav id="navMenu">
-    <a href="index.php"><strong>Laman Utama</strong></a>
+    <a href="index.php" class="active"><strong>Laman Utama</strong></a>
     <a href="daftar.php"><strong>Daftar Usahawan</strong></a>
     <a href="senarai.php"><strong>Senarai Usahawan</strong></a>
-
-</div>
-
   </nav>
-
-  
 </header>
 
-<main class="main-content">
+<div class="container">
 
- <!-- ===== SEARCH BAR ===== -->
-<div class="search-wrapper">
-  <div style="display:flex; gap:10px; align-items:center;">
-
-    <!-- SEARCH -->
-    <div class="search-box" style="flex:2;">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Cari servis..." autocomplete="off">
-    </div>
-
-    <!-- FILTER LOKASI -->
-    <select id="lokasiFilter" style="
-      flex:1;
-      padding:12px;
-      border-radius:25px;
-      border:1px solid #ccc;
-      font-size:14px;
-      outline:none;
-      height:45px;
-    ">
-      <option value="">📍 Semua Lokasi</option>
-
-      <?php if ($result_lokasi && $result_lokasi->num_rows > 0): ?>
-        <?php while ($lok = $result_lokasi->fetch_assoc()): ?>
-          <option value="<?= htmlspecialchars($lok['lokasi']) ?>">
-            <?= htmlspecialchars($lok['lokasi']) ?>
-          </option>
-        <?php endwhile; ?>
-      <?php endif; ?>
-    </select>
-
-  </div>
+<!-- ✅ GAMBAR SERVIS -->
+<?php
+$gambar = $service['gambar_servis_url'];
+if (!empty($gambar) && strpos($gambar, 'uploads/') === false) {
+  $gambar = "uploads/" . $gambar;
+}
+?>
+<div class="cover">
+  <img src="<?= htmlspecialchars($gambar) ?>">
 </div>
 
-<!-- ✅ SERVICE LIST -->
-<div class="service-container" id="serviceContainer"></div>
+<h1><?= htmlspecialchars($service['nama']) ?></h1>
+<p>📍<strong> <?= htmlspecialchars($service['lokasi']) ?></p>
 
-</main>
+<div class="deskripsi">
+<?= nl2br(htmlspecialchars($service['deskripsi'])) ?>
+</div>
 
-<!-- ✅ AJAX SCRIPT -->
-<script>
-const searchInput = document.getElementById("searchInput");
-const lokasiFilter = document.getElementById("lokasiFilter");
-const serviceContainer = document.getElementById("serviceContainer");
+<!-- ✅ PROFIL USAHAWAN -->
+<div class="tukang-card">
+<?php
+$avatar = $service['avatar'];
+if (empty($avatar)) $avatar = "default.png";
+if (strpos($avatar, 'uploads/') === false) $avatar = "uploads/$avatar";
+?>
+<img src="<?= htmlspecialchars($avatar) ?>">
 
-function loadServis() {
-  const s = searchInput.value;
-  const l = lokasiFilter.value;
+<div>
+  <p><strong><?= htmlspecialchars($service['nama_tukang']) ?></strong></p>
+  <p>Perniagaan: <?= htmlspecialchars($service['perniagaan']) ?></p>
+  <p>Jenis: <?= htmlspecialchars($service['jenis']) ?></p>
+  <p>Telefon: <?= htmlspecialchars($service['telefon']) ?></p>
+  <p>Daftar: <?= date("d M Y", strtotime($service['tarikh_daftar'])) ?></p>
+</div>
+</div>
 
-  fetch(`senarai_servis.php?ajax=1&kategori_id=<?= $kategori_id ?>&search=${encodeURIComponent(s)}&lokasi=${encodeURIComponent(l)}`)
-    .then(res => res.text())
-    .then(data => {
-      serviceContainer.innerHTML = data;
-    });
-}
+<!-- ✅ STATISTIK -->
+<div class="stats">
+  <div class="stat-box">👥 <?= $total_customer ?> Pelanggan</div>
+  <div class="stat-box">💼 Servis Aktif</div>
+  <div class="stat-box">✅ Disahkan</div>
+</div>
 
-// ✅ Load awal
-loadServis();
+<!-- ✅ GALLERY -->
+<div class="gallery">
+<h3>Contoh Kerja</h3>
 
-// ✅ Real-time
-searchInput.addEventListener("keyup", loadServis);
-lokasiFilter.addEventListener("change", loadServis);
-</script>
+<div class="gallery-grid">
+<?php if ($gallery && $gallery->num_rows > 0): ?>
+  <?php while ($g = $gallery->fetch_assoc()): ?>
+    <?php
+      $gbr = $g['gambar'];
+      if (strpos($gbr, 'uploads/') === false) $gbr = "uploads/$gbr";
+    ?>
+    <img src="<?= htmlspecialchars($gbr) ?>">
+  <?php endwhile; ?>
+<?php else: ?>
+  <p>Tiada gambar kerja dimuat naik.</p>
+<?php endif; ?>
+</div>
+</div>
+
+<!-- Butang -->
+<button class="btn-tempah"
+onclick="window.location.href='tempah_servis.php?id=<?= $service['id'] ?>'">
+Tempah Servis
+</button>
+
+<button class="btn-chat"
+onclick="window.location.href='create_chat.php?servis_id=<?= $service['id'] ?>'">
+💬 Chat Dengan Tukang
+</button>
+
+</button>
+
+</div>
 
 <!-- ===== Footer Rasmi ===== -->
 <footer>
@@ -681,5 +539,16 @@ lokasiFilter.addEventListener("change", loadServis);
   </div>
 </footer>
 
+
+<script>
+  function toggleMenu() {
+    document.getElementById('navMenu').classList.toggle('show');
+  }
+  
+
+</script>
+
 </body>
 </html>
+
+<?php $conn->close(); ?>

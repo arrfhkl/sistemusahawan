@@ -832,6 +832,11 @@ footer .copyright {
       <i class="fas fa-chart-line" style="color:black;"></i>
       <span>Dashboard</span>
     </a>
+     </a>
+    <a href="pilih_kategori_servis.php" class="function-btn" style="color:white;">
+      <i class="fas fa-users" style="color:black;"></i>
+      <span>Servis Perniagaan</span>
+    </a>
   </div>
 </div>
 
@@ -891,8 +896,6 @@ footer .copyright {
     <div class="led-item"><i class="fas fa-chart-line"></i> Jumlah Pelawat: <span><?= $total_pelawat ?></span></div>
   </div>
 </section>
-
-
 
 <!-- ===== Peta lokasi ===== -->
 

@@ -764,7 +764,6 @@ if (strpos($gambarPath, 'uploads/') === false) {
 
         <div class="produk-card-content">
           <h3><?= htmlspecialchars($s['nama']) ?></h3>
-          <p><?= htmlspecialchars($s['deskripsi']) ?></p>
           <p><strong>Lokasi:</strong> <?= htmlspecialchars($s['lokasi']) ?></p>
           <p class="harga">RM <?= number_format($s['harga'], 2) ?></p>
 
