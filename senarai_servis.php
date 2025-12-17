@@ -287,15 +287,28 @@ header .title::after {
 }
 .service-card {
   background:#fff;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow:hidden;
-  box-shadow:0 4px 10px rgba(0,0,0,.1);
+  box-shadow:0 6px 15px rgba(0,0,0,.12);
+
+  transition: 
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.service-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 18px 35px rgba(0,0,0,0.18);
 }
 .service-card img {
   width:100%;
   height:200px;
   object-fit:cover;
+  transition: transform 0.5s ease;
 }
+.service-card:hover img {
+  transform: scale(1.08);
+}
+
 .service-info {
   padding: 15px;
 }
