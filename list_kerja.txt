@@ -1,2 +1,14 @@
-1. pada bahagian promosi_pasaran.php tambahkan bahagian untuk filter dan search bar
-2. 
+Bahagian Servis
+
+- Tak perlu letak harga kerana pengguna akan dapatkan quotation harga daripada service provider.
+- perlu buat system chat untuk user dan pengguna.
+
+Bahagian Pendaftaran
+- Tambah bahagian untuk usahawan masukkan no pendaftaran SSM dan juga fail sijil SSM
+
+Bahagian Admin
+- Generate Report untuk permohonan
+- Generate Report untuk usahawan
+- Generate Report untuk pembelian dan penjualan oleh user
+- Drop Usahawan jika tidak aktif dalam masa tertentu
+- Tambah bahagian untuk pantau produk yang dijual
