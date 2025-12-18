@@ -12,3 +12,8 @@ Bahagian Admin
 - Generate Report untuk pembelian dan penjualan oleh user
 - Drop Usahawan jika tidak aktif dalam masa tertentu
 - Tambah bahagian untuk pantau produk yang dijual
+
+Laman Utama
+- Cantikkan design bahagian berita untuk buatkan dia menarik
+- Betulkan fungsi pada bahagia navigation bar 
+
