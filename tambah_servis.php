@@ -115,22 +115,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $kategori_nama = $kategoriData['nama'];
     $getKategori->close();
 
-// Ambil harga dari borang (atau set default)
-$harga = floatval($_POST['harga'] ?? 0);
 
 $stmt = $conn->prepare("
     INSERT INTO servis 
-    (kategori_servis_id, usahawan_id, nama, harga, deskripsi, lokasi, gambar_servis_url)
+    (kategori_servis_id, usahawan_id, nama, deskripsi, lokasi, gambar_servis_url)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ");
 
 
 $stmt->bind_param(
-    "iisdsss",
+    "iissss",
     $kategori_id,   // i
     $usahawan_id,   // i
     $nama,          // s
-    $harga,         // d
     $deskripsi,     // s
     $lokasi,        // s
     $gambar_url     // s
@@ -509,9 +506,6 @@ footer .copyright {
 
         <label>Deskripsi:</label>
         <textarea name="deskripsi" rows="4"></textarea>
-
-        <label>Harga Servis (RM):</label>
-        <input type="number" name="harga" step="0.01" required>
 
         <label>Muat Naik Gambar:</label>
         <input type="file" name="gambar" accept="image/*" onchange="previewImage(event)">

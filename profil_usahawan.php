@@ -476,7 +476,6 @@ header .title::after {
     .produk-card-content { padding: 15px; }
     .produk-card h3 { margin: 0; font-size: 1.2rem; color: #333; }
     .produk-card p { margin: 6px 0; font-size: 0.95rem; color: #555; }
-    .produk-card .harga { font-weight: bold; color: #000; margin-top: 10px; }
     .produk-actions { margin-top: 10px; display: flex; gap: 10px; }
     .produk-actions a {
       flex: 1; text-align: center; padding: 8px; border-radius: 6px;
@@ -728,7 +727,6 @@ if (strpos($gambarPath, 'uploads/') === false) {
           <div class="produk-card-content">
             <h3><?= htmlspecialchars($p['nama']) ?></h3>
             <p><?= htmlspecialchars($p['deskripsi']) ?></p>
-            <p class="harga"><?= htmlspecialchars($p['harga']) ?></p>
             <div class="produk-actions">
               <a class="btn-edit" href="edit_produk.php?id=<?= $p['id'] ?>">Edit</a>
               <a class="btn-delete" href="delete_produk.php?id=<?= $p['id'] ?>&usahawan_id=<?= $usahawan['id'] ?>" onclick="return confirm('Padam produk ini?')">Delete</a>
@@ -765,7 +763,6 @@ if (strpos($gambarPath, 'uploads/') === false) {
         <div class="produk-card-content">
           <h3><?= htmlspecialchars($s['nama']) ?></h3>
           <p><strong>Lokasi:</strong> <?= htmlspecialchars($s['lokasi']) ?></p>
-          <p class="harga">RM <?= number_format($s['harga'], 2) ?></p>
 
           <div class="produk-actions">
             <a class="btn-edit" href="edit_servis.php?id=<?= $s['id'] ?>">Edit</a>

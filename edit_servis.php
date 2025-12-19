@@ -27,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nama       = $conn->real_escape_string($_POST['nama']);
     $deskripsi  = $conn->real_escape_string($_POST['deskripsi']);
     $lokasi     = $conn->real_escape_string($_POST['lokasi']);
-    $harga      = $conn->real_escape_string($_POST['harga']);
 
     // Kekalkan gambar lama jika tiada upload baru
     $gambar_baru = $servis['gambar_servis_url'];
@@ -59,7 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             nama='$nama',
             deskripsi='$deskripsi',
             lokasi='$lokasi',
-            harga='$harga',
             gambar_servis_url='$gambar_baru'
         WHERE id=$id
     ");
@@ -467,9 +465,6 @@ footer .copyright {
 
     <label>Lokasi</label>
     <input type="text" name="lokasi" value="<?= htmlspecialchars($servis['lokasi']) ?>" required>
-
-    <label>Harga (RM)</label>
-    <input type="number" step="0.01" name="harga" value="<?= htmlspecialchars($servis['harga']) ?>" required>
 
     <label>Tukar Gambar Servis</label>
     <input type="file" name="gambar" accept="image/*" onchange="previewImage(event)">
