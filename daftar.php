@@ -374,7 +374,7 @@ footer .copyright {
   <div class="container">
     <div class="card">
       <h2>📝 Pendaftaran Pengguna</h2>
-      <form action="save_pendaftaran.php" method="POST" onsubmit="return semakKataLaluan()">
+      <form action="save_pendaftaran.php" method="POST"  enctype="multipart/form-data" onsubmit="return semakKataLaluan()">
         
         <!-- Pilihan Jenis Pendaftaran -->
         <div class="form-group">
@@ -388,6 +388,35 @@ footer .copyright {
             <option value="Pengguna">👤 Pengguna</option>
           </select>
         </div>
+
+        <div class="form-group">
+          <label>
+            <i class="fas fa-file-signature"></i>
+            No. Pendaftaran SSM <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            name="ssm_no" 
+            id="ssm_no"
+            placeholder="Contoh: 202301234567"
+          >
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i class="fas fa-file-pdf"></i>
+            Muat Naik Sijil SSM <span class="required">*</span>
+          </label>
+          <input 
+            type="file" 
+            name="ssm_file" 
+            id="ssm_file"
+            accept=".pdf,.jpg,.jpeg,.png"
+          >
+          <small>Format dibenarkan: PDF / JPG / PNG</small>
+        </div>
+
+
 
         <div class="form-group">
           <label>
@@ -489,6 +518,9 @@ footer .copyright {
     var businessFields = document.getElementById("businessFields");
     var perniagaanInput = document.getElementById("perniagaan");
     var jenisInput = document.getElementById("jenis");
+    var ssmNoInput = document.getElementById("ssm_no");
+    var ssmFileInput = document.getElementById("ssm_file");
+
 
     console.log("Jenis Pendaftaran dipilih:", jenisPendaftaran); // Debug
 
@@ -496,15 +528,24 @@ footer .copyright {
       businessFields.style.display = "block";
       perniagaanInput.required = true;
       jenisInput.required = true;
+      ssmNoInput.required = true;
+      ssmFileInput.required = true;
+
       console.log("Field perniagaan ditunjukkan"); // Debug
     } else if (jenisPendaftaran === "Pengguna") {
       businessFields.style.display = "none";
       perniagaanInput.required = false;
       jenisInput.required = false;
+      ssmNoInput.required = false;
+      ssmFileInput.required = false;
+
       // Reset values
       perniagaanInput.value = "";
       jenisInput.value = "";
+      ssmNoInput.value = "";
+      ssmFileInput.value = "";  
       console.log("Field perniagaan disembunyikan"); // Debug
+      
     } else {
       // Jika tiada pilihan
       businessFields.style.display = "none";

@@ -42,3 +42,10 @@ CREATE TABLE servis_review (
     tarikh DATE DEFAULT NULL,
     PRIMARY KEY (id)
 ) 
+
+ALTER TABLE pending_usahawan
+ADD COLUMN ssm_no VARCHAR(50) NOT NULL AFTER perniagaan,
+ADD COLUMN ssm_file VARCHAR(255) NOT NULL AFTER ssm_no;
+
+ALTER TABLE pending_usahawan
+ADD COLUMN sebab_ditolak TEXT NULL;

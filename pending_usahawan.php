@@ -431,6 +431,7 @@ $result = $conn->query($sql);
             <th>Perniagaan</th>
             <th>Jenis</th>
             <th>Tarikh Daftar</th>
+            <th>SSM</th>
             <th>Status</th>
             <th>Tindakan</th>
           </tr>
@@ -447,6 +448,15 @@ $result = $conn->query($sql);
                 <td><?= htmlspecialchars($row["perniagaan"]); ?></td>
                 <td><?= htmlspecialchars($row["jenis"]); ?></td>
                 <td><?= date('d/m/Y H:i', strtotime($row["tarikh_daftar"])); ?></td>
+                <td>
+                  <a 
+                    href="view_ssm.php?file=<?= urlencode($row['ssm_file']) ?>" 
+                    target="_blank"
+                    class="action-btn view-btn"
+ >
+                    LIHAT
+                  </a>
+                </td>
                 <td>
                   <span class="status-badge status-pending">Menunggu</span>
                 </td>
@@ -536,6 +546,22 @@ $result = $conn->query($sql);
           <div class="detail-label">Tarikh Pendaftaran:</div>
           <div class="detail-value">${new Date(data.tarikh_daftar).toLocaleString('ms-MY')}</div>
         </div>
+        <div class="detail-row">
+          <div class="detail-label">No. Pendaftaran SSM:</div>
+          <div class="detail-value">${data.ssm_no}</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">Sijil SSM:</div>
+          <div class="detail-value">
+            <a href="view_ssm.php?file=${data.ssm_file}" 
+              target="_blank" 
+              class="action-btn view-btn">
+              📄 Lihat Sijil
+            </a>
+          </div>
+        </div>
+
       `;
       document.getElementById('detailModal').style.display = 'block';
     }
