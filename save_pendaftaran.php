@@ -15,6 +15,7 @@ $alamat            = isset($_POST['alamat']) ? trim($_POST['alamat']) : '';
 $telefon           = isset($_POST['telefon']) ? trim($_POST['telefon']) : '';
 $email             = isset($_POST['email']) ? trim($_POST['email']) : '';
 $password          = isset($_POST['password']) ? trim($_POST['password']) : '';
+$ssm_no = isset($_POST['ssm_no']) ? trim($_POST['ssm_no']) : '';
 
 // Set default values for Pengguna
 if ($jenis_pendaftaran === 'Pengguna') {
@@ -36,9 +37,51 @@ if ($jenis_pendaftaran === 'Usahawan' && (empty($perniagaan) || empty($jenis))) 
     die("Sila isi maklumat perniagaan untuk pendaftaran Usahawan. <a href='daftar.php'>Kembali</a>");
 }
 
+if ($jenis_pendaftaran === 'Usahawan' && empty($ssm_no)) {
+    die("No Pendaftaran SSM wajib diisi. <a href='daftar.php'>Kembali</a>");
+}
+
+
 // === Hash password for security (RECOMMENDED) ===
 // Uncomment line below to use password hashing
 // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+$ssm_file_name = null;
+if ($jenis_pendaftaran === 'Usahawan') {
+
+    if (!isset($_FILES['ssm_file']) || $_FILES['ssm_file']['error'] !== 0) {
+        die("Fail sijil SSM wajib dimuat naik. <a href='daftar.php'>Kembali</a>");
+    }
+
+    $allowed_ext = ['pdf','jpg','jpeg','png'];
+    $file_ext = strtolower(pathinfo($_FILES['ssm_file']['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($file_ext, $allowed_ext)) {
+        die("Format fail SSM tidak dibenarkan. <a href='daftar.php'>Kembali</a>");
+    }
+
+    // Nama fail unik
+    $ssm_file_name = 'ssm_' . time() . '_' . rand(1000,9999) . '.' . $file_ext;
+
+    // Folder simpanan
+    $upload_path = 'uploads/ssm/' . $ssm_file_name;
+
+    $max_size = 2 * 1024 * 1024; // 2MB
+    if ($_FILES['ssm_file']['size'] > $max_size) {
+        die("Saiz fail SSM terlalu besar. Maksimum 2MB. <a href='daftar.php'>Kembali</a>");
+    }
+
+
+    // Pastikan folder wujud
+    if (!is_dir('uploads/ssm')) {
+        mkdir('uploads/ssm', 0777, true);
+    }
+
+    if (!move_uploaded_file($_FILES['ssm_file']['tmp_name'], $upload_path)){
+        die("Gagal memuat naik fail SSM. <a href='daftar.php'>Kembali</a>");
+    }
+}
+
 
 // === Process based on registration type ===
 if ($jenis_pendaftaran === 'Pengguna') {
@@ -61,11 +104,13 @@ if ($jenis_pendaftaran === 'Pengguna') {
     }
     
 } else {
+    
     // Insert into pending_usahawan table for Usahawan (pending approval)
-    $sql = "INSERT INTO pending_usahawan (nama, ic, perniagaan, jenis, alamat, telefon, email, password, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+    $sql = "INSERT INTO pending_usahawan (nama, ic, perniagaan, jenis, alamat, telefon, email, password, ssm_no, ssm_file, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssss", $nama, $ic, $perniagaan, $jenis, $alamat, $telefon, $email, $password);
+    $stmt->bind_param("ssssssssss", $nama, $ic, $perniagaan, $jenis, $alamat, $telefon, $email, $password,  $ssm_no, 
+    $ssm_file_name);
     
     if ($stmt->execute()) {
         echo "<script>
