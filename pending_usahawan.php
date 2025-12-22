@@ -70,6 +70,56 @@ $totalPages = ceil($totalRows / $limit);
 // ====== Query Data with Limit ======
 $sql = "SELECT * FROM pending_usahawan WHERE status='pending' ORDER BY tarikh_daftar DESC LIMIT $start, $limit";
 $result = $conn->query($sql);
+
+// ====== FUNCTION TO GET FILE ICON ======
+function getFileIcon($filename) {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    switch($ext) {
+        case 'pdf':
+            return '📄';
+        case 'doc':
+        case 'docx':
+            return '📝';
+        case 'xls':
+        case 'xlsx':
+            return '📊';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+            return '🖼️';
+        case 'zip':
+        case 'rar':
+            return '📦';
+        default:
+            return '📎';
+    }
+}
+
+// ====== FUNCTION TO GET FILE TYPE ======
+function getFileType($filename) {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    switch($ext) {
+        case 'pdf':
+            return 'PDF';
+        case 'doc':
+        case 'docx':
+            return 'Word';
+        case 'xls':
+        case 'xlsx':
+            return 'Excel';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+            return 'Gambar';
+        case 'zip':
+        case 'rar':
+            return 'Arkib';
+        default:
+            return 'Fail';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -318,6 +368,110 @@ $result = $conn->query($sql);
       color: #333;
     }
 
+    /* File Link Styles */
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: #e7f3ff;
+      color: var(--primary);
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      border: 1px solid #b3d9ff;
+    }
+    .file-link:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    .file-icon {
+      font-size: 1.2rem;
+    }
+    .file-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      transition: 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    .download-btn:hover {
+      background: #218838;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      overflow: auto;
+    }
+    .modal-content {
+      position: relative;
+      margin: 2% auto;
+      padding: 0;
+      width: 90%;
+      max-width: 1200px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+    }
+    .modal-header {
+      padding: 15px 20px;
+      background: var(--primary);
+      color: white;
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 20px;
+      max-height: 80vh;
+      overflow: auto;
+    }
+    .close {
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .close:hover {
+      color: #ff6b6b;
+    }
+    .modal-body iframe {
+      width: 100%;
+      height: 70vh;
+      border: none;
+      border-radius: 5px;
+    }
+    .modal-body img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+
     /* ===== Pagination ===== */
     .pagination {
       margin-top: 20px;
@@ -448,16 +602,39 @@ $result = $conn->query($sql);
                 <td><?= htmlspecialchars($row["perniagaan"]); ?></td>
                 <td><?= htmlspecialchars($row["jenis"]); ?></td>
                 <td><?= date('d/m/Y H:i', strtotime($row["tarikh_daftar"])); ?></td>
+
                 <td>
-                  <a 
-                    href="view_ssm.php?file=<?= urlencode($row['ssm_file']) ?>" 
-                    target="_blank"
-                    class="action-btn view-btn"
- >
-                    LIHAT
-                  </a>
+                <?php if (!empty($row['ssm_file'])): ?>
+                  <div class="file-actions">
+
+                    <!-- LIHAT SSM -->
+                    <a href="#"
+                      class="file-link"
+                      onclick="viewDocument(
+                        'uploads/ssm/<?= htmlspecialchars($row['ssm_file']); ?>',
+                        '<?= htmlspecialchars($row['ssm_file']); ?>'
+                      ); return false;">
+                      
+                      <span class="file-icon">
+                        <?= getFileIcon($row['ssm_file']); ?>
+                      </span>
+                      <span>Lihat <?= getFileType($row['ssm_file']); ?></span>
+                    </a>
+
+                    <!-- MUAT TURUN -->
+                    <a href="uploads/ssm/<?= htmlspecialchars($row['ssm_file']); ?>"
+                      class="download-btn"
+                      download>
+                      ⬇ Muat Turun
+                    </a>
+
+                  </div>
+                <?php else: ?>
+                  <span style="color:#999;">Tiada Dokumen</span>
+                <?php endif; ?>
                 </td>
-                <td>
+
+
                   <span class="status-badge status-pending">Menunggu</span>
                 </td>
                 <td>
@@ -469,7 +646,18 @@ $result = $conn->query($sql);
             <?php endwhile; ?>
           <?php else: ?>
             <tr><td colspan="10" style="text-align:center;">Tiada permohonan menunggu pengesahan.</td></tr>
-          <?php endif; ?>
+                    <?php endif; ?>
+
+                    <div id="documentModal" class="modal">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 id="documentTitle">Dokumen</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+              </div>
+              <div class="modal-body" id="documentBody"></div>
+            </div>
+          </div>
+
         </tbody>
       </table>
 
@@ -509,61 +697,6 @@ $result = $conn->query($sql);
   <script>
     function toggleMenu() {
       document.getElementById('sidebar').classList.toggle('active');
-    }
-
-    function viewDetails(data) {
-      const modalBody = document.getElementById('modalBody');
-      modalBody.innerHTML = `
-        <div class="detail-row">
-          <div class="detail-label">Nama Penuh:</div>
-          <div class="detail-value">${data.nama}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">No. Kad Pengenalan:</div>
-          <div class="detail-value">${data.ic}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Telefon:</div>
-          <div class="detail-value">${data.telefon}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Email:</div>
-          <div class="detail-value">${data.email}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Nama Perniagaan:</div>
-          <div class="detail-value">${data.perniagaan}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Jenis Perniagaan:</div>
-          <div class="detail-value">${data.jenis}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Alamat:</div>
-          <div class="detail-value">${data.alamat || 'Tidak dinyatakan'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Tarikh Pendaftaran:</div>
-          <div class="detail-value">${new Date(data.tarikh_daftar).toLocaleString('ms-MY')}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">No. Pendaftaran SSM:</div>
-          <div class="detail-value">${data.ssm_no}</div>
-        </div>
-
-        <div class="detail-row">
-          <div class="detail-label">Sijil SSM:</div>
-          <div class="detail-value">
-            <a href="view_ssm.php?file=${data.ssm_file}" 
-              target="_blank" 
-              class="action-btn view-btn">
-              📄 Lihat Sijil
-            </a>
-          </div>
-        </div>
-
-      `;
-      document.getElementById('detailModal').style.display = 'block';
     }
 
     function closeModal() {
@@ -618,7 +751,54 @@ $result = $conn->query($sql);
         })
         .catch(() => alert('Ralat rangkaian!'));
     }
+
+    function viewDocument(filepath, filename) {
+      const modal = document.getElementById('documentModal');
+      const documentBody = document.getElementById('documentBody');
+      const documentTitle = document.getElementById('documentTitle');
+
+      documentTitle.textContent = filename;
+      documentBody.innerHTML = '';
+
+      const ext = filename.split('.').pop().toLowerCase();
+
+      if (['jpg','jpeg','png','gif','bmp'].includes(ext)) {
+        documentBody.innerHTML = `<img src="${filepath}" alt="${filename}">`;
+      } 
+      else if (ext === 'pdf') {
+        documentBody.innerHTML = `<iframe src="${filepath}"></iframe>`;
+      } 
+      else if (['doc','docx','xls','xlsx','ppt','pptx'].includes(ext)) {
+        documentBody.innerHTML = `
+          <iframe src="https://docs.google.com/viewer?url=
+          ${encodeURIComponent(window.location.origin + '/' + filepath)}
+          &embedded=true"></iframe>`;
+      } 
+      else {
+        documentBody.innerHTML = `
+          <div style="text-align:center;padding:40px">
+            <p style="font-size:3rem">📄</p>
+            <p>Fail ini tidak boleh dipaparkan.</p>
+            <a href="${filepath}" download class="download-btn">
+              ⬇ Muat Turun
+            </a>
+          </div>`;
+      }
+
+      modal.style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('documentModal').style.display = 'none';
+    }
+
+    window.onclick = function(e) {
+      const modal = document.getElementById('documentModal');
+      if (e.target === modal) modal.style.display = 'none';
+    }
+
   </script>
+
 </body>
 </html>
 <?php $conn->close(); ?>
