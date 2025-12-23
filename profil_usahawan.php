@@ -17,6 +17,10 @@ $user_id = $is_logged_in ? $_SESSION['usahawan_id'] : null;
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 $usahawan = $conn->query("SELECT * FROM usahawan WHERE id=$id")->fetch_assoc();
 
+$jenis_user = $usahawan['jenis'] ?? '';
+$is_pengguna = ($jenis_user === 'Pengguna');
+$is_allowed  = !$is_pengguna; // selain Pengguna
+
 // Dapatkan produk usahawan dan servis
 $produk = $conn->query("SELECT * FROM produk WHERE usahawan_id=$id");
 $servis = $conn->query("SELECT * FROM servis WHERE usahawan_id=$id");
@@ -55,7 +59,6 @@ body {
   color: #111;
   overflow-x: hidden;
   position: relative;
-  margin-top: 90px;
 }
 
 /* ✨ Cahaya lembut keemasan & hitam bergerak */
@@ -221,7 +224,7 @@ header .title::after {
 
 
     /* ===== Container & Cards ===== */
-    .container { max-width: 1100px; margin: auto; padding: 20px; }
+    .container { max-width: 1100px; margin: auto; padding: 20px;  flex: 1; }
     /* ========== General Card Styling ========== */
 .card {
   background: #ffffff;
@@ -485,6 +488,11 @@ header .title::after {
     .btn-edit:hover { background: #0b7dda; }
     .btn-delete { background: #f44336; color: white; }
     .btn-delete:hover { background: #c62828; }
+   
+    .page-wrapper {
+      min-height: calc(100vh - 90px); /* tinggi screen tolak header */
+      padding-top: 90px;              /* ganti margin-top body */
+    }
 
     /* ===== Footer ===== */
 footer {
@@ -642,6 +650,10 @@ footer .copyright {
   </nav>
 </header>
 
+<div class="page-wrapper">
+  <div class="container">
+
+  </div>
 <div class="container">
   <div class="card">
     <div class="profile-header">
@@ -670,10 +682,13 @@ footer .copyright {
       <p><span class="label">Tarikh Daftar:</span> <?= htmlspecialchars($usahawan['tarikh_daftar']) ?></p>
     </div>
 
+    <?php if ($is_allowed): ?>
     <a class="btn-add" href="tambah_produk.php?id=<?= $usahawan['id'] ?>">+ Tambah Produk</a>
     <a class="btn-add" href="tambah_servis.php?id=<?= $usahawan['id'] ?>">+ Tambah Servis</a>
-    <a class="btn-add" href="pesanan_detail.php?id=<?= $usahawan['id'] ?>">Pesanan Saya</a>
     <a class="btn-add" href="pesanan_masuk.php?id=<?= $usahawan['id'] ?>">Pesanan Masuk</a>
+    <?php endif; ?>
+
+    <a class="btn-add" href="pesanan_detail.php?id=<?= $usahawan['id'] ?>">Pesanan Saya</a>
   </div>
 
   <!-- ===== Permohonan Section ===== -->
@@ -711,6 +726,7 @@ footer .copyright {
 
 
   <!-- ===== Produk Section ===== -->
+  <?php if ($is_allowed): ?>
   <div class="produk-section">
     <h2>Produk</h2>
     <div class="produk-grid">
@@ -736,8 +752,9 @@ if (strpos($gambarPath, 'uploads/') === false) {
       <?php endforeach; ?>
     </div>
   </div>
+  <?php endif; ?>
 
-
+<?php if ($is_allowed): ?>
 <!-- ===== Servis Section ===== -->
 <div class="produk-section">
   <h2>Servis</h2>
@@ -782,8 +799,10 @@ if (strpos($gambarPath, 'uploads/') === false) {
   <?php endif; ?>
 </div>
 </div>
+<?php endif; ?>
 
-
+  </div>
+</div>
 
 <!-- ===== Footer Rasmi ===== -->
 <footer>
