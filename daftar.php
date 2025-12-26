@@ -226,6 +226,50 @@ header .title::after {
     }
     form button:hover { background:#00264d; }
 
+    /* ===== SSM NOTE ===== */
+.ssm-note {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #555;
+  background: #f1f5ff;
+  border-left: 4px solid #003366;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+/* ===== POPUP ===== */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.popup-card {
+  background: #fff;
+  padding: 30px 35px;
+  border-radius: 14px;
+  text-align: center;
+  max-width: 380px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: popupIn 0.4s ease;
+}
+
+.popup-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+@keyframes popupIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+
     /* ===== Footer ===== */
 footer {
   background: linear-gradient(
@@ -389,31 +433,30 @@ footer .copyright {
           </select>
         </div>
 
-        <div class="form-group">
-          <label>
-            <i class="fas fa-file-signature"></i>
-            No. Pendaftaran SSM <span class="required">*</span>
-          </label>
-          <input 
-            type="text" 
-            name="ssm_no" 
-            id="ssm_no"
-            placeholder="Contoh: 202301234567"
-          >
-        </div>
+          <!-- ===== SSM (Hanya Usahawan) ===== -->
+        <div id="ssmSection" style="display:none;">
 
-        <div class="form-group">
-          <label>
-            <i class="fas fa-file-pdf"></i>
-            Muat Naik Sijil SSM <span class="required">*</span>
-          </label>
-          <input 
-            type="file" 
-            name="ssm_file" 
-            id="ssm_file"
-            accept=".pdf,.jpg,.jpeg,.png"
-          >
-          <small>Format dibenarkan: PDF / JPG / PNG</small>
+          <div class="form-group">
+            <label>
+              <i class="fas fa-file-signature"></i>
+              No. Pendaftaran SSM <span class="required">*</span>
+            </label>
+            <input type="text" name="ssm_no" id="ssm_no" placeholder="Contoh: 202301234567">
+          </div>
+
+          <div class="form-group">
+            <label>
+              <i class="fas fa-file-pdf"></i>
+              Muat Naik Sijil SSM <span class="required">*</span>
+            </label>
+            <input type="file" name="ssm_file" id="ssm_file" accept=".pdf,.jpg,.jpeg,.png">
+            <small>Format dibenarkan: PDF / JPG / PNG</small>
+          </div>
+
+          <div class="ssm-note">
+            ℹ️ Usahawan perlu menunggu pengesahan perniagaan sebelum akaun diaktifkan.
+          </div>
+
         </div>
 
 
@@ -507,52 +550,56 @@ footer .copyright {
     </div>
   </div>
 
-  <script>
-  function toggleMenu(){
-    document.getElementById('navMenu').classList.toggle('show');
-  }
+    <!-- ===== POPUP STATUS ===== -->
+  <div id="statusPopup" class="popup-overlay">
+    <div class="popup-card">
+      <div id="popupIcon" class="popup-icon">✔️</div>
+      <h3 id="popupTitle">Berjaya</h3>
+      <p id="popupMessage"></p>
+    </div>
+  </div>
+    <script>
+    function toggleMenu(){
+      document.getElementById('navMenu').classList.toggle('show');
+    }
 
   // Toggle Business Fields based on registration type
   function toggleBusinessFields() {
-    var jenisPendaftaran = document.getElementById("jenis_pendaftaran").value;
-    var businessFields = document.getElementById("businessFields");
-    var perniagaanInput = document.getElementById("perniagaan");
-    var jenisInput = document.getElementById("jenis");
-    var ssmNoInput = document.getElementById("ssm_no");
-    var ssmFileInput = document.getElementById("ssm_file");
+    const jenis = document.getElementById("jenis_pendaftaran").value;
+    const business = document.getElementById("businessFields");
+    const ssm = document.getElementById("ssmSection");
 
+    const perniagaan = document.getElementById("perniagaan");
+    const jenisBiz = document.getElementById("jenis");
+    const ssmNo = document.getElementById("ssm_no");
+    const ssmFile = document.getElementById("ssm_file");
 
-    console.log("Jenis Pendaftaran dipilih:", jenisPendaftaran); // Debug
+    if (jenis === "Usahawan") {
+      business.style.display = "block";
+      ssm.style.display = "block";
 
-    if (jenisPendaftaran === "Usahawan") {
-      businessFields.style.display = "block";
-      perniagaanInput.required = true;
-      jenisInput.required = true;
-      ssmNoInput.required = true;
-      ssmFileInput.required = true;
+      perniagaan.required = true;
+      jenisBiz.required = true;
+      ssmNo.required = true;
+      ssmFile.required = true;
 
-      console.log("Field perniagaan ditunjukkan"); // Debug
-    } else if (jenisPendaftaran === "Pengguna") {
-      businessFields.style.display = "none";
-      perniagaanInput.required = false;
-      jenisInput.required = false;
-      ssmNoInput.required = false;
-      ssmFileInput.required = false;
-
-      // Reset values
-      perniagaanInput.value = "";
-      jenisInput.value = "";
-      ssmNoInput.value = "";
-      ssmFileInput.value = "";  
-      console.log("Field perniagaan disembunyikan"); // Debug
-      
     } else {
-      // Jika tiada pilihan
-      businessFields.style.display = "none";
-      perniagaanInput.required = false;
-      jenisInput.required = false;
+      business.style.display = "none";
+      ssm.style.display = "none";
+
+      perniagaan.required = false;
+      jenisBiz.required = false;
+      ssmNo.required = false;
+      ssmFile.required = false;
+
+      perniagaan.value = "";
+      jenisBiz.value = "";
+      ssmNo.value = "";
+      ssmFile.value = "";
     }
   }
+
+
 
   function semakKataLaluan() {
     var pass = document.getElementById("password").value;
@@ -571,6 +618,29 @@ footer .copyright {
     var testField = document.getElementById("businessFields");
     console.log("Business field element:", testField);
   }
+
+  function showPopup(jenis) {
+  const popup = document.getElementById("statusPopup");
+  const icon = document.getElementById("popupIcon");
+  const title = document.getElementById("popupTitle");
+  const msg = document.getElementById("popupMessage");
+
+  if (jenis === "Usahawan") {
+    icon.textContent = "⏳";
+    title.textContent = "Pendaftaran Diterima";
+    msg.textContent = "Akaun anda akan diaktifkan selepas pengesahan perniagaan.";
+  } else {
+    icon.textContent = "✔️";
+    title.textContent = "Berjaya";
+    msg.textContent = "Akaun berjaya didaftarkan. Selamat datang!";
+  }
+
+  popup.style.display = "flex";
+
+  setTimeout(() => {
+    popup.style.display = "none";
+  }, 3000);
+}
 </script>
 
   <!-- ===== Footer Rasmi ===== -->
@@ -586,6 +656,9 @@ footer .copyright {
     </div>
   </div>
 </footer>
+
+
+
 
   <script>
     function toggleMenu(){
