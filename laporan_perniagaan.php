@@ -58,32 +58,39 @@ while ($row = $res->fetch_assoc()) {
 $stmt->close();
 
 /* ===============================
-   JUALAN BULANAN
+   JUALAN BULANAN (JAN–DEC FIX)
 ================================ */
-$bulan = [];
-$jualan = [];
 
+// Label 12 bulan (tetap)
+$bulanLabel = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Default semua bulan = 0
+$jualanBulanan = array_fill(0, 12, 0);
+
+// SQL ambil jualan ikut bulan
 $chart_sql = "
 SELECT 
-    DATE_FORMAT(p.tarikh_pesanan,'%b') AS bulan,
+    MONTH(p.tarikh_pesanan) AS bulan,
     SUM(pi.subtotal) AS jumlah
 FROM pesanan p
 JOIN pesanan_item pi ON p.id = pi.pesanan_id
 JOIN produk pr ON pi.produk_id = pr.id
 WHERE pr.usahawan_id = ?
 GROUP BY MONTH(p.tarikh_pesanan)
-ORDER BY MONTH(p.tarikh_pesanan)
 ";
+
 $stmt = $conn->prepare($chart_sql);
 $stmt->bind_param("i", $usahawan_id);
 $stmt->execute();
 $res = $stmt->get_result();
 
+// Masukkan data ke bulan yang betul
 while ($r = $res->fetch_assoc()) {
-    $bulan[]  = $r['bulan'];
-    $jualan[] = $r['jumlah'];
+    $index = (int)$r['bulan'] - 1; // Jan = 0
+    $jualanBulanan[$index] = (float)$r['jumlah'];
 }
 $stmt->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -127,22 +134,37 @@ h1{margin-bottom:20px}
 <div class="card">
 <h3>Jualan Bulanan</h3>
 <canvas id="salesChart"></canvas>
+<p style="font-size:13px;color:#666;margin-top:8px">
+Nota: Bulan tanpa jualan akan dipaparkan sebagai RM0.
+</p>
+
 </div>
 </div>
 
 <script>
-new Chart(document.getElementById('salesChart'),{
- type:'bar',
- data:{
-  labels:<?= json_encode($bulan) ?>,
-  datasets:[{
-    label:'Jualan (RM)',
-    data:<?= json_encode($jualan) ?>,
-    backgroundColor:'#003399'
-  }]
- }
+new Chart(document.getElementById('salesChart'), {
+  type: 'bar',
+  data: {
+    labels: <?= json_encode($bulanLabel) ?>,
+    datasets: [{
+      label: 'Jualan (RM)',
+      data: <?= json_encode($jualanBulanan) ?>,
+      backgroundColor: '#003399'
+    }]
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: value => 'RM ' + value
+        }
+      }
+    }
+  }
 });
 </script>
+
 
 </body>
 </html>

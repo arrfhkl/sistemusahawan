@@ -496,7 +496,7 @@ footer .copyright {
 
     <label>Gambar Produk</label>
    
-    <input type="file" name="gambar" accept="image/*" required onchange="previewImage(event)">
+    <input type="file" name="gambar" accept="image/*"  onchange="previewImage(event)">
     <!-- Teks ini HIDDEN dulu -->
     <p id="newImageText" class="new-upload-text" style="display:none; text-align:center; margin-top:15px; font-weight:600; color:#003366;">
       Muat turun gambar baharu:
