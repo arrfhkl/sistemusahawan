@@ -575,122 +575,144 @@ footer .copyright {
   .function-btn { padding: 15px; }
 }
 
-/* ====== Struktur Umum ====== */
+/* ====== SECTION BERITA MODERN & FORMAL ====== */
 .berita-section {
-  max-width: 1100px;
-  margin: 80px auto;
-  padding: 20px;
-  font-family: "Poppins", sans-serif;
-  text-align: center;
-}
-.headline-utama h1 {
-  font-size: 1.8rem;
-  color: #003366;
-  margin-bottom: 5px;
-}
-.headline-sub {
-  color: #555;
-  font-size: 1rem;
-  margin-bottom: 30px;
+    max-width: 1200px;
+    margin: 80px auto;
+    padding: 0 20px;
 }
 
-/* ====== Paparan Biasa ====== */
-.berita-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 25px;
+.berita-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    border-left: 5px solid #003399;
+    padding-left: 20px;
 }
+
+.berita-header h2 {
+    font-size: 2rem;
+    color: #001F3F;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.berita-slider-container {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+}
+
+.berita-wrapper {
+    display: flex;
+    gap: 25px;
+    transition: transform 0.5s ease;
+}
+
+/* Card Style Baru (Formal) */
 .berita-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  overflow: hidden;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+    min-width: calc(33.333% - 17px);
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
 }
+
 .berita-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-.berita-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-}
-.berita-content {
-  padding: 15px;
-  text-align: left;
-}
-.berita-content h3 {
-  color: #003366;
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-}
-.berita-content .tarikh {
-  font-size: 0.85rem;
-  color: #777;
-  margin-bottom: 8px;
-}
-.berita-content p {
-  font-size: 0.9rem;
-  color: #444;
-  line-height: 1.5;
-}
-.baca-lanjut {
-  display: inline-block;
-  margin-top: 10px;
-  color: #0056b3;
-  font-weight: 600;
-  text-decoration: none;
-}
-.baca-lanjut:hover {
-  color: #002b5c;
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    border-color: #003399;
 }
 
-/* ====== 3D SLIDER DESIGN ====== */
-.berita-slider {
-  position: relative;
-  width: 100%;
-  height: 420px;
-  perspective: 1200px;
-  margin-top: 30px;
-}
-.berita-slider .berita-card {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform-style: preserve-3d;
-  transform-origin: center;
-  width: 70%;
-  opacity: 0;
-  transition: all 1s ease;
-  border-radius: 15px;
-}
-.berita-slider .berita-card img {
-  height: 220px;
-  border-radius: 10px 10px 0 0;
-}
-.berita-slider .berita-card.active {
-  opacity: 1;
-  transform: translateX(-50%) rotateY(0deg) scale(1);
-  z-index: 2;
-}
-.berita-slider .berita-card.prev {
-  opacity: 0.5;
-  transform: translateX(-110%) rotateY(30deg) scale(0.9);
-  z-index: 1;
-}
-.berita-slider .berita-card.next {
-  opacity: 0.5;
-  transform: translateX(10%) rotateY(-30deg) scale(0.9);
-  z-index: 1;
+.card-img-container {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
 }
 
-/* ====== Responsif ====== */
-@media (max-width: 768px) {
-  .berita-slider .berita-card {
-    width: 90%;
-  }
+.card-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
 }
+
+.berita-card:hover .card-img-container img {
+    transform: scale(1.1);
+}
+
+.card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.card-date {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #001F3F;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-excerpt {
+    font-size: 0.9rem;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.read-more-btn {
+    margin-top: auto;
+    color: #003399;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.3s;
+}
+
+.berita-card:hover .read-more-btn {
+    gap: 12px;
+}
+
+/* Tablet & Mobile */
+@media (max-width: 992px) {
+    .berita-card { min-width: calc(50% - 13px); }
+}
+
+@media (max-width: 600px) {
+    .berita-card { min-width: 100%; }
+    .berita-header h2 { font-size: 1.5rem; }
+}
+
 
 /* ===== LED Ticker Statistik Section ===== */
 .led-ticker {
@@ -757,6 +779,48 @@ footer .copyright {
     padding: 0 15px;
   }
 }
+
+/* ===== Berita Card Interaksi Premium ===== */
+
+/* Hover → besar sikit */
+.berita-card {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  cursor: pointer;
+}
+
+.berita-card:hover {
+  transform: scale(1.05);
+  z-index: 5;
+}
+
+/* Click → naik ke atas (active) */
+.berita-card.active {
+  transform: translateY(-14px) scale(1.05);
+  box-shadow: 0 18px 35px rgba(0,0,0,0.35);
+  z-index: 10;
+}
+
+.berita-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  background: linear-gradient(90deg, #001F3F, #003399, #0066FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+
+.berita-sub {
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 6px;
+}
+
+.berita-card:active {
+  transform: scale(0.97);
+}
+
+
 
 
   </style>
@@ -837,44 +901,51 @@ footer .copyright {
       <i class="fas fa-users" style="color:black;"></i>
       <span>Servis Perniagaan</span>
     </a>
+    <a href="laporan_perniagaan.php" class="function-btn" style="color:white;">
+      <i class="fas fa-users" style="color:black;"></i>
+      <span>Laporan Perniagaan</span>
+    </a>
   </div>
 </div>
 
 
 <!-- ===== Berita Section ===== -->
 <section class="berita-section">
+  <div class="berita-header">
+    <div>
+      <h2 class="berita-title">Berita & Hebahan Rasmi</h2>
+      <p class="berita-sub">Maklumat terkini dan pengumuman rasmi Kerajaan Negeri Pahang</p>
+    </div>
+  </div>
+    
+    <div class="berita-slider-container">
+        <div class="berita-wrapper" id="beritaWrapper">
+            <?php foreach ($berita_list as $berita): ?>
+                <a href="<?= htmlspecialchars($berita['pautan']) ?>" 
+                class="berita-card"
+                target="_blank"
+                rel="noopener noreferrer">
 
-  <?php if (count($berita_list) > 3): ?>
-    <!-- ====== 3D SLIDER ====== -->
-    <div class="berita-slider">
-      <?php foreach ($berita_list as $index => $berita): ?>
-        <article class="berita-card" style="--i:<?= $index ?>">
-          <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="<?= htmlspecialchars($berita['tajuk']) ?>">
-          <div class="berita-content">
-            <h3><?= htmlspecialchars($berita['tajuk']) ?></h3>
-            <p class="tarikh"><?= date('d F Y', strtotime($berita['tarikh'])) ?></p>
-            <p><?= htmlspecialchars($berita['kandungan']) ?></p>
-            <a href="<?= htmlspecialchars($berita['pautan']) ?>" class="baca-lanjut">Baca Lanjut →</a>
-          </div>
-        </article>
-      <?php endforeach; ?>
+                    <div class="card-img-container">
+                        <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="Berita">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-date">
+                            <i class="far fa-calendar-alt"></i> 
+                            <?= date('d F Y', strtotime($berita['tarikh'])) ?>
+                        </div>
+                        <h3 class="card-title"><?= htmlspecialchars($berita['tajuk']) ?></h3>
+                        <p class="card-excerpt">
+                            <?= strip_tags($berita['kandungan']) ?>
+                        </p>
+                        <div class="read-more-btn">
+                            Baca Lanjut <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
     </div>
-  <?php else: ?>
-    <!-- ====== PAPARAN BIASA ====== -->
-    <div class="berita-container">
-      <?php foreach ($berita_list as $berita): ?>
-        <article class="berita-card">
-          <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="<?= htmlspecialchars($berita['tajuk']) ?>">
-          <div class="berita-content">
-            <h3><?= htmlspecialchars($berita['tajuk']) ?></h3>
-            <p class="tarikh"><?= date('d F Y', strtotime($berita['tarikh'])) ?></p>
-            <p><?= htmlspecialchars($berita['kandungan']) ?></p>
-            <a href="<?= htmlspecialchars($berita['pautan']) ?>" class="baca-lanjut">Baca Lanjut →</a>
-          </div>
-        </article>
-      <?php endforeach; ?>
-    </div>
-  <?php endif; ?>
 </section>
 
 <!-- ===== Kisah Kejayaan Usahawan ===== -->
@@ -940,24 +1011,52 @@ footer .copyright {
 </script>
 
 <script>
-let current = 0;
-const cards = document.querySelectorAll('.berita-slider .berita-card');
-if (cards.length > 0) {
-  function showSlide(index) {
-    cards.forEach((card, i) => {
-      card.classList.remove('active', 'prev', 'next');
-      if (i === index) card.classList.add('active');
-      else if (i === (index - 1 + cards.length) % cards.length) card.classList.add('prev');
-      else if (i === (index + 1) % cards.length) card.classList.add('next');
-    });
-  }
-  showSlide(current);
-  setInterval(() => {
-    current = (current + 1) % cards.length;
-    showSlide(current);
-  }, 6000);
+const beritaWrapper = document.getElementById('beritaWrapper');
+let isPaused = false;
+let scrollPos = 0;
+
+// Gandakan kandungan untuk infinite loop
+const originalCards = [...beritaWrapper.children];
+originalCards.forEach(card => {
+  const clone = card.cloneNode(true);
+  beritaWrapper.appendChild(clone);
+});
+
+// Kira lebar satu pusingan
+function getTotalWidth() {
+  return originalCards.reduce((total, card) => {
+    return total + card.offsetWidth + 25; // 25 = gap
+  }, 0);
 }
+
+let totalWidth = getTotalWidth();
+
+function animate() {
+  if (!isPaused) {
+    scrollPos += 0.6; // lebih smooth & premium
+    if (scrollPos >= totalWidth) {
+      scrollPos = 0;
+    }
+    beritaWrapper.style.transform = `translateX(${-scrollPos}px)`;
+  }
+  requestAnimationFrame(animate);
+}
+
+// Hover → pause
+beritaWrapper.addEventListener('mouseenter', () => isPaused = true);
+beritaWrapper.addEventListener('mouseleave', () => isPaused = false);
+
+// Recalculate bila resize (mobile fix)
+window.addEventListener('resize', () => {
+  totalWidth = getTotalWidth();
+});
+
+// Start animation
+animate();
 </script>
+
+
+
 
 </body>
 </html>
