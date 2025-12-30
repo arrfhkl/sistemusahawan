@@ -257,14 +257,22 @@ header .title::after {
       margin-top: 10px;
       display: block;
     }
-    input[type="email"], input[type="password"] {
+    .form-input {
       width: 100%;
       padding: 12px;
       margin-top: 5px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #003366;
+      box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.12);
+    }
+
     button.submit {
       background: #003366;
       color: #fff;
@@ -408,6 +416,68 @@ footer .copyright {
   .slideshow-container { height: 180px; }
   .function-btn { padding: 15px; }
 }
+
+/*PASSWORD SECTION*/
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  padding-right: 45px; /* ruang untuk icon */
+}
+
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #003366; /* Warna biru gelap mengikut tema anda */
+  padding: 5px;
+  transition: color 0.2s;
+}
+
+.eye-btn:hover {
+  color: #0066FF; /* Warna bertukar bila hover */
+}
+
+.eye-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.eye-btn:hover svg {
+  stroke: #0055a5;
+}
+
+/*SIGNUP SECTION*/
+.signup-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.signup-link a {
+  color: #003366; /* biru gelap */
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
+  color: #0055a5;
+}
+
+
+
+
   </style>
 </head>
 <body>
@@ -425,17 +495,32 @@ footer .copyright {
 
 <div class="container">
   <div class="card">
-    <h2>Log Masuk Usahawan</h2>
+    <h2>Log Masuk </h2>
     <?php if ($error) echo "<p class='error'>$error</p>"; ?>
     <form method="POST" action="">
       <label for="email">Emel:</label>
-      <input type="email" id="email" name="email" required>
+      <input type="email" id="email" name="email" class="form-input" required>
 
       <label for="password">Kata Laluan:</label>
-      <input type="password" id="password" name="password" required>
+      <div class="password-wrapper">
+        <input type="password" id="password" name="password" class="form-input" required>
+        <button type="button" class="eye-btn" onclick="togglePassword()" aria-label="Papar kata laluan">
+          <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+
+
+
 
       <button class="submit" type="submit">Log Masuk</button>
     </form>
+    <div class="signup-link">
+      Tiada akaun? <a href="daftar.php">Daftar sekarang</a>
+    </div>
+
   </div>
 </div>
 
@@ -454,8 +539,29 @@ footer .copyright {
 </footer>
 
 <script>
-  function toggleMenu() {
+ function toggleMenu() {
     document.getElementById('navMenu').classList.toggle('show');
+  }
+    
+  function togglePassword() {
+    const input = document.getElementById("password");
+    const icon = document.getElementById("eyeIcon");
+
+    if (input.type === "password") {
+      input.type = "text";
+      // Tukar ke ikon mata tutup (Eye)
+      icon.innerHTML = `
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      `;
+    } else {
+      input.type = "password";
+      // Tukar balik ke ikon mata buka (Eye Off)
+      icon.innerHTML = `
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+      `;
+    }
   }
 </script>
 
