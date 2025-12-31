@@ -554,6 +554,69 @@ footer .copyright {
   }
 }
 
+/* ===== DARK MODERN CENTER TOAST ===== */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(10px);
+  min-width: 320px;
+  max-width: 420px;
+  padding: 18px 22px;
+  border-radius: 14px;
+
+  background: linear-gradient(
+    135deg,
+    #2d63afff 100%
+  );
+
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-align: center;
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s ease;
+  z-index: 4000;
+}
+
+/* SHOW */
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0);
+}
+
+/* ICON (Neutral & Premium) */
+.toast::before {
+  content: "🛒";
+  display: block;
+  font-size: 22px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+/* ERROR (still dark, not aggressive) */
+.toast.error {
+  background: linear-gradient(
+    135deg,
+    #2a0b0b 0%,
+    #4a1212 50%,
+    #6b1a1a 100%
+  );
+}
+
+.toast.error::before {
+  content: "⚠";
+}
+
+
+
 </style>
 </head>
 <body>
@@ -667,6 +730,10 @@ footer .copyright {
   </div>
 </div>
 
+<!-- ===== TOAST NOTIFICATION ===== -->
+<div id="toast" class="toast"></div>
+
+
 <!-- ===== Footer Rasmi ===== -->
 <footer>
   <div class="footer-content">
@@ -747,11 +814,17 @@ async function tambahKeCart(produk_id, nama, harga, gambar_url) {
     console.log('🟣 Parsed JSON:', data);
 
     if (data.success) {
-      alert('✅ ' + data.message);
-      location.reload();
+      showToast("🛒 Produk berjaya dimasukkan ke troli.", "success");
+
+      // reload selepas toast 3 saat
+      setTimeout(() => {
+        location.reload();
+      }, 3000);
+
     } else {
-      alert('⚠️ ' + data.message);
+      showToast("⚠️ Gagal menambah produk ke troli.", "error");
     }
+
   } catch (error) {
     console.error('🔴 ERROR:', error);
     alert('❌ Error: ' + error.message);
@@ -780,6 +853,17 @@ function tutupPopup(){
 function bukaCart(){
   window.location.href = "cart.php";
 }
+
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.className = `toast show ${type}`;
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000); // ⏱️ 3 saat
+}
+
 
 </script>
 

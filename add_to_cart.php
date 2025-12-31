@@ -64,7 +64,7 @@ if ($check->num_rows > 0) {
 
     if ($update) {
         $response['success'] = true;
-        $response['message'] = "Kuantiti produk berjaya ditambah.";
+        $response['message'] = "🛒Kuantiti produk berjaya ditambah.";
     } else {
         $response['message'] = "Gagal kemas kini kuantiti.";
     }
@@ -79,7 +79,7 @@ if ($check->num_rows > 0) {
 
     if ($insert) {
         $response['success'] = true;
-        $response['message'] = "Produk berjaya dimasukkan ke cart.";
+        $response['message'] = "🛒 Produk berjaya dimasukkan ke cart.";
     } else {
         $response['message'] = "Gagal insert ke cart.";
     }
