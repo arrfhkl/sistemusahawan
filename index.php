@@ -820,6 +820,68 @@ footer .copyright {
   transform: scale(0.97);
 }
 
+/* ===== Confirmation Modal ===== */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.confirm-box {
+  background: #fff;
+  padding: 30px 35px;
+  border-radius: 14px;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  animation: popupScale 0.35s ease;
+}
+
+.confirm-box h3 {
+  color: #001F3F;
+  margin-bottom: 12px;
+}
+
+.confirm-box p {
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.confirm-actions {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.confirm-actions button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#confirmYes {
+  background: #003399;
+  color: #fff;
+}
+
+#confirmNo {
+  background: #ddd;
+  color: #333;
+}
+
+@keyframes popupScale {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+
 
 
 
@@ -921,10 +983,8 @@ footer .copyright {
     <div class="berita-slider-container">
         <div class="berita-wrapper" id="beritaWrapper">
             <?php foreach ($berita_list as $berita): ?>
-                <a href="<?= htmlspecialchars($berita['pautan']) ?>" 
-                class="berita-card"
-                target="_blank"
-                rel="noopener noreferrer">
+                <a href="<?= htmlspecialchars($berita['pautan']) ?>"
+                class="berita-card confirm-newtab">
 
                     <div class="card-img-container">
                         <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="Berita">
@@ -967,6 +1027,20 @@ footer .copyright {
     <div class="led-item"><i class="fas fa-chart-line"></i> Jumlah Pelawat: <span><?= $total_pelawat ?></span></div>
   </div>
 </section>
+
+<!-- ===== Modal Confirmation ===== -->
+<div id="confirmModal" class="confirm-overlay">
+  <div class="confirm-box">
+    <h3>Buka Pautan Baharu?</h3>
+    <p>Adakah anda ingin membuka berita ini dalam tab baharu?</p>
+
+    <div class="confirm-actions">
+      <button id="confirmYes">Buka Tab Baharu</button>
+      <button id="confirmNo">Batal</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- ===== Peta lokasi ===== -->
 
@@ -1054,6 +1128,35 @@ window.addEventListener('resize', () => {
 // Start animation
 animate();
 </script>
+
+
+<script>
+  // Modal Confirmation
+let targetLink = null;
+
+document.querySelectorAll('.confirm-newtab').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault(); // hentikan buka link
+    targetLink = this.href;
+    document.getElementById('confirmModal').style.display = 'flex';
+  });
+});
+
+document.getElementById('confirmYes').onclick = () => {
+  if (targetLink) {
+    window.open(targetLink, '_blank');
+  }
+  closeConfirm();
+};
+
+document.getElementById('confirmNo').onclick = closeConfirm;
+
+function closeConfirm() {
+  document.getElementById('confirmModal').style.display = 'none';
+  targetLink = null;
+}
+</script>
+
 
 
 
