@@ -795,9 +795,9 @@ footer .copyright {
 
 /* Click → naik ke atas (active) */
 .berita-card.active {
-  transform: translateY(-14px) scale(1.05);
-  box-shadow: 0 18px 35px rgba(0,0,0,0.35);
-  z-index: 10;
+  transform: translateY(-14px) scale(1.08);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+  z-index: 20;
 }
 
 .berita-title {
@@ -1107,14 +1107,18 @@ let totalWidth = getTotalWidth();
 
 function animate() {
   if (!isPaused) {
-    scrollPos += 0.6; // lebih smooth & premium
+    scrollPos += 0.6;
+
+    // bila sampai hujung clone, rewind tanpa rasa lompat
     if (scrollPos >= totalWidth) {
-      scrollPos = 0;
+      scrollPos -= totalWidth;
     }
+
     beritaWrapper.style.transform = `translateX(${-scrollPos}px)`;
   }
   requestAnimationFrame(animate);
 }
+
 
 // Hover → pause
 beritaWrapper.addEventListener('mouseenter', () => isPaused = true);
@@ -1133,11 +1137,32 @@ animate();
 <script>
   // Modal Confirmation
 let targetLink = null;
+let activeCard = null;
 
-document.querySelectorAll('.confirm-newtab').forEach(link => {
-  link.addEventListener('click', function(e) {
-    e.preventDefault(); // hentikan buka link
+document.querySelectorAll('.confirm-newtab').forEach((card, index) => {
+  card.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    // 1. Pause slider
+    isPaused = true;
+
+    // 2. Remove active dari semua card
+    document.querySelectorAll('.berita-card').forEach(c => c.classList.remove('active'));
+
+    // 3. Set active pada card diklik
+    this.classList.add('active');
+    activeCard = this;
     targetLink = this.href;
+
+    // 4. Fokuskan card ke tengah slider
+    const cardOffset = this.offsetLeft;
+    const cardWidth = this.offsetWidth;
+    const containerWidth = document.querySelector('.berita-slider-container').offsetWidth;
+
+    scrollPos = cardOffset - (containerWidth / 2) + (cardWidth / 2);
+    beritaWrapper.style.transform = `translateX(${-scrollPos}px)`;
+
+    // 5. Papar modal
     document.getElementById('confirmModal').style.display = 'flex';
   });
 });
@@ -1154,8 +1179,12 @@ document.getElementById('confirmNo').onclick = closeConfirm;
 function closeConfirm() {
   document.getElementById('confirmModal').style.display = 'none';
   targetLink = null;
+
+  if (activeCard) activeCard.classList.remove('active');
+  isPaused = false;
 }
 </script>
+
 
 
 
