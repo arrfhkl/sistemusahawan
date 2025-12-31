@@ -82,6 +82,80 @@ if ($result->num_rows > 0) {
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
 
   <style>
+
+  /* ===== PREMIUM TOAST ===== */
+.toast {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  min-width: 320px;
+  max-width: 420px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-family: 'Poppins', sans-serif;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  animation: slideIn 0.6s ease forwards;
+  z-index: 9999;
+}
+
+/* Success Theme */
+.toast-success {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 51, 102, 0.95),
+    rgba(0, 102, 204, 0.95)
+  );
+  color: #fff;
+}
+
+/* Icon */
+.toast-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Text */
+.toast-content strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.toast-content span {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+/*end toast*/
     * {
   margin: 0;
   padding: 0;
@@ -889,6 +963,16 @@ footer .copyright {
 </head>
 <body>
 
+<?php if (!empty($_SESSION['toast_logout'])): ?>
+<div class="toast toast-success" id="logoutToast">
+  <div class="toast-icon">✓</div>
+  <div class="toast-content">
+    <strong>Log Keluar Berjaya</strong>
+    <span>Anda berjaya logout dari Sistem Usahawan Pahang</span>
+  </div>
+</div>
+<?php unset($_SESSION['toast_logout']); endif; ?>
+
 <header>
   <img src="assets/img/jatapahang.png" alt="Jata Negeri Pahang" class="jata">
   <h1 class="title">Sistem Usahawan Pahang</h1>
@@ -1057,6 +1141,18 @@ footer .copyright {
     </div>
   </div>
 </footer>
+
+<!-- ===== Toast Logout ===== -->
+<script>
+setTimeout(() => {
+  const toast = document.getElementById('logoutToast');
+  if (toast) {
+    toast.style.animation = "fadeOut 0.6s ease forwards";
+    setTimeout(() => toast.remove(), 600);
+  }
+}, 3000);
+</script>
+
 
 <script>
   function toggleMenu() {
