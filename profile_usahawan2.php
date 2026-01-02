@@ -279,10 +279,10 @@ field("Emel","email",$u['email'],$editMode);
 <div class="actions">
 <?php if($editMode): ?>
   <button class="btn primary" name="update_profile">Simpan</button>
-  <a href="profile_usahawan.php" class="btn secondary">Batal</a>
+  <a href="profile_usahawan2.php" class="btn secondary">Batal</a>
 
 <?php elseif($deleteMode): ?>
-  <a href="profile_usahawan.php" class="btn secondary">Batal</a>
+  <a href="profile_usahawan2.php" class="btn secondary">Batal</a>
 
 <?php else: ?>
   <?php if($can_edit): ?>

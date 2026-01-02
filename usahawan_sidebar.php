@@ -213,8 +213,8 @@ $is_usahawan = isset($_SESSION['usahawan_id']);
     </li>
 
     <li>
-      <a href="produk_saya.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'produk_saya.php' ? 'active' : '' ?>">
+      <a href="produk_usahawan.php"
+         class="<?= basename($_SERVER['PHP_SELF']) == 'produk_usahawan.php' ? 'active' : '' ?>">
         <i>📦</i> Produk
       </a>
     </li>
