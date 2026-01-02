@@ -206,8 +206,8 @@ $is_usahawan = isset($_SESSION['usahawan_id']);
     </li>
 
     <li>
-      <a href="profil_usahawan.php?id=<?= $_SESSION['usahawan_id'] ?>"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'profil_usahawan.php' ? 'active' : '' ?>">
+      <a href="profile_usahawan2.php?id=<?= $_SESSION['usahawan_id'] ?>"
+         class="<?= basename($_SERVER['PHP_SELF']) == 'profile_usahawan2.php' ? 'active' : '' ?>">
         <i>👤</i> Profil
       </a>
     </li>
