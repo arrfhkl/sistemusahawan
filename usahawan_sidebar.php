@@ -1,81 +1,134 @@
 <?php
-// ===============================
-// CHECK ROLE USAHAWAN
-// ===============================
-$is_usahawan = isset($_SESSION['usahawan_id']);
+/* =========================================
+                 USAHAWAN SIDEBAR 
+========================================= */
+
+if (empty($_SESSION['usahawan_id'])) {
+    return;
+}
+
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 
 <style>
-/* =================================================
-   USAHAWAN SIDEBAR – PREMIUM ANIMATED VERSION
-================================================= */
-
-/* ===== ROOT OFFSET ===== */
+/* ================= ROOT ================= */
 :root {
   --header-height: 90px;
   --sidebar-width: 260px;
+
+  /* TEMA ASAL */
+  --royal-dark: #001F3F;
+  --royal-mid: #003399;
+  --royal-bright: #0066FF;
+
+  --gold: #FFD700;
+
+  --text-light: #ffffff;
+  --text-muted: #dbe3ff;
 }
 
-/* ===== SIDEBAR BASE ===== */
+/* ================= TOGGLE BAR ================= */
+.usahawan-toggle-bar {
+  position: fixed;
+  top: calc(var(--header-height) + 16px);
+  left: 0;
+
+  height: 34px;
+  padding: 0 14px;
+
+  background: linear-gradient(
+    135deg,
+    var(--royal-dark),
+    var(--royal-mid)
+  );
+
+  color: var(--text-light);
+  border-radius: 0 18px 18px 0;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+
+  cursor: pointer;
+  z-index: 910;
+
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  transition: background .2s ease, padding .2s ease;
+}
+
+.usahawan-toggle-bar span {
+  color: var(--gold);
+}
+
+/* ================= SIDEBAR ================= */
 .usahawan-sidebar {
   position: fixed;
   top: var(--header-height);
   left: 0;
+
   width: var(--sidebar-width);
   height: calc(100vh - var(--header-height));
+
   background: linear-gradient(
     180deg,
-    #001F3F 0%,
-    #003399 35%,
-    #002855 100%
+    var(--royal-dark),
+    var(--royal-mid),
+    var(--royal-bright)
   );
-  padding: 22px 14px;
-  overflow-y: auto;
-  box-shadow: 6px 0 25px rgba(0,0,0,0.25);
+
+  padding: 20px 14px;
   z-index: 900;
 
-  /* animation */
+  box-shadow: 6px 0 20px rgba(0,0,0,0.35);
+
+  transform: translateX(-100%);
+  transition: transform .35s ease;
+
+  margin: 0 !important;
+}
+
+.usahawan-sidebar * {
+  margin-top: 0;
+}
+
+/* open */
+.usahawan-sidebar.open {
   transform: translateX(0);
-  animation: sidebarFadeIn 0.6s ease forwards;
 }
 
-/* ===== ENTRY ANIMATION ===== */
-@keyframes sidebarFadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+/* when sidebar open, toggle becomes icon only */
+.usahawan-sidebar.open ~ .usahawan-toggle-bar {
+  padding: 0 10px;
 }
 
-/* ===== BRAND ===== */
+.usahawan-sidebar.open ~ .usahawan-toggle-bar span {
+  display: none;
+}
+
+/* ================= BRAND ================= */
 .usahawan-sidebar .brand {
   text-align: center;
-  margin-bottom: 28px;
-  animation: glowPulse 3s ease-in-out infinite;
-}
-
-@keyframes glowPulse {
-  0%,100% { text-shadow: 0 0 0 rgba(255,215,0,0); }
-  50% { text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
 }
 
 .usahawan-sidebar .brand h3 {
+  color: var(--gold);
   font-size: 1.05rem;
-  font-weight: 700;
-  color: #ffd700;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
 }
 
 .usahawan-sidebar .brand span {
+  color: var(--text-muted);
   font-size: 0.85rem;
-  color: #dbe3ff;
 }
 
-/* ===== MENU ===== */
+/* ================= MENU ================= */
 .usahawan-menu {
   list-style: none;
   padding: 0;
@@ -90,100 +143,42 @@ $is_usahawan = isset($_SESSION['usahawan_id']);
   display: flex;
   align-items: center;
   gap: 12px;
+
   padding: 12px 14px;
   border-radius: 12px;
-  color: #ffffff;
+
+  color: var(--text-light);
   text-decoration: none;
+  font-size: 0.95rem;
   font-weight: 500;
-  background: rgba(255,255,255,0.06);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.35s cubic-bezier(.4,0,.2,1);
-}
 
-/* ===== HOVER SHINE EFFECT ===== */
-.usahawan-menu a::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255,255,255,0.35),
-    transparent
-  );
-  transition: left 0.5s ease;
-}
-
-.usahawan-menu a:hover::before {
-  left: 120%;
+  background: rgba(255,255,255,0.08);
+  transition: background .25s ease, transform .25s ease;
 }
 
 .usahawan-menu a:hover {
-  background: rgba(255,215,0,0.2);
-  transform: translateX(6px) scale(1.02);
+  background: rgba(255,215,0,0.22);
+  transform: translateX(6px);
 }
 
-/* ===== ACTIVE ===== */
 .usahawan-menu a.active {
-  background: linear-gradient(90deg, #ffd700, #ffb700);
-  color: #002855;
+  background: linear-gradient(90deg, #FFD700, #FFB700);
+  color: var(--royal-dark);
   font-weight: 700;
 }
 
-/* ===== ICON ===== */
-.usahawan-menu i {
-  font-size: 1.2rem;
-  width: 24px;
-  text-align: center;
-}
-
-/* ===== MOBILE TOGGLE ===== */
-.usahawan-toggle {
-  display: none;
-  position: fixed;
-  top: calc(var(--header-height) + 10px);
-  left: 15px;
-  z-index: 1200;
-  background: linear-gradient(135deg, #003399, #001F3F);
-  color: #fff;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 1rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-  cursor: pointer;
-  animation: bounceIn 0.8s ease;
-}
-
-@keyframes bounceIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  60% { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* ===== MOBILE MODE ===== */
+/* ================= MOBILE ================= */
 @media (max-width: 900px) {
-
   .usahawan-sidebar {
     transform: translateX(-100%);
   }
-
-  .usahawan-sidebar.show {
+  .usahawan-sidebar.open {
     transform: translateX(0);
-  }
-
-  .usahawan-toggle {
-    display: block;
   }
 }
 </style>
 
-<?php if ($is_usahawan): ?>
-<!-- ===== USAHAWAN SIDEBAR ===== -->
+<!-- ===== SIDEBAR ===== -->
 <aside class="usahawan-sidebar" id="usahawanSidebar">
 
   <div class="brand">
@@ -192,71 +187,30 @@ $is_usahawan = isset($_SESSION['usahawan_id']);
   </div>
 
   <ul class="usahawan-menu">
-
-    <li>
-      <a href="seller_dashboard.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'seller_dashboard.php' ? 'active' : '' ?>">
-        <i>🧭</i> Dashboard
-      </a>
-    </li>
-
-    <li>
-      <a href="profile_usahawan2.php?id=<?= $_SESSION['usahawan_id'] ?>"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'profile_usahawan2.php' ? 'active' : '' ?>">
-        <i>👤</i> Profil
-      </a>
-    </li>
-
-    <li>
-      <a href="produk_usahawan.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'produk_usahawan.php' ? 'active' : '' ?>">
-        <i>📦</i> Produk
-      </a>
-    </li>
-
-    <li>
-      <a href="servis_saya.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'servis_saya.php' ? 'active' : '' ?>">
-        <i>🛠️</i> Servis
-      </a>
-    </li>
-
-    <li>
-      <a href="pesanan_masuk.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'pesanan_masuk.php' ? 'active' : '' ?>">
-        <i>🚚</i> Pesanan
-      </a>
-    </li>
-
-    <li>
-      <a href="jualan.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'jualan.php' ? 'active' : '' ?>">
-        <i>💰</i> Jualan
-      </a>
-    </li>
-
-    <li>
-      <a href="laporan.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'laporan.php' ? 'active' : '' ?>">
-        <i>📊</i> Laporan
-      </a>
-    </li>
-
-    <li>
-      <a href="tetapan_perniagaan.php"
-         class="<?= basename($_SERVER['PHP_SELF']) == 'tetapan_perniagaan.php' ? 'active' : '' ?>">
-        <i>⚙️</i> Tetapan
-      </a>
-    </li>
-
+    <li><a href="seller_dashboard.php" class="<?= $current_page=='seller_dashboard.php'?'active':'' ?>">🧭 Dashboard</a></li>
+    <li><a href="profile_usahawan2.php" class="<?= $current_page=='profile_usahawan2.php'?'active':'' ?>">👤 Profil</a></li>
+    <li><a href="produk_usahawan.php" class="<?= $current_page=='produk_usahawan.php'?'active':'' ?>">📦 Produk</a></li>
+    <li><a href="servis_saya.php" class="<?= $current_page=='servis_saya.php'?'active':'' ?>">🛠️ Servis</a></li>
+    <li><a href="pesanan_masuk.php" class="<?= $current_page=='pesanan_masuk.php'?'active':'' ?>">🚚 Pesanan</a></li>
+    <li><a href="jualan.php" class="<?= $current_page=='jualan.php'?'active':'' ?>">💰 Jualan</a></li>
+    <li><a href="laporan.php" class="<?= $current_page=='laporan.php'?'active':'' ?>">📊 Laporan</a></li>
+    <li><a href="tetapan_perniagaan.php" class="<?= $current_page=='tetapan_perniagaan.php'?'active':'' ?>">⚙️ Tetapan</a></li>
   </ul>
+
 </aside>
 
-<button class="usahawan-toggle" onclick="toggleUsahawanSidebar()">☰ Menu</button>
-<?php endif; ?>
+<!-- ===== TOGGLE BAR ===== -->
+<div class="usahawan-toggle-bar" onclick="toggleUsahawanSidebar()">
+  <i id="usahawanToggleIcon">☰</i>
+  <span>USAHAWAN</span>
+</div>
 
 <script>
 function toggleUsahawanSidebar() {
-  document.getElementById("usahawanSidebar")?.classList.toggle("show");
+  const sidebar = document.getElementById("usahawanSidebar");
+  const icon = document.getElementById("usahawanToggleIcon");
+
+  sidebar.classList.toggle("open");
+  icon.textContent = sidebar.classList.contains("open") ? "◂" : "☰";
 }
 </script>

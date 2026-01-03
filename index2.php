@@ -1,0 +1,1067 @@
+<?php
+include "connection.php";
+include 'header.php';
+
+if ($conn->connect_error) {
+  die("Sambungan gagal: " . $conn->connect_error);
+}
+
+// 🔹 Semak sama ada user sudah login
+$is_logged_in = isset($_SESSION['usahawan_id']);
+$user_id = $is_logged_in ? $_SESSION['usahawan_id'] : null;
+
+// ====== 1. Jumlah Usahawan ======
+$usahawan = $conn->query("SELECT COUNT(*) AS total FROM usahawan");
+$total_usahawan = ($usahawan->num_rows > 0) ? $usahawan->fetch_assoc()['total'] : 0;
+
+// ====== 2. Jumlah Geran Selesai (Semua Jenis Permohonan) ======
+$geran_selesai = $conn->query("
+    SELECT COUNT(*) AS total FROM (
+        SELECT id FROM permohonan_ipush WHERE status = 'selesai'
+        UNION ALL
+        SELECT id FROM permohonan_agro WHERE status = 'selesai'
+        UNION ALL
+        SELECT id FROM permohonan_itekad WHERE status = 'selesai'
+    ) AS semua
+");
+$total_geran_selesai = ($geran_selesai->num_rows > 0) ? $geran_selesai->fetch_assoc()['total'] : 0;
+
+// ====== 3. Nilai Geran Selesai (Jumlah Keseluruhan RM) ======
+$nilai_geran = $conn->query("
+    SELECT SUM(jumlah) AS jumlah FROM (
+        SELECT jumlah FROM permohonan_ipush WHERE status = 'selesai'
+        UNION ALL
+        SELECT jumlah FROM permohonan_agro WHERE status = 'selesai'
+        UNION ALL
+        SELECT jumlah FROM permohonan_itekad WHERE status = 'selesai'
+    ) AS semua
+");
+$total_nilai_geran = ($nilai_geran->num_rows > 0)
+    ? number_format($nilai_geran->fetch_assoc()['jumlah'] ?? 0, 2)
+    : "0.00";
+
+
+// ====== 4. Jumlah Pelawat ======
+$conn->query("CREATE TABLE IF NOT EXISTS statistik_pelawat (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  page VARCHAR(100),
+  jumlah INT DEFAULT 0
+)");
+$page = "index";
+$check = $conn->query("SELECT jumlah FROM statistik_pelawat WHERE page='$page'");
+if ($check->num_rows > 0) {
+  $conn->query("UPDATE statistik_pelawat SET jumlah = jumlah + 1 WHERE page='$page'");
+} else {
+  $conn->query("INSERT INTO statistik_pelawat (page, jumlah) VALUES ('$page', 1)");
+}
+$pelawat = $conn->query("SELECT jumlah FROM statistik_pelawat WHERE page='$page'");
+$total_pelawat = ($pelawat->num_rows > 0) ? $pelawat->fetch_assoc()['jumlah'] : 1;
+
+// ====== Ambil berita dari database ======
+$sql = "SELECT * FROM berita ORDER BY tarikh DESC";
+$result = $conn->query($sql);
+$berita_list = [];
+if ($result->num_rows > 0) {
+  while ($row = $result->fetch_assoc()) {
+    $berita_list[] = $row;
+  }
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Usahawan Pahang</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
+
+  <style>
+
+  /* ===== PREMIUM TOAST ===== */
+.toast {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  min-width: 320px;
+  max-width: 420px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-family: 'Poppins', sans-serif;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  animation: slideIn 0.6s ease forwards;
+  z-index: 9999;
+}
+
+/* Success Theme */
+.toast-success {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 51, 102, 0.95),
+    rgba(0, 102, 204, 0.95)
+  );
+  color: #fff;
+}
+
+/* Icon */
+.toast-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Text */
+.toast-content strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.toast-content span {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+/*end toast*/
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== Background Premium dengan Watermark Jata Pahang ===== */
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #fdfdfd 0%, #f8f8f6 40%, #ede8dc 100%);
+  background-attachment: fixed;
+  color: #111;
+  overflow-x: hidden;
+  position: relative;
+  margin-top: 90px;
+}
+
+/* ✨ Cahaya lembut keemasan & hitam bergerak */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 25% 30%, rgba(0, 0, 0, 0.05), transparent 70%),
+    radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.15), transparent 70%);
+  background-repeat: no-repeat;
+  animation: royalWave 25s ease-in-out infinite alternate;
+  z-index: -3;
+  mix-blend-mode: overlay;
+}
+
+/* 🏛️ Multiple Watermark Jata Pahang - lebih jelas */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-color: transparent;
+  background-image: url("assets/img/jatapahang.png");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+  background-position: center;
+  opacity: 0.15; /* 🔆 Naikkan dari 0.07 → 0.15 supaya lebih nampak */
+  filter: grayscale(5%) brightness(1.3) contrast(1.1);
+  animation: watermarkFloat 40s linear infinite;
+  z-index: -2;
+}
+
+/* 🌫️ Animasi lembut watermark */
+@keyframes watermarkFloat {
+  0% { background-position: 0 0; opacity: 0.14; }
+  50% { background-position: 80px 60px; opacity: 0.18; }
+  100% { background-position: 0 0; opacity: 0.14; }
+}
+
+/* 🪄 Efek cahaya bergerak lembut */
+@keyframes royalWave {
+  0% { background-position: 0% 50%, 100% 50%; transform: scale(1); }
+  100% { background-position: 100% 50%, 0% 50%; transform: scale(1.05); }
+}
+
+/* ===== Kad (card) Optional ===== */
+.card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 25px;
+  backdrop-filter: blur(8px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== Container & Cards (Parallelogram Metallic Style) ===== */
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* Parallelogram metallic cards */
+.card {
+  position: relative;
+  background: linear-gradient(
+      135deg,
+      #001F3F 0%,
+      #003399 15%,
+      #0066FF 40%,
+      #99CCFF 60%,
+      #003399 80%,
+      #001F3F 100%
+  );
+  background-size: 200% 200%;
+  animation: metalshine 6s linear infinite;
+  padding: 40px 25px;
+  margin: 30px auto;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  text-align: center;
+  color: #fff;
+  overflow: hidden;
+  transform: skew(-10deg);
+  transition: all 0.4s ease;
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Shine animation for the metallic gradient */
+@keyframes metalshine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Inner text alignment fix (straight text inside skewed box) */
+.card > * {
+  transform: skew(10deg);
+  position: relative;
+  z-index: 2;
+}
+
+/* Optional shine overlay for more metallic effect */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      120deg,
+      rgba(255,255,255,0.2) 0%,
+      rgba(255,255,255,0) 60%
+  );
+  transform: translateX(-100%) skew(10deg);
+  transition: transform 0.6s ease;
+  z-index: 1;
+}
+
+.card:hover::after {
+  transform: translateX(100%) skew(10deg);
+}
+
+.card:hover {
+  transform: skew(-10deg) scale(1.03);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.3), 0 0 15px rgba(0,128,255,0.4);
+}
+
+
+/* ===== Stylish Parallelogram Slideshow ===== */
+.slideshow-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  margin: 25px auto;
+  transform: skew(-10deg);
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  background: linear-gradient(
+      135deg,
+      #001F3F 0%,
+      #003399 15%,
+      #0066FF 40%,
+      #99CCFF 60%,
+      #003399 80%,
+      #001F3F 100%
+  );
+  animation: metalshine 6s linear infinite;
+}
+
+.slides {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: skew(10deg);
+  animation: fade 1.2s ease-in-out;
+}
+
+@keyframes fade {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+.dots {
+  text-align: center;
+  position: absolute;
+  bottom: 15px;
+  width: 100%;
+  transform: skew(10deg);
+}
+
+.dot {
+  cursor: pointer;
+  height: 12px; width: 12px;
+  margin: 0 4px;
+  background: #ccc;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background 0.4s ease;
+}
+.dot.active, .dot:hover { background: #ffd700; }
+
+/* ===== Parallelogram Function Buttons ===== */
+.function-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+/* ===== Parallelogram Function Buttons with Image Background ===== */
+.function-btn {
+  position: relative;
+  background: url('assets/img/fbbg.png') center/cover no-repeat;
+  color: #FFD700; /* gold for contrast */
+  text-align: center;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 25px 15px;
+  border-radius: 12px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transform: skew(-15deg);
+  transition: all 0.4s ease;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.function-btn i,
+.function-btn span {
+  transform: skew(15deg);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.function-btn i {
+  font-size: 2.3rem;
+  margin-bottom: 10px;
+}
+
+.function-btn:hover {
+  transform: skew(-15deg) scale(1.05);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.3), 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.function-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.15);
+  transform: translateX(-100%) skew(15deg);
+  transition: transform 0.5s ease;
+}
+
+.function-btn:hover::after {
+  transform: translateX(100%) skew(15deg);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 992px) {
+  .slideshow-container { height: 300px; }
+  .function-btn { min-height: 130px; }
+  .function-btn i { font-size: 2rem; }
+}
+
+@media (max-width: 768px) {
+  .menu-toggle { display: block; }
+  nav {
+    display: none;
+    flex-direction: column;
+    background: linear-gradient(
+      135deg,
+      #001F3F 0%,
+      #003399 15%,
+      #0066FF 40%,
+      #99CCFF 60%,
+      #003399 80%,
+      #001F3F 100%
+  );
+  animation: metalshine 6s linear infinite;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 12px;
+    width: 100%;
+  }
+  nav.show { display: flex; }
+  nav a { text-align: center; padding: 10px; font-size: 1rem; }
+  .title { font-size: 1.2rem; }
+  .slideshow-container { height: 220px; }
+  .function-grid { gap: 18px; }
+  .function-btn { min-height: 110px; padding: 18px; }
+  .function-btn i { font-size: 1.8rem; }
+  .function-btn span { font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+  .slideshow-container { height: 180px; }
+  .function-btn { padding: 15px; }
+}
+
+/* ====== SECTION BERITA MODERN & FORMAL ====== */
+.berita-section {
+    max-width: 1200px;
+    margin: 80px auto;
+    padding: 0 20px;
+}
+
+.berita-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    border-left: 5px solid #003399;
+    padding-left: 20px;
+}
+
+.berita-header h2 {
+    font-size: 2rem;
+    color: #001F3F;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.berita-slider-container {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+}
+
+.berita-wrapper {
+    display: flex;
+    gap: 25px;
+    transition: transform 0.5s ease;
+}
+
+/* Card Style Baru (Formal) */
+.berita-card {
+    min-width: calc(33.333% - 17px);
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.berita-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    border-color: #003399;
+}
+
+.card-img-container {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+}
+
+.card-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.berita-card:hover .card-img-container img {
+    transform: scale(1.1);
+}
+
+.card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.card-date {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #001F3F;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-excerpt {
+    font-size: 0.9rem;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.read-more-btn {
+    margin-top: auto;
+    color: #003399;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.3s;
+}
+
+.berita-card:hover .read-more-btn {
+    gap: 12px;
+}
+
+/* Tablet & Mobile */
+@media (max-width: 992px) {
+    .berita-card { min-width: calc(50% - 13px); }
+}
+
+@media (max-width: 600px) {
+    .berita-card { min-width: 100%; }
+    .berita-header h2 { font-size: 1.5rem; }
+}
+
+
+/* ===== LED Ticker Statistik Section ===== */
+.led-ticker {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  background: linear-gradient(90deg, #001F3F, #003399, #0066FF, #001F3F);
+  color: #fff;
+  padding: 12px 0;
+  font-family: 'Poppins', sans-serif;
+  border-top: 3px solid #FFD700;
+  border-bottom: 3px solid #FFD700;
+  box-shadow: inset 0 0 10px #000, 0 -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.led-track {
+  display: flex;
+  width: max-content;
+  animation: ledScroll 30s linear infinite;
+}
+
+.led-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  padding: 0 40px;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 0 0 6px #68665cff, 0 0 12px #00FFFF;
+  letter-spacing: 0.5px;
+  transition: transform 0.3s;
+}
+
+.led-item i {
+  color: #000000ff;
+  font-size: 1.3rem;
+}
+
+.led-item span {
+  font-weight: 700;
+  color: #00FFFF;
+}
+
+@keyframes ledScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .led-item {
+    font-size: 0.9rem;
+    padding: 0 25px;
+  }
+  .led-item i {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .led-item {
+    font-size: 0.8rem;
+    padding: 0 15px;
+  }
+}
+
+/* ===== Berita Card Interaksi Premium ===== */
+
+/* Hover → besar sikit */
+.berita-card {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  cursor: pointer;
+}
+
+.berita-card:hover {
+  transform: scale(1.05);
+  z-index: 5;
+}
+
+/* Click → naik ke atas (active) */
+.berita-card.active {
+  transform: translateY(-14px) scale(1.08);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+  z-index: 20;
+}
+
+.berita-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  background: linear-gradient(90deg, #001F3F, #003399, #0066FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+
+.berita-sub {
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 6px;
+}
+
+.berita-card:active {
+  transform: scale(0.97);
+}
+
+/* ===== Confirmation Modal ===== */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.confirm-box {
+  background: #fff;
+  padding: 30px 35px;
+  border-radius: 14px;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  animation: popupScale 0.35s ease;
+}
+
+.confirm-box h3 {
+  color: #001F3F;
+  margin-bottom: 12px;
+}
+
+.confirm-box p {
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.confirm-actions {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.confirm-actions button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#confirmYes {
+  background: #003399;
+  color: #fff;
+}
+
+#confirmNo {
+  background: #ddd;
+  color: #333;
+}
+
+@keyframes popupScale {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+  </style>
+</head>
+<body>
+
+<?php if (!empty($_SESSION['toast_logout'])): ?>
+<div class="toast toast-success" id="logoutToast">
+  <div class="toast-icon">✓</div>
+  <div class="toast-content">
+    <strong>Log Keluar Berjaya</strong>
+    <span>Anda berjaya logout dari Sistem Usahawan Pahang</span>
+  </div>
+</div>
+<?php unset($_SESSION['toast_logout']); endif; ?>
+
+<div class="container">
+  <div class="card">
+    <h2 style="color: white"><strong>Selamat Datang</strong></h2>
+    <p style="color: white"><strong>Sistem ini membolehkan pendaftaran dan carian maklumat usahawan di Pahang.</strong></p>
+  </div>
+
+  <!-- Slideshow -->
+  <div class="slideshow-container">
+    <img class="slides" src="assets/img/slide1.jpg" alt="Slide 1">
+    <img class="slides" src="assets/img/slide2.png" alt="Slide 2">
+    <img class="slides" src="assets/img/slide3.jpeg" alt="Slide 3">
+
+    <div class="dots">
+      <span class="dot" onclick="currentSlide(1)"></span>
+      <span class="dot" onclick="currentSlide(2)"></span>
+      <span class="dot" onclick="currentSlide(3)"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Function Buttons -->
+<div class="container">
+  <div class="function-grid">
+    <a href="login.php" class="function-btn" style="color:white;">
+      <i class="fas fa-user-plus" style="color:black;"></i>
+      <span>Profil Usahawan</span>
+    </a>
+    <a href="latihan_panduan.php" class="function-btn" style="color:white;">
+      <i class="fas fa-chalkboard-teacher" style="color:black;"></i>
+      <span>Latihan & Panduan</span>
+    </a>
+    <a href="akses-geran.php" class="function-btn" style="color:white;">
+      <i class="fas fa-hand-holding-usd" style="color:black;"></i>
+      <span>Akses Geran</span>
+    </a>
+    <a href="ruang_fizikal.php" class="function-btn" style="color:white;">
+      <i class="fas fa-building" style="color:black;"></i>
+      <span>Ruang Fizikal</span>
+    </a>
+    <a href="promosi-pasaran.php" class="function-btn" style="color:white;">
+      <i class="fas fa-bullhorn" style="color:black;"></i>
+      <span>Promosi & Pasaran</span>
+    </a>
+    <a href="komuniti.php" class="function-btn" style="color:white;">
+      <i class="fas fa-users" style="color:black;"></i>
+      <span>Komuniti & Jejari</span>
+    </a>
+    <a href="admin_dashboard.php" class="function-btn" style="color:white;">
+      <i class="fas fa-chart-line" style="color:black;"></i>
+      <span>Dashboard</span>
+    </a>
+     </a>
+    <a href="pilih_kategori_servis.php" class="function-btn" style="color:white;">
+      <i class="fas fa-users" style="color:black;"></i>
+      <span>Servis Perniagaan</span>
+    </a>
+    <a href="laporan_perniagaan.php" class="function-btn" style="color:white;">
+      <i class="fas fa-users" style="color:black;"></i>
+      <span>Laporan Perniagaan</span>
+    </a>
+  </div>
+</div>
+
+
+<!-- ===== Berita Section ===== -->
+<section class="berita-section">
+  <div class="berita-header">
+    <div>
+      <h2 class="berita-title">Berita & Hebahan Rasmi</h2>
+      <p class="berita-sub">Maklumat terkini dan pengumuman rasmi Kerajaan Negeri Pahang</p>
+    </div>
+  </div>
+    
+    <div class="berita-slider-container">
+        <div class="berita-wrapper" id="beritaWrapper">
+            <?php foreach ($berita_list as $berita): ?>
+                <a href="<?= htmlspecialchars($berita['pautan']) ?>"
+                class="berita-card confirm-newtab">
+
+                    <div class="card-img-container">
+                        <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="Berita">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-date">
+                            <i class="far fa-calendar-alt"></i> 
+                            <?= date('d F Y', strtotime($berita['tarikh'])) ?>
+                        </div>
+                        <h3 class="card-title"><?= htmlspecialchars($berita['tajuk']) ?></h3>
+                        <p class="card-excerpt">
+                            <?= strip_tags($berita['kandungan']) ?>
+                        </p>
+                        <div class="read-more-btn">
+                            Baca Lanjut <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- ===== Kisah Kejayaan Usahawan ===== -->
+
+<!-- ===== Bahagian Statistik Sistem(bilangan usahawan, jumlah program dianjurkan, jumlah geran disalurkan) ===== -->
+ <!-- ===== Statistik Section ===== -->
+<!-- ===== Statistik LED Ticker Section ===== -->
+<section class="led-ticker">
+  <div class="led-track">
+    <div class="led-item"><i class="fas fa-users"></i> Usahawan Berdaftar: <span><?= $total_usahawan ?></span></div>
+    <div class="led-item"><i class="fas fa-hand-holding-usd"></i> Geran Diagihkan: <span><?= $total_geran_selesai ?></span></div>
+    <div class="led-item"><i class="fas fa-coins"></i> Nilai Geran Diagihkan: <span>RM <?= $total_nilai_geran ?></span></div>
+    <div class="led-item"><i class="fas fa-chart-line"></i> Jumlah Pelawat: <span><?= $total_pelawat ?></span></div>
+
+    <!-- Duplicate content for smooth infinite loop -->
+    <div class="led-item"><i class="fas fa-users"></i> Usahawan Berdaftar: <span><?= $total_usahawan ?></span></div>
+    <div class="led-item"><i class="fas fa-hand-holding-usd"></i> Geran Diagihkan: <span><?= $total_geran_selesai ?></span></div>
+    <div class="led-item"><i class="fas fa-coins"></i> Nilai Geran Diagihkan: <span>RM <?= $total_nilai_geran ?></span></div>
+    <div class="led-item"><i class="fas fa-chart-line"></i> Jumlah Pelawat: <span><?= $total_pelawat ?></span></div>
+  </div>
+</section>
+
+<!-- ===== Modal Confirmation ===== -->
+<div id="confirmModal" class="confirm-overlay">
+  <div class="confirm-box">
+    <h3>Buka Pautan Baharu?</h3>
+    <p>Adakah anda ingin membuka berita ini dalam tab baharu?</p>
+
+    <div class="confirm-actions">
+      <button id="confirmYes">Buka Tab Baharu</button>
+      <button id="confirmNo">Batal</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== Peta lokasi ===== -->
+
+<!-- ===== Toast Logout ===== -->
+<script>
+setTimeout(() => {
+  const toast = document.getElementById('logoutToast');
+  if (toast) {
+    toast.style.animation = "fadeOut 0.6s ease forwards";
+    setTimeout(() => toast.remove(), 600);
+  }
+}, 3000);
+</script>
+
+
+<script>
+  function toggleMenu() {
+    document.getElementById('navMenu').classList.toggle('show');
+  }
+
+  let slideIndex = 0;
+  showSlides();
+
+  function showSlides() {
+    let slides = document.getElementsByClassName("slides");
+    let dots = document.getElementsByClassName("dot");
+    for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
+    slideIndex++;
+    if (slideIndex > slides.length) { slideIndex = 1 }
+    for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
+    slides[slideIndex - 1].style.display = "block";
+    dots[slideIndex - 1].className += " active";
+    setTimeout(showSlides, 5000);
+  }
+
+  function currentSlide(n) {
+    slideIndex = n - 1;
+    showSlides();
+  }
+</script>
+
+<script>
+const beritaWrapper = document.getElementById('beritaWrapper');
+let isPaused = false;
+let scrollPos = 0;
+
+// Gandakan kandungan untuk infinite loop
+const originalCards = [...beritaWrapper.children];
+originalCards.forEach(card => {
+  const clone = card.cloneNode(true);
+  beritaWrapper.appendChild(clone);
+});
+
+// Kira lebar satu pusingan
+function getTotalWidth() {
+  return originalCards.reduce((total, card) => {
+    return total + card.offsetWidth + 25; // 25 = gap
+  }, 0);
+}
+
+let totalWidth = getTotalWidth();
+
+function animate() {
+  if (!isPaused) {
+    scrollPos += 0.6;
+
+    // bila sampai hujung clone, rewind tanpa rasa lompat
+    if (scrollPos >= totalWidth) {
+      scrollPos -= totalWidth;
+    }
+
+    beritaWrapper.style.transform = `translateX(${-scrollPos}px)`;
+  }
+  requestAnimationFrame(animate);
+}
+
+
+// Hover → pause
+beritaWrapper.addEventListener('mouseenter', () => isPaused = true);
+beritaWrapper.addEventListener('mouseleave', () => isPaused = false);
+
+// Recalculate bila resize (mobile fix)
+window.addEventListener('resize', () => {
+  totalWidth = getTotalWidth();
+});
+
+// Start animation
+animate();
+</script>
+
+
+<script>
+  // Modal Confirmation
+let targetLink = null;
+let activeCard = null;
+
+document.querySelectorAll('.confirm-newtab').forEach((card, index) => {
+  card.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    // 1. Pause slider
+    isPaused = true;
+
+    // 2. Remove active dari semua card
+    document.querySelectorAll('.berita-card').forEach(c => c.classList.remove('active'));
+
+    // 3. Set active pada card diklik
+    this.classList.add('active');
+    activeCard = this;
+    targetLink = this.href;
+
+    // 4. Fokuskan card ke tengah slider
+    const cardOffset = this.offsetLeft;
+    const cardWidth = this.offsetWidth;
+    const containerWidth = document.querySelector('.berita-slider-container').offsetWidth;
+
+    scrollPos = cardOffset - (containerWidth / 2) + (cardWidth / 2);
+    beritaWrapper.style.transform = `translateX(${-scrollPos}px)`;
+
+    // 5. Papar modal
+    document.getElementById('confirmModal').style.display = 'flex';
+  });
+});
+
+document.getElementById('confirmYes').onclick = () => {
+  if (targetLink) {
+    window.open(targetLink, '_blank');
+  }
+  closeConfirm();
+};
+
+document.getElementById('confirmNo').onclick = closeConfirm;
+
+function closeConfirm() {
+  document.getElementById('confirmModal').style.display = 'none';
+  targetLink = null;
+
+  if (activeCard) activeCard.classList.remove('active');
+  isPaused = false;
+}
+</script>
+
+
+<?php
+    include 'footer.php';
+?>
+
+
+
+</body>
+</html>

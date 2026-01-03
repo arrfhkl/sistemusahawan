@@ -1,6 +1,6 @@
 <?php
 include "connection.php";
-include "usahawan_sidebar.php";
+include 'header.php';
 
 if (!isset($_SESSION['usahawan_id'])) {
     header("Location: index.php");
