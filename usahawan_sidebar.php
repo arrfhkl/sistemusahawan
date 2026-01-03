@@ -1,10 +1,5 @@
 <?php
 // ===============================
-// GLOBAL HEADER (USER + SELLER)
-// ===============================
-include "header.php";
-
-// ===============================
 // CHECK ROLE USAHAWAN
 // ===============================
 $is_usahawan = isset($_SESSION['usahawan_id']);
