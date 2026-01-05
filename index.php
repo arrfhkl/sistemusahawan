@@ -82,80 +82,6 @@ if ($result->num_rows > 0) {
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
 
   <style>
-
-  /* ===== PREMIUM TOAST ===== */
-.toast {
-  position: fixed;
-  top: 30px;
-  right: 30px;
-  min-width: 320px;
-  max-width: 420px;
-  padding: 16px 20px;
-  border-radius: 14px;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  font-family: 'Poppins', sans-serif;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-  animation: slideIn 0.6s ease forwards;
-  z-index: 9999;
-}
-
-/* Success Theme */
-.toast-success {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 51, 102, 0.95),
-    rgba(0, 102, 204, 0.95)
-  );
-  color: #fff;
-}
-
-/* Icon */
-.toast-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-/* Text */
-.toast-content strong {
-  display: block;
-  font-size: 15px;
-  margin-bottom: 2px;
-}
-
-.toast-content span {
-  font-size: 13px;
-  opacity: 0.9;
-}
-
-/* Animations */
-@keyframes slideIn {
-  from {
-    transform: translateX(40px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  to {
-    opacity: 0;
-    transform: translateX(40px);
-  }
-}
-/*end toast*/
     * {
   margin: 0;
   padding: 0;
@@ -649,144 +575,122 @@ footer .copyright {
   .function-btn { padding: 15px; }
 }
 
-/* ====== SECTION BERITA MODERN & FORMAL ====== */
+/* ====== Struktur Umum ====== */
 .berita-section {
-    max-width: 1200px;
-    margin: 80px auto;
-    padding: 0 20px;
+  max-width: 1100px;
+  margin: 80px auto;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+  text-align: center;
+}
+.headline-utama h1 {
+  font-size: 1.8rem;
+  color: #003366;
+  margin-bottom: 5px;
+}
+.headline-sub {
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 30px;
 }
 
-.berita-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 40px;
-    border-left: 5px solid #003399;
-    padding-left: 20px;
+/* ====== Paparan Biasa ====== */
+.berita-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
 }
-
-.berita-header h2 {
-    font-size: 2rem;
-    color: #001F3F;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.berita-slider-container {
-    width: 100%;
-    overflow: hidden;
-    padding: 20px 0;
-}
-
-.berita-wrapper {
-    display: flex;
-    gap: 25px;
-    transition: transform 0.5s ease;
-}
-
-/* Card Style Baru (Formal) */
 .berita-card {
-    min-width: calc(33.333% - 17px);
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    border: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    color: inherit;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
-
 .berita-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-    border-color: #003399;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+.berita-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+.berita-content {
+  padding: 15px;
+  text-align: left;
+}
+.berita-content h3 {
+  color: #003366;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+.berita-content .tarikh {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 8px;
+}
+.berita-content p {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.5;
+}
+.baca-lanjut {
+  display: inline-block;
+  margin-top: 10px;
+  color: #0056b3;
+  font-weight: 600;
+  text-decoration: none;
+}
+.baca-lanjut:hover {
+  color: #002b5c;
 }
 
-.card-img-container {
-    position: relative;
-    width: 100%;
-    height: 220px;
-    overflow: hidden;
+/* ====== 3D SLIDER DESIGN ====== */
+.berita-slider {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  perspective: 1200px;
+  margin-top: 30px;
+}
+.berita-slider .berita-card {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-style: preserve-3d;
+  transform-origin: center;
+  width: 70%;
+  opacity: 0;
+  transition: all 1s ease;
+  border-radius: 15px;
+}
+.berita-slider .berita-card img {
+  height: 220px;
+  border-radius: 10px 10px 0 0;
+}
+.berita-slider .berita-card.active {
+  opacity: 1;
+  transform: translateX(-50%) rotateY(0deg) scale(1);
+  z-index: 2;
+}
+.berita-slider .berita-card.prev {
+  opacity: 0.5;
+  transform: translateX(-110%) rotateY(30deg) scale(0.9);
+  z-index: 1;
+}
+.berita-slider .berita-card.next {
+  opacity: 0.5;
+  transform: translateX(10%) rotateY(-30deg) scale(0.9);
+  z-index: 1;
 }
 
-.card-img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
+/* ====== Responsif ====== */
+@media (max-width: 768px) {
+  .berita-slider .berita-card {
+    width: 90%;
+  }
 }
-
-.berita-card:hover .card-img-container img {
-    transform: scale(1.1);
-}
-
-.card-content {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-}
-
-.card-date {
-    font-size: 0.8rem;
-    color: #666;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.card-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #001F3F;
-    margin-bottom: 12px;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.card-excerpt {
-    font-size: 0.9rem;
-    color: #444;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.read-more-btn {
-    margin-top: auto;
-    color: #003399;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: gap 0.3s;
-}
-
-.berita-card:hover .read-more-btn {
-    gap: 12px;
-}
-
-/* Tablet & Mobile */
-@media (max-width: 992px) {
-    .berita-card { min-width: calc(50% - 13px); }
-}
-
-@media (max-width: 600px) {
-    .berita-card { min-width: 100%; }
-    .berita-header h2 { font-size: 1.5rem; }
-}
-
 
 /* ===== LED Ticker Statistik Section ===== */
 .led-ticker {
@@ -854,124 +758,10 @@ footer .copyright {
   }
 }
 
-/* ===== Berita Card Interaksi Premium ===== */
-
-/* Hover → besar sikit */
-.berita-card {
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
-  cursor: pointer;
-}
-
-.berita-card:hover {
-  transform: scale(1.05);
-  z-index: 5;
-}
-
-/* Click → naik ke atas (active) */
-.berita-card.active {
-  transform: translateY(-14px) scale(1.08);
-  box-shadow: 0 20px 45px rgba(0,0,0,0.4);
-  z-index: 20;
-}
-
-.berita-title {
-  font-size: 2.2rem;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  background: linear-gradient(90deg, #001F3F, #003399, #0066FF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-transform: uppercase;
-}
-
-.berita-sub {
-  font-size: 0.95rem;
-  color: #555;
-  margin-top: 6px;
-}
-
-.berita-card:active {
-  transform: scale(0.97);
-}
-
-/* ===== Confirmation Modal ===== */
-.confirm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.confirm-box {
-  background: #fff;
-  padding: 30px 35px;
-  border-radius: 14px;
-  max-width: 420px;
-  text-align: center;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-  animation: popupScale 0.35s ease;
-}
-
-.confirm-box h3 {
-  color: #001F3F;
-  margin-bottom: 12px;
-}
-
-.confirm-box p {
-  color: #444;
-  font-size: 0.95rem;
-}
-
-.confirm-actions {
-  margin-top: 25px;
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
-
-.confirm-actions button {
-  padding: 10px 18px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-#confirmYes {
-  background: #003399;
-  color: #fff;
-}
-
-#confirmNo {
-  background: #ddd;
-  color: #333;
-}
-
-@keyframes popupScale {
-  from { transform: scale(0.85); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-
-
-
 
   </style>
 </head>
 <body>
-
-<?php if (!empty($_SESSION['toast_logout'])): ?>
-<div class="toast toast-success" id="logoutToast">
-  <div class="toast-icon">✓</div>
-  <div class="toast-content">
-    <strong>Log Keluar Berjaya</strong>
-    <span>Anda berjaya logout dari Sistem Usahawan Pahang</span>
-  </div>
-</div>
-<?php unset($_SESSION['toast_logout']); endif; ?>
 
 <header>
   <img src="assets/img/jatapahang.png" alt="Jata Negeri Pahang" class="jata">
@@ -1057,39 +847,38 @@ footer .copyright {
 
 <!-- ===== Berita Section ===== -->
 <section class="berita-section">
-  <div class="berita-header">
-    <div>
-      <h2 class="berita-title">Berita & Hebahan Rasmi</h2>
-      <p class="berita-sub">Maklumat terkini dan pengumuman rasmi Kerajaan Negeri Pahang</p>
-    </div>
-  </div>
-    
-    <div class="berita-slider-container">
-        <div class="berita-wrapper" id="beritaWrapper">
-            <?php foreach ($berita_list as $berita): ?>
-                <a href="<?= htmlspecialchars($berita['pautan']) ?>"
-                class="berita-card confirm-newtab">
 
-                    <div class="card-img-container">
-                        <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="Berita">
-                    </div>
-                    <div class="card-content">
-                        <div class="card-date">
-                            <i class="far fa-calendar-alt"></i> 
-                            <?= date('d F Y', strtotime($berita['tarikh'])) ?>
-                        </div>
-                        <h3 class="card-title"><?= htmlspecialchars($berita['tajuk']) ?></h3>
-                        <p class="card-excerpt">
-                            <?= strip_tags($berita['kandungan']) ?>
-                        </p>
-                        <div class="read-more-btn">
-                            Baca Lanjut <i class="fas fa-chevron-right"></i>
-                        </div>
-                    </div>
-                </a>
-            <?php endforeach; ?>
-        </div>
+  <?php if (count($berita_list) > 3): ?>
+    <!-- ====== 3D SLIDER ====== -->
+    <div class="berita-slider">
+      <?php foreach ($berita_list as $index => $berita): ?>
+        <article class="berita-card" style="--i:<?= $index ?>">
+          <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="<?= htmlspecialchars($berita['tajuk']) ?>">
+          <div class="berita-content">
+            <h3><?= htmlspecialchars($berita['tajuk']) ?></h3>
+            <p class="tarikh"><?= date('d F Y', strtotime($berita['tarikh'])) ?></p>
+            <p><?= htmlspecialchars($berita['kandungan']) ?></p>
+            <a href="<?= htmlspecialchars($berita['pautan']) ?>" class="baca-lanjut">Baca Lanjut →</a>
+          </div>
+        </article>
+      <?php endforeach; ?>
     </div>
+  <?php else: ?>
+    <!-- ====== PAPARAN BIASA ====== -->
+    <div class="berita-container">
+      <?php foreach ($berita_list as $berita): ?>
+        <article class="berita-card">
+          <img src="<?= htmlspecialchars($berita['imej']) ?>" alt="<?= htmlspecialchars($berita['tajuk']) ?>">
+          <div class="berita-content">
+            <h3><?= htmlspecialchars($berita['tajuk']) ?></h3>
+            <p class="tarikh"><?= date('d F Y', strtotime($berita['tarikh'])) ?></p>
+            <p><?= htmlspecialchars($berita['kandungan']) ?></p>
+            <a href="<?= htmlspecialchars($berita['pautan']) ?>" class="baca-lanjut">Baca Lanjut →</a>
+          </div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
 </section>
 
 <!-- ===== Kisah Kejayaan Usahawan ===== -->
@@ -1112,20 +901,6 @@ footer .copyright {
   </div>
 </section>
 
-<!-- ===== Modal Confirmation ===== -->
-<div id="confirmModal" class="confirm-overlay">
-  <div class="confirm-box">
-    <h3>Buka Pautan Baharu?</h3>
-    <p>Adakah anda ingin membuka berita ini dalam tab baharu?</p>
-
-    <div class="confirm-actions">
-      <button id="confirmYes">Buka Tab Baharu</button>
-      <button id="confirmNo">Batal</button>
-    </div>
-  </div>
-</div>
-
-
 <!-- ===== Peta lokasi ===== -->
 
 <!-- ===== Footer Rasmi ===== -->
@@ -1141,18 +916,6 @@ footer .copyright {
     </div>
   </div>
 </footer>
-
-<!-- ===== Toast Logout ===== -->
-<script>
-setTimeout(() => {
-  const toast = document.getElementById('logoutToast');
-  if (toast) {
-    toast.style.animation = "fadeOut 0.6s ease forwards";
-    setTimeout(() => toast.remove(), 600);
-  }
-}, 3000);
-</script>
-
 
 <script>
   function toggleMenu() {
@@ -1181,110 +944,24 @@ setTimeout(() => {
 </script>
 
 <script>
-const beritaWrapper = document.getElementById('beritaWrapper');
-let isPaused = false;
-let scrollPos = 0;
-
-// Gandakan kandungan untuk infinite loop
-const originalCards = [...beritaWrapper.children];
-originalCards.forEach(card => {
-  const clone = card.cloneNode(true);
-  beritaWrapper.appendChild(clone);
-});
-
-// Kira lebar satu pusingan
-function getTotalWidth() {
-  return originalCards.reduce((total, card) => {
-    return total + card.offsetWidth + 25; // 25 = gap
-  }, 0);
-}
-
-let totalWidth = getTotalWidth();
-
-function animate() {
-  if (!isPaused) {
-    scrollPos += 0.6;
-
-    // bila sampai hujung clone, rewind tanpa rasa lompat
-    if (scrollPos >= totalWidth) {
-      scrollPos -= totalWidth;
-    }
-
-    beritaWrapper.style.transform = `translateX(${-scrollPos}px)`;
+let current = 0;
+const cards = document.querySelectorAll('.berita-slider .berita-card');
+if (cards.length > 0) {
+  function showSlide(index) {
+    cards.forEach((card, i) => {
+      card.classList.remove('active', 'prev', 'next');
+      if (i === index) card.classList.add('active');
+      else if (i === (index - 1 + cards.length) % cards.length) card.classList.add('prev');
+      else if (i === (index + 1) % cards.length) card.classList.add('next');
+    });
   }
-  requestAnimationFrame(animate);
-}
-
-
-// Hover → pause
-beritaWrapper.addEventListener('mouseenter', () => isPaused = true);
-beritaWrapper.addEventListener('mouseleave', () => isPaused = false);
-
-// Recalculate bila resize (mobile fix)
-window.addEventListener('resize', () => {
-  totalWidth = getTotalWidth();
-});
-
-// Start animation
-animate();
-</script>
-
-
-<script>
-  // Modal Confirmation
-let targetLink = null;
-let activeCard = null;
-
-document.querySelectorAll('.confirm-newtab').forEach((card, index) => {
-  card.addEventListener('click', function(e) {
-    e.preventDefault();
-
-    // 1. Pause slider
-    isPaused = true;
-
-    // 2. Remove active dari semua card
-    document.querySelectorAll('.berita-card').forEach(c => c.classList.remove('active'));
-
-    // 3. Set active pada card diklik
-    this.classList.add('active');
-    activeCard = this;
-    targetLink = this.href;
-
-    // 4. Fokuskan card ke tengah slider
-    const cardOffset = this.offsetLeft;
-    const cardWidth = this.offsetWidth;
-    const containerWidth = document.querySelector('.berita-slider-container').offsetWidth;
-
-    scrollPos = cardOffset - (containerWidth / 2) + (cardWidth / 2);
-    beritaWrapper.style.transform = `translateX(${-scrollPos}px)`;
-
-    // 5. Papar modal
-    document.getElementById('confirmModal').style.display = 'flex';
-  });
-});
-
-document.getElementById('confirmYes').onclick = () => {
-  if (targetLink) {
-    window.open(targetLink, '_blank');
-  }
-  closeConfirm();
-};
-
-document.getElementById('confirmNo').onclick = closeConfirm;
-
-function closeConfirm() {
-  document.getElementById('confirmModal').style.display = 'none';
-  targetLink = null;
-
-  if (activeCard) activeCard.classList.remove('active');
-  isPaused = false;
+  showSlide(current);
+  setInterval(() => {
+    current = (current + 1) % cards.length;
+    showSlide(current);
+  }, 6000);
 }
 </script>
-
-
-
-
-
 
 </body>
 </html>
