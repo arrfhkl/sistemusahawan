@@ -1,10 +1,7 @@
 <?php
 include "connection.php";
-include "usahawan_sidebar.php";
+include "header.php";
 
-/* ===========================
-   KESELAMATAN & VALIDASI
-=========================== */
 if (!isset($_SESSION['usahawan_id'])) {
     die("<div style='padding:20px'>Sila log masuk sebagai usahawan.</div>");
 }

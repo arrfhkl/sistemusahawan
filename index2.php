@@ -77,6 +77,7 @@ if ($result->num_rows > 0) {
   <title>Sistem Usahawan Pahang</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <!--<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">  |font Montserrat -->
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
 
   <style>
@@ -465,7 +466,9 @@ body::after {
     max-width: 1200px;
     margin: 80px auto;
     padding: 0 20px;
+    /*font-family: 'Montserrat', sans-serif;*/
 }
+
 
 .berita-header {
     display: flex;
