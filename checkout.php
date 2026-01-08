@@ -552,7 +552,7 @@ function validateForm() {
     if (!nama || !telefon || !alamat) {
         alert('Sila lengkapkan semua maklumat yang diperlukan.');
         return false;
-    }
+    } 
     
     if (!lat || !lng) {
       alert("Sila pin lokasi anda di map untuk ketepatan penghantaran.");

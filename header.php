@@ -13,6 +13,7 @@ $is_usahawan = !empty($_SESSION['usahawan_id']);{
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Template - Sistem Usahawan Pahang</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
 
   <style>
@@ -247,7 +248,7 @@ body::after {
 
   <nav id="navMenu">
     <a href="index.php" class="active"><strong>Laman Utama</strong></a>
-    <a href="daftar.php"><strong>Daftar Usahawan</strong></a>
+    <a href="daftar.php"><strong>Daftar Akaun</strong></a>
     <a href="senarai.php"><strong>Senarai Usahawan</strong></a>
   </nav>
 </header>
