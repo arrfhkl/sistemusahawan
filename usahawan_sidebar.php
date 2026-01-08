@@ -188,6 +188,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
   <ul class="usahawan-menu">
     <li><a href="seller_dashboard.php" class="<?= $current_page=='seller_dashboard.php'?'active':'' ?>">🧭 Dashboard</a></li>
+    <li><a href="seller_inbox.php" class="<?= $current_page=='seller_inbox.php'?'active':'' ?>">💬 Chat</a></li>
     <li><a href="profile_usahawan2.php" class="<?= $current_page=='profile_usahawan2.php'?'active':'' ?>">👤 Profil</a></li>
     <li><a href="produk_usahawan.php" class="<?= $current_page=='produk_usahawan.php'?'active':'' ?>">📦 Produk</a></li>
     <li><a href="servis_usahawan.php" class="<?= $current_page=='servis_usahawan.php'?'active':'' ?>">🛠️ Servis</a></li>
@@ -195,6 +196,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <li><a href="jualan.php" class="<?= $current_page=='jualan.php'?'active':'' ?>">💰 Jualan</a></li>
     <li><a href="laporan_perniagaan.php" class="<?= $current_page=='laporan_perniagaan.php'?'active':'' ?>">📊 Laporan</a></li>
     <li><a href="tetapan_perniagaan.php" class="<?= $current_page=='tetapan_perniagaan.php'?'active':'' ?>">⚙️ Tetapan</a></li>
+
   </ul>
 
 </aside>
