@@ -13,6 +13,12 @@ if ($chat_id === 0) {
   die("Chat tidak sah");
 }
 
+$conn->query("
+  INSERT INTO user_online_status (user_id, last_active)
+  VALUES ($user_id, NOW())
+  ON DUPLICATE KEY UPDATE last_active = NOW()
+");
+
 /* ===============================
    INFO CHAT + SERVIS
 ================================ */
@@ -30,17 +36,22 @@ $stmt = $conn->prepare("
   JOIN servis s ON s.id = cr.servis_id
   JOIN usahawan u ON u.id = s.usahawan_id
   WHERE cr.id = ?
+    AND (cr.user_a = ? OR cr.user_b = ?)
+
 ");
-$stmt->bind_param("i", $chat_id);
+$stmt->bind_param("iii", $chat_id, $user_id, $user_id);
 $stmt->execute();
+
 $info = $stmt->get_result()->fetch_assoc();
 
 if (!$info) {
   die("Chat tidak dijumpai");
 }
 
-$servis_id = $info['servis_id'];
 $tukang_id = $info['tukang_id'];
+$isSeller  = ($user_id == $tukang_id);
+$isBuyer   = !$isSeller;
+$servis_id = $info['servis_id'];
 $namaServis = $info['servis_nama'];
 
 /* AUTO MESSAGE – hanya untuk pelanggan */
@@ -207,7 +218,6 @@ $gambar = $info['gambar_servis_url']
   border-radius:16px;
   font-size:15px;
   line-height:1.5;
-  animation:fadeUp .3s ease;
 }
 
 @keyframes fadeUp{
@@ -269,14 +279,6 @@ $gambar = $info['gambar_servis_url']
   line-height: 1.5;
 }
 
-/* MESSAGE BUBBLE BESAR */
-.msg{
-  max-width: 72%;
-  padding: 14px 18px;
-  border-radius: 16px;
-  font-size: 15px;
-}
-
 .meta{
   font-size: 12px;
 }
@@ -326,7 +328,7 @@ $gambar = $info['gambar_servis_url']
 </style>
 </head>
 
-<body>
+
 
 <div class="chat-layout">
 
@@ -345,7 +347,7 @@ $gambar = $info['gambar_servis_url']
         <strong><?= htmlspecialchars($info['nama_tukang']) ?></strong><br>
         <span id="status">Menyemak status...</span>
         <div id="typing" style="font-size:12px;color:#666;display:none;">
-  ✍️ Sedang menaip…
+   Sedang menaip…✍️
 </div>
 
       </div>
@@ -373,29 +375,34 @@ $gambar = $info['gambar_servis_url']
 </div>
 
 <script>
+let lastMessageId = 0;
 const chatId   = <?= $chat_id ?>;
 const tukangId = <?= $tukang_id ?>;
 
 let shouldAutoScroll = true;
 
 function loadMsg(){
-  const box = document.getElementById("chat-box");
+  fetch("load_messages.php?chat_id="+chatId+"&last_id="+lastMessageId)
+    .then(r=>r.json())
+    .then(messages=>{
+      if(messages.length === 0) return;
 
-  // Check kalau user dekat bawah
-  const isNearBottom =
-    box.scrollTop + box.clientHeight >= box.scrollHeight - 100;
+      messages.forEach(m=>{
+        const div = document.createElement("div");
+        div.className = "msg " + (m.is_me ? "me" : "other");
+        div.innerHTML = `
+          ${m.message.replace(/\n/g,"<br>")}
+          <div class="meta">${m.time}</div>
+        `;
+        document.getElementById("chat-box").appendChild(div);
+        lastMessageId = m.id;
+      });
 
-  fetch("load_messages.php?chat_id="+chatId)
-    .then(r=>r.text())
-    .then(d=>{
-      box.innerHTML = d;
-
-      if (isNearBottom || shouldAutoScroll) {
-        box.scrollTop = box.scrollHeight;
-        shouldAutoScroll = false;
-      }
+      document.getElementById("chat-box").scrollTop =
+        document.getElementById("chat-box").scrollHeight;
     });
 }
+
 
 
 /* SEND MESSAGE */
@@ -435,39 +442,30 @@ window.addEventListener("load",()=>{
 
 /* STATUS ONLINE */
 setInterval(()=>{
-  fetch("check_status.php?user_id="+tukangId)
+  fetch("check_status.php?chat_id="+chatId)
     .then(r=>r.text())
     .then(s=>{
       document.getElementById("status").innerHTML =
         s==="online"
-        ? "🟢 Usahawan sedang online"
-        : "⚪ Usahawan offline";
+        ? "🟢 Online"
+        : "⚫ Offline";
     });
 },5000);
 
 setInterval(loadMsg,2000);
 loadMsg();
 
-let typingTimer;
-let isTyping = false;
-
 document.getElementById("msg").addEventListener("input", () => {
-
-  if (isTyping) return;
-
-  isTyping = true;
-
-  fetch("update_typing.php");
-
-  clearTimeout(typingTimer);
-
-  typingTimer = setTimeout(() => {
-    isTyping = false;
-  }, 3000);
+  fetch("update_typing.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "chat_id=" + chatId
+  });
 });
+;
 
 setInterval(() => {
-  fetch("check_typing.php?user_id="+tukangId)
+  fetch("check_typing.php?chat_id="+chatId)
     .then(r=>r.text())
     .then(status => {
       const el = document.getElementById("typing");
