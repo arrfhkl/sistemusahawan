@@ -2,6 +2,8 @@
 include "connection.php";
 include "header.php";
 
+$conn->query("SET time_zone = '+08:00'");
+
 if (!isset($_SESSION['usahawan_id'])) {
   die("Login dahulu");
 }
@@ -304,7 +306,7 @@ $gambar = $info['gambar_servis_url']
 }
 
 .chat-header strong{
-  font-size: 16px;
+  font-size: 16px;  
 }
 
 /* SERVIS CARD BESAR */
@@ -339,7 +341,7 @@ $gambar = $info['gambar_servis_url']
 
   <!-- CHAT -->
   <div class="chat-main">
-
+  
     <!-- HEADER -->
     <div class="chat-header">
       <img src="<?= htmlspecialchars($info['avatar']) ?>">
@@ -369,39 +371,40 @@ $gambar = $info['gambar_servis_url']
     <div class="chat-input">
       <input type="text" id="msg" placeholder="Taip mesej...">
       <button onclick="sendMsg()">Hantar</button>
-    </div>
+
+      <?php if ($isBuyer): ?>
+      <button id="btn-request-quotation">
+        📄 Minta Quotation Rasmi
+        </button>
+      <?php endif; ?>
+
+      <?php if ($isSeller): ?>
+      <button id="btn-send-quotation" disabled>
+        📤 Hantar Quotation Rasmi
+      </button>
+    <?php endif; ?>
+        </div>
 
   </div>
 </div>
 
 <script>
-let lastMessageId = 0;
 const chatId   = <?= $chat_id ?>;
 const tukangId = <?= $tukang_id ?>;
 
 let shouldAutoScroll = true;
 
-function loadMsg(){
-  fetch("load_messages.php?chat_id="+chatId+"&last_id="+lastMessageId)
-    .then(r=>r.json())
-    .then(messages=>{
-      if(messages.length === 0) return;
+let lastMessageId = 0;
 
-      messages.forEach(m=>{
-        const div = document.createElement("div");
-        div.className = "msg " + (m.is_me ? "me" : "other");
-        div.innerHTML = `
-          ${m.message.replace(/\n/g,"<br>")}
-          <div class="meta">${m.time}</div>
-        `;
-        document.getElementById("chat-box").appendChild(div);
-        lastMessageId = m.id;
-      });
-
-      document.getElementById("chat-box").scrollTop =
-        document.getElementById("chat-box").scrollHeight;
-    });
+function loadAllFirst(){
+  lastMessageId = 0;
+  lastRenderedDate = null;
+  document.getElementById("chat-box").innerHTML = "";
+  loadMsg();
 }
+
+loadAllFirst();
+setInterval(loadMsg, 2000);
 
 
 
@@ -472,10 +475,102 @@ setInterval(() => {
       el.style.display = (status === "typing") ? "block" : "none";
     });
 }, 1500);
-
-
 </script>
 
+<script>
+document.getElementById("btn-request-quotation")?.addEventListener("click", ()=>{
+  if(!confirm("Hantar permintaan quotation rasmi?")) return;
+
+  fetch("request_quotation.php",{
+    method:"POST",
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:"chat_id="+chatId
+  })
+  .then(r=>r.text())
+  .then(res=>{
+    if(res==="OK"){
+      alert("Permintaan quotation dihantar");
+    }else{
+      alert(res);
+    }
+  });
+});
+</script>
+
+<script>
+document.getElementById("btn-send-quotation")?.addEventListener("click", ()=>{
+  // buka modal form quotation
+});
+</script>
+
+<script>
+let lastRenderedDate = null;
+
+function labelTarikh(dateStr){
+  const today = new Date().toISOString().slice(0,10);
+
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  const yesterday = y.toISOString().slice(0,10);
+
+  if(dateStr === today) return "Hari ini";
+  if(dateStr === yesterday) return "Semalam";
+
+  return new Date(dateStr).toLocaleDateString("ms-MY",{
+    day:"numeric",
+    month:"short",
+    year:"numeric"
+  });
+}
+
+function loadMsg(){
+  fetch(`load_messages.php?chat_id=${chatId}&last_id=${lastMessageId}`)
+    .then(r=>r.json())
+    .then(msgs=>{
+      if(!msgs.length) return;
+
+      const box = document.getElementById("chat-box");
+
+      msgs.forEach(m=>{
+        /* DATE LABEL */
+        if(m.date !== lastRenderedDate){
+          const d = document.createElement("div");
+          d.style.textAlign = "center";
+          d.style.margin = "16px 0";
+          d.style.fontSize = "12px";
+          d.style.color = "#666";
+          d.innerHTML = `
+            <span style="
+              background:#eee;
+              padding:6px 14px;
+              border-radius:14px;
+            ">
+              ${labelTarikh(m.date)}
+            </span>
+          `;
+          box.appendChild(d);
+          lastRenderedDate = m.date;
+        }
+
+        /* MESSAGE */
+        const div = document.createElement("div");
+        div.className = "msg " + (m.is_me ? "me" : "other");
+        div.innerHTML = `
+          ${m.message.replace(/\n/g,"<br>")}
+          <div class="meta">${m.time}</div>
+        `;
+        box.appendChild(div);
+
+        lastMessageId = m.id;
+      });
+
+      box.scrollTop = box.scrollHeight;
+    });
+}
+</script>
+
+
+  
 <?php
 include 'footer.php';
 ?>

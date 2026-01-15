@@ -2,6 +2,8 @@
 session_start();
 include "connection.php";
 
+date_default_timezone_set("Asia/Kuala_Lumpur");
+
 /* ===============================
    AUTH CHECK
 ================================ */
@@ -45,7 +47,9 @@ $stmt = $conn->prepare("
     id,
     sender_id,
     message,
-    created_at
+    created_at,
+    DATE(created_at) AS msg_date,
+    DATE_FORMAT(created_at, '%H:%i') AS msg_time
   FROM chat_messages
   WHERE chat_id = ?
     AND id > ?
@@ -62,7 +66,8 @@ while ($row = $result->fetch_assoc()) {
   $messages[] = [
     "id"      => (int)$row['id'],
     "message" => htmlspecialchars($row['message'], ENT_QUOTES, 'UTF-8'),
-    "time"    => date("H:i", strtotime($row['created_at'])),
+    "date"    => $row['msg_date'], // YYYY-MM-DD
+    "time"    => date("h:i A", strtotime($row['msg_time'])),
     "is_me"   => ($row['sender_id'] == $user_id)
   ];
 }
