@@ -25,15 +25,17 @@ $conn->query("
    INFO CHAT + SERVIS
 ================================ */
 $stmt = $conn->prepare("
-  SELECT 
+SELECT 
     cr.id AS chat_id,
+    cr.user_a,
+    cr.user_b,
     cr.servis_id,
     s.nama AS servis_nama,
     s.lokasi,
     s.gambar_servis_url,
     u.id AS tukang_id,
     u.nama AS nama_tukang,
-    u.avatar
+    u.avatar AS avatar_tukang
   FROM chat_rooms cr
   JOIN servis s ON s.id = cr.servis_id
   JOIN usahawan u ON u.id = s.usahawan_id
@@ -46,12 +48,39 @@ $stmt->execute();
 
 $info = $stmt->get_result()->fetch_assoc();
 
+$other_user_id = ($user_id == $info['user_a'])
+  ? $info['user_b']
+  : $info['user_a'];
+
+
 if (!$info) {
   die("Chat tidak dijumpai");
 }
 
 $tukang_id = $info['tukang_id'];
 $isSeller  = ($user_id == $tukang_id);
+
+if ($isSeller) {
+  // seller login → lawan = buyer (juga usahawan)
+  $stmt2 = $conn->prepare("
+    SELECT nama, avatar
+    FROM usahawan
+    WHERE id = ?
+    LIMIT 1
+  ");
+  $stmt2->bind_param("i", $other_user_id);
+  $stmt2->execute();
+  $other = $stmt2->get_result()->fetch_assoc();
+
+  $header_name   = $other['nama'] ?? 'Pengguna';
+  $header_avatar = $other['avatar'] ?? 'assets/img/user.png';
+
+} else {
+  // buyer login → lawan = seller (owner servis)
+  $header_name   = $info['nama_tukang'];
+  $header_avatar = $info['avatar_tukang'];
+}
+
 $isBuyer   = !$isSeller;
 $servis_id = $info['servis_id'];
 $namaServis = $info['servis_nama'];
@@ -65,6 +94,7 @@ $gambar = $info['gambar_servis_url']
       ? "uploads/" . $info['gambar_servis_url']
       : $info['gambar_servis_url'])
   : "assets/img/no-image.png";
+  
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -332,6 +362,7 @@ $gambar = $info['gambar_servis_url']
 
 
 
+
 <div class="chat-layout">
 
   <!-- SIDEBAR -->
@@ -344,9 +375,9 @@ $gambar = $info['gambar_servis_url']
   
     <!-- HEADER -->
     <div class="chat-header">
-      <img src="<?= htmlspecialchars($info['avatar']) ?>">
+      <img src="<?= htmlspecialchars($header_avatar) ?>">
       <div>
-        <strong><?= htmlspecialchars($info['nama_tukang']) ?></strong><br>
+        <strong><?= htmlspecialchars($header_name) ?></strong><br>
         <span id="status">Menyemak status...</span>
         <div id="typing" style="font-size:12px;color:#666;display:none;">
    Sedang menaip…✍️
