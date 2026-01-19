@@ -268,7 +268,7 @@ $gambar = $info['gambar_servis_url']
 }
 .chat-input button:hover{opacity:.9}
 /* ================================
-   CHAT SIZE IMPROVEMENT (DESKTOP)
+   CHAT SIZE IMPROVEMENT (DESKTOP)- change this to resize to chat length
 ================================ */
 .chat-layout{
   max-width: 1400px;          /* LEBIH BESAR */
@@ -389,24 +389,33 @@ $gambar = $info['gambar_servis_url']
 </div>
 
 <script>
+let lastMessageId = 0;
 const chatId   = <?= $chat_id ?>;
 const tukangId = <?= $tukang_id ?>;
 
 let shouldAutoScroll = true;
 
-let lastMessageId = 0;
+function loadMsg(){
+  fetch("load_messages.php?chat_id="+chatId+"&last_id="+lastMessageId)
+    .then(r=>r.json())
+    .then(messages=>{
+      if(messages.length === 0) return;
 
-function loadAllFirst(){
-  lastMessageId = 0;
-  lastRenderedDate = null;
-  document.getElementById("chat-box").innerHTML = "";
-  loadMsg();
+      messages.forEach(m=>{
+        const div = document.createElement("div");
+        div.className = "msg " + (m.is_me ? "me" : "other");
+        div.innerHTML = `
+          ${m.message.replace(/\n/g,"<br>")}
+          <div class="meta">${m.time}</div>
+        `;
+        document.getElementById("chat-box").appendChild(div);
+        lastMessageId = m.id;
+      });
+
+      document.getElementById("chat-box").scrollTop =
+        document.getElementById("chat-box").scrollHeight;
+    });
 }
-
-loadAllFirst();
-setInterval(loadMsg, 2000);
-
-
 
 /* SEND MESSAGE */
 function sendMsg(){
@@ -415,7 +424,7 @@ function sendMsg(){
   if(!msg) return;
 
 
-  shouldAutoScroll = true; // paksa scroll lepas send
+  shouldAutoScroll = true; // paksa scroll lepas send 
 
   fetch("send_message.php",{
     method:"POST",
@@ -428,20 +437,6 @@ function sendMsg(){
     loadMsg();
   });
 }
-
-
-/* AUTO MESSAGE – SEKALI SAHAJA */
-<?php if($sendAutoMessage): ?>
-window.addEventListener("load",()=>{
-  fetch("send_message.php",{
-    method:"POST",
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:
-      "chat_id=<?= $chat_id ?>"+
-      "&message=<?= urlencode("Hi, saya berminat dengan servis $namaServis") ?>"
-  }).then(loadMsg);
-});
-<?php endif; ?>
 
 /* STATUS ONLINE */
 setInterval(()=>{
@@ -501,72 +496,6 @@ document.getElementById("btn-request-quotation")?.addEventListener("click", ()=>
 document.getElementById("btn-send-quotation")?.addEventListener("click", ()=>{
   // buka modal form quotation
 });
-</script>
-
-<script>
-let lastRenderedDate = null;
-
-function labelTarikh(dateStr){
-  const today = new Date().toISOString().slice(0,10);
-
-  const y = new Date();
-  y.setDate(y.getDate() - 1);
-  const yesterday = y.toISOString().slice(0,10);
-
-  if(dateStr === today) return "Hari ini";
-  if(dateStr === yesterday) return "Semalam";
-
-  return new Date(dateStr).toLocaleDateString("ms-MY",{
-    day:"numeric",
-    month:"short",
-    year:"numeric"
-  });
-}
-
-function loadMsg(){
-  fetch(`load_messages.php?chat_id=${chatId}&last_id=${lastMessageId}`)
-    .then(r=>r.json())
-    .then(msgs=>{
-      if(!msgs.length) return;
-
-      const box = document.getElementById("chat-box");
-
-      msgs.forEach(m=>{
-        /* DATE LABEL */
-        if(m.date !== lastRenderedDate){
-          const d = document.createElement("div");
-          d.style.textAlign = "center";
-          d.style.margin = "16px 0";
-          d.style.fontSize = "12px";
-          d.style.color = "#666";
-          d.innerHTML = `
-            <span style="
-              background:#eee;
-              padding:6px 14px;
-              border-radius:14px;
-            ">
-              ${labelTarikh(m.date)}
-            </span>
-          `;
-          box.appendChild(d);
-          lastRenderedDate = m.date;
-        }
-
-        /* MESSAGE */
-        const div = document.createElement("div");
-        div.className = "msg " + (m.is_me ? "me" : "other");
-        div.innerHTML = `
-          ${m.message.replace(/\n/g,"<br>")}
-          <div class="meta">${m.time}</div>
-        `;
-        box.appendChild(div);
-
-        lastMessageId = m.id;
-      });
-
-      box.scrollTop = box.scrollHeight;
-    });
-}
 </script>
 
 

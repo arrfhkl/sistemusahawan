@@ -6,8 +6,6 @@ if (!isset($_SESSION['usahawan_id'])) {
   exit("NO_SESSION");
 }
 
-
-
 $user_id = $_SESSION['usahawan_id'];
 $chat_id = (int)($_POST['chat_id'] ?? 0);
 $message = trim($_POST['message'] ?? "");
