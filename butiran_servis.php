@@ -652,7 +652,7 @@ onclick="window.location.href='create_chat.php?servis_id=<?= $service['id'] ?>'"
 <?php if ($servis_berkaitan && $servis_berkaitan->num_rows > 0): ?>
 <hr style="margin:40px 0">
 
-<h2>Servis lain yang sama:</h2>
+<h2>Servis lain yang berkaitan sama:</h2>
 
 <div class="servis-lain-grid">
 <?php while ($sb = $servis_berkaitan->fetch_assoc()): ?>
