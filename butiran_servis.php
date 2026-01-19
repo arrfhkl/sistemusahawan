@@ -29,6 +29,22 @@ if (!$service) {
   die("Servis tidak ditemui.");
 }
 
+/* ✅ SERVIS LAIN OLEH USAHAWAN YANG SAMA */
+$servis_lain = [];
+if (!empty($service['usahawan_id'])) {
+  $stmt4 = $conn->prepare("
+    SELECT id, nama, lokasi, gambar_servis_url
+    FROM servis
+    WHERE usahawan_id = ?
+      AND id != ?
+    ORDER BY id DESC
+    LIMIT 3
+  ");
+  $stmt4->bind_param("ii", $service['usahawan_id'], $service['id']);
+  $stmt4->execute();
+  $servis_lain = $stmt4->get_result();
+}
+
 /* total customer */
 $total_customer = 0;
 $check = $conn->query("SHOW TABLES LIKE 'servis_booking'");
@@ -47,6 +63,22 @@ if ($check2->num_rows > 0) {
   $stmt3->bind_param("i", $id);
   $stmt3->execute();
   $gallery = $stmt3->get_result();
+}
+
+/* ✅ SERVIS LAIN YANG BERKAITAN (KATEGORI SAMA) */
+$servis_berkaitan = [];
+if (!empty($service['kategori_servis_id'])) {
+  $stmt5 = $conn->prepare("
+    SELECT id, nama, lokasi, gambar_servis_url
+    FROM servis
+    WHERE kategori_servis_id = ?
+      AND id != ?
+    ORDER BY id DESC
+    LIMIT 6
+  ");
+  $stmt5->bind_param("ii", $service['kategori_servis_id'], $service['id']);
+  $stmt5->execute();
+  $servis_berkaitan = $stmt5->get_result();
 }
 ?>
 
@@ -431,6 +463,66 @@ footer .copyright {
   .stats { grid-template-columns: repeat(2,1fr); }
   .tukang-card { flex-direction: column; text-align: center; }
 }
+
+/* ===== Servis Lain ===== */
+.servis-lain-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.servis-card {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid #ddd;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.servis-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.servis-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.servis-card-body {
+  padding: 15px;
+}
+
+.servis-card-body h4 {
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+
+.servis-card-body p {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.servis-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #007bff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.servis-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .servis-lain-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
 </style>
 </head>
 <body>
@@ -465,6 +557,7 @@ if (!empty($gambar) && strpos($gambar, 'uploads/') === false) {
 <div class="deskripsi">
 <?= nl2br(htmlspecialchars($service['deskripsi'])) ?>
 </div>
+
 
 <!-- ✅ PROFIL USAHAWAN -->
 <div class="tukang-card">
@@ -522,6 +615,69 @@ onclick="window.location.href='create_chat.php?servis_id=<?= $service['id'] ?>'"
 </button>
 
 </button>
+
+<?php if ($servis_lain && $servis_lain->num_rows > 0): ?>
+<hr style="margin:40px 0">
+
+<h2>
+  Servis lain yang ditawarkan oleh
+  <?= htmlspecialchars($service['nama_tukang']) ?>:
+</h2>
+
+<div class="servis-lain-grid">
+<?php while ($sl = $servis_lain->fetch_assoc()): ?>
+  <?php
+    $img = $sl['gambar_servis_url'];
+    if (empty($img)) {
+      $img = "default-service.png";
+    } elseif (strpos($img, 'uploads/') === false) {
+      $img = "uploads/$img";
+    }
+  ?>
+  <div class="servis-card">
+    <img src="<?= htmlspecialchars($img) ?>" alt="Servis">
+    <div class="servis-card-body">
+      <h4><?= htmlspecialchars($sl['nama']) ?></h4>
+      <p>📍 <?= htmlspecialchars($sl['lokasi']) ?></p>
+      <a href="butiran_servis.php?id=<?= $sl['id'] ?>" class="servis-link">
+        Tengok lanjut →
+      </a>  <!-- ===== create a page for usahawan (buyer view)===== -->
+    </div>
+
+  </div>
+<?php endwhile; ?>
+</div>
+<?php endif; ?>
+
+<?php if ($servis_berkaitan && $servis_berkaitan->num_rows > 0): ?>
+<hr style="margin:40px 0">
+
+<h2>Servis lain yang sama:</h2>
+
+<div class="servis-lain-grid">
+<?php while ($sb = $servis_berkaitan->fetch_assoc()): ?>
+  <?php
+    $img = $sb['gambar_servis_url'];
+    if (empty($img)) {
+      $img = "default-service.png";
+    } elseif (strpos($img, 'uploads/') === false) {
+      $img = "uploads/$img";
+    }
+  ?>
+  <div class="servis-card">
+    <img src="<?= htmlspecialchars($img) ?>" alt="Servis Berkaitan">
+    <div class="servis-card-body">
+      <h4><?= htmlspecialchars($sb['nama']) ?></h4>
+      <p>📍 <?= htmlspecialchars($sb['lokasi']) ?></p>
+      <a href="page.php?id=<?= $sb['id'] ?>" class="servis-link"> 
+        Tengok lanjut →
+      </a>
+    </div>
+  </div>
+<?php endwhile; ?>
+</div>
+<?php endif; ?>
+
 
 </div>
 
