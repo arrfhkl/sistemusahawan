@@ -357,6 +357,18 @@ $gambar = $info['gambar_servis_url']
   }
 }
 
+/* SYSTEM MESSAGE */
+.msg.system {
+  max-width: 100%;
+  margin: 18px auto;
+  padding: 10px 16px;
+  background: transparent;
+  color: #888;
+  font-size: 13px;
+  text-align: center;
+  font-style: italic;
+}
+
 </style>
 </head>
 
@@ -434,7 +446,11 @@ function loadMsg(){
 
       messages.forEach(m=>{
         const div = document.createElement("div");
-        div.className = "msg " + (m.is_me ? "me" : "other");
+        if (m.sender_id == 0) {
+          div.className = "msg system";
+        } else {
+          div.className = "msg " + (m.is_me ? "me" : "other");
+        }
         div.innerHTML = `
           ${m.message.replace(/\n/g,"<br>")}
           <div class="meta">${m.time}</div>
@@ -516,6 +532,7 @@ document.getElementById("btn-request-quotation")?.addEventListener("click", ()=>
   .then(res=>{
     if(res==="OK"){
       alert("Permintaan quotation dihantar");
+    loadMsg();
     }else{
       alert(res);
     }

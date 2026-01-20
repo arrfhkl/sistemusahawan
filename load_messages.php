@@ -63,12 +63,13 @@ $result = $stmt->get_result();
 $messages = [];
 
 while ($row = $result->fetch_assoc()) {
-  $messages[] = [
-    "id"      => (int)$row['id'],
-    "message" => htmlspecialchars($row['message'], ENT_QUOTES, 'UTF-8'),
-    "date"    => $row['msg_date'], // YYYY-MM-DD
-    "time"    => date("h:i A", strtotime($row['msg_time'])),
-    "is_me"   => ($row['sender_id'] == $user_id)
+$messages[] = [
+    "id"        => (int)$row['id'],
+    "sender_id" => (int)$row['sender_id'], 
+    "message"   => $row['message'],         
+    "date"      => $row['msg_date'],
+    "time"      => date("h:i A", strtotime($row['msg_time'])),
+    "is_me"     => ($row['sender_id'] == $user_id)
   ];
 }
 
