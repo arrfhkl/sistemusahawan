@@ -1,6 +1,6 @@
 <?php
-session_start();
 include "connection.php";
+include "header.php";
 
 $conn->query("SET time_zone = '+08:00'");
 
@@ -79,7 +79,6 @@ if (!$quotation) {
     }
 
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       padding: 30px;
     }
 
@@ -324,6 +323,7 @@ if (!$quotation) {
 </head>
 
 <body>
+  <br><br>
     <form method="post" action="submit_quotation.php">
 
   <!-- 🔑 HIDDEN KEYS -->
@@ -398,20 +398,36 @@ if (!$quotation) {
           <th>Item</th>
           <th>Penerangan</th>
           <th>Qty</th>
+          <th>Harga (RM)</th>
           <th>Jumlah (RM)</th>
           <th></th>
         </tr>
       </thead>
+
       <tbody id="itemsTable">
         <tr>
-          <td>1</td>
+          <td class="text-center row-number">1</td>
           <td><input name="item_name[]" required></td>
           <td><textarea name="item_desc[]"></textarea></td>
-          <td><input type="number" name="item_qty[]" value="1"></td>
-          <td><input type="number" name="item_total[]" step="0.01"></td>
-          <td><button type="button" class="btn btn-danger">🗑️</button></td>
+
+          <td>
+            <input type="number" name="item_qty[]" class="item-qty" value="1" min="1">
+          </td>
+
+          <td>
+            <input type="number" name="item_price[]" class="item-price" step="0.01" min="0">
+          </td>
+
+          <td>
+            <input type="number" name="item_total[]" class="item-total" step="0.01" readonly>
+          </td>
+
+          <td class="text-center">
+            <button type="button" class="btn btn-danger delete-row">🗑️</button>
+          </td>
         </tr>
       </tbody>
+
     </table>
 
     <button type="button" class="btn btn-add" id="addRow">➕ Tambah Item</button>
@@ -444,45 +460,71 @@ if (!$quotation) {
 </form>
 
 <script>
-  const itemsTable = document.getElementById('itemsTable');
-  const addRow = document.getElementById('addRow');
-  const subtotalEl = document.getElementById('subtotal');
-  const taxEl = document.getElementById('tax');
-  const grandTotalEl = document.getElementById('grandTotal');
+const itemsTable = document.getElementById('itemsTable');
+const addRow = document.getElementById('addRow');
+const subtotalEl = document.getElementById('subtotal');
+const taxEl = document.getElementById('tax');
+const grandTotalEl = document.getElementById('grandTotal');
 
-  function calculate() {
-    let subtotal = 0;
-    document.querySelectorAll('.item-total').forEach(i => {
-      subtotal += parseFloat(i.value) || 0;
-    });
-    const tax = subtotal * 0.06;
-    subtotalEl.textContent = 'RM ' + subtotal.toFixed(2);
-    taxEl.textContent = 'RM ' + tax.toFixed(2);
-    grandTotalEl.textContent = 'RM ' + (subtotal + tax).toFixed(2);
+function calculateRow(row) {
+  const qty = parseFloat(row.querySelector('.item-qty')?.value) || 0;
+  const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+  const totalInput = row.querySelector('.item-total');
+  const total = qty * price;
+  totalInput.value = total.toFixed(2);
+}
+
+function calculateAll() {
+  let subtotal = 0;
+
+  itemsTable.querySelectorAll('tr').forEach(row => {
+    calculateRow(row);
+    subtotal += parseFloat(row.querySelector('.item-total')?.value) || 0;
+  });
+
+  const tax = subtotal * 0.06;
+  subtotalEl.textContent = 'RM ' + subtotal.toFixed(2);
+  taxEl.textContent = 'RM ' + tax.toFixed(2);
+  grandTotalEl.textContent = 'RM ' + (subtotal + tax).toFixed(2);
+}
+
+addRow.onclick = () => {
+  const row = itemsTable.insertRow();
+  row.innerHTML = `
+    <td class="text-center row-number">${itemsTable.rows.length}</td>
+    <td><input name="item_name[]" required></td>
+    <td><textarea name="item_desc[]"></textarea></td>
+
+    <td><input type="number" name="item_qty[]" class="item-qty" value="1" min="1"></td>
+    <td><input type="number" name="item_price[]" class="item-price" step="0.01" min="0"></td>
+    <td><input type="number" name="item_total[]" class="item-total" step="0.01" readonly></td>
+
+    <td class="text-center">
+      <button type="button" class="btn btn-danger delete-row">🗑️</button>
+    </td>
+  `;
+};
+
+itemsTable.addEventListener('input', e => {
+  if (
+    e.target.classList.contains('item-qty') ||
+    e.target.classList.contains('item-price')
+  ) {
+    calculateAll();
   }
+});
 
-  addRow.onclick = () => {
-    const row = itemsTable.insertRow();
-    row.innerHTML = `
-      <td class="text-center"><span class="row-number">${itemsTable.rows.length}</span></td>
-      <td><input type="text" name="item_name[]"></td>
-      <td><textarea name="item_desc[]"></textarea></td>
-      <td><input type="number" name="item_qty[]" value="1"></td>
-      <td><input type="number" name="item_total[]" class="item-total" step="0.01"></td>
-      <td class="text-center"><button type="button" class="btn btn-danger delete-row">🗑️</button></td>
-    `;
-  };
+itemsTable.addEventListener('click', e => {
+  if (e.target.classList.contains('delete-row')) {
+    e.target.closest('tr').remove();
 
-  itemsTable.addEventListener('input', e => {
-    if (e.target.classList.contains('item-total')) calculate();
-  });
+    [...itemsTable.rows].forEach((row, i) => {
+      row.querySelector('.row-number').textContent = i + 1;
+    });
 
-  itemsTable.addEventListener('click', e => {
-    if (e.target.classList.contains('delete-row')) {
-      e.target.closest('tr').remove();
-      calculate();
-    }
-  });
+    document.addEventListener('DOMContentLoaded', calculateAll);
+  }
+});
 </script>
 
 </body>
