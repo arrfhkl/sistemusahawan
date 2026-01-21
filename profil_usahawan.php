@@ -41,6 +41,13 @@ $sql_permohonan = "
 ";
 $permohonan = $conn->query($sql_permohonan);
 ?>
+
+<?php
+$avatar = (!empty($usahawan['avatar']) && file_exists($usahawan['avatar']))
+  ? htmlspecialchars($usahawan['avatar'])
+  : 'assets/img/default_avatar.jpg';
+?>
+
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -49,6 +56,11 @@ $permohonan = $conn->query($sql_permohonan);
   <title>Profil Usahawan - <?= htmlspecialchars($usahawan['nama']) ?></title>
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
   <style>
+
+    .profile-header img {
+  background: #f5f6f8;
+}
+
     * { margin: 0; padding: 0; box-sizing: border-box;}
 
     /* ===== Background Premium dengan Watermark Jata Pahang ===== */
@@ -657,21 +669,19 @@ footer .copyright {
 <div class="container">
   <div class="card">
     <div class="profile-header">
-        <?php if (!empty($usahawan['avatar'])): ?>
-        <img src="<?= htmlspecialchars($usahawan['avatar']) ?>" alt="Avatar">
-        <?php else: ?>
-        <img src="https://via.placeholder.com/100" alt="Avatar">
-        <?php endif; ?>
+  <img src="<?= $avatar ?>"
+       alt="Avatar Usahawan"
+       onerror="this.src='assets/img/default_avatar.jpg'">
 
-        <div>
-          <h2><?= htmlspecialchars($usahawan['nama']) ?></h2>
-          <form class="upload-form" action="upload_avatar.php" method="post" enctype="multipart/form-data">
-              <input type="hidden" name="id" value="<?= $usahawan['id'] ?>">
-              <input type="file" name="avatar" accept="image/*" required>
-              <button type="submit">Update Gambar</button>
-          </form>
-        </div>
+    <div>
+      <h2><?= htmlspecialchars($usahawan['nama']) ?></h2>
+      <form class="upload-form" action="upload_avatar.php" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="<?= $usahawan['id'] ?>">
+        <input type="file" name="avatar" accept="image/*" required>
+        <button type="submit">Update Gambar</button>
+      </form>
     </div>
+  </div>
 
     <div class="profile-info">
       <p><span class="label">Alamat:</span> <?= htmlspecialchars($usahawan['alamat']) ?></p>
