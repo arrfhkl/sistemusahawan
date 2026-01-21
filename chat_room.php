@@ -48,14 +48,14 @@ $stmt->execute();
 
 $info = $stmt->get_result()->fetch_assoc();
 
+if (!$info) {
+  die("Chat tidak dijumpai");
+}
+
 $other_user_id = ($user_id == $info['user_a'])
   ? $info['user_b']
   : $info['user_a'];
 
-
-if (!$info) {
-  die("Chat tidak dijumpai");
-}
 
 $tukang_id = $info['tukang_id'];
 $isSeller  = ($user_id == $tukang_id);
@@ -276,6 +276,18 @@ $gambar = $info['gambar_servis_url']
   line-height:1.5;
 }
 
+.msg.system {
+  text-align: center;
+  background: #f7f5ef;
+  color: #555;
+  font-size: 14px;
+}
+
+.msg.system a {
+  color: #b89544;
+  text-decoration: underline;
+}
+
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(6px)}
   to{opacity:1}
@@ -402,12 +414,18 @@ $gambar = $info['gambar_servis_url']
   opacity: 0.8;
 }
 
+.btn-quotation{
+  background: linear-gradient(135deg,#d4b26a,#b89544);
+  color:#fff;
+  padding:14px 26px;
+  border-radius:8px;
+  text-decoration:none;
+  font-size:15px;
+}
+.btn-quotation:hover{opacity:.9}
 
 </style>
 </head>
-
-
-
 
 <div class="chat-layout">
 
@@ -443,7 +461,7 @@ $gambar = $info['gambar_servis_url']
 
     <!-- MESSAGE -->
     <div class="chat-box" id="chat-box"></div>
-
+    
     <!-- INPUT -->
     <div class="chat-input">
       <input type="text" id="msg" placeholder="Taip mesej...">
@@ -455,14 +473,13 @@ $gambar = $info['gambar_servis_url']
         </button>
       <?php endif; ?>
 
-      <?php if ($isSeller): ?>
-      <button
-        id="btn-send-quotation"
-        <?= $requestedQuotationId ? '' : 'disabled' ?>
-        data-quotation-id="<?= $requestedQuotationId ?>"
-      >
-        📤 Hantar Quotation Rasmi
-      </button>
+      <?php if ($isSeller && $requestedQuotationId): ?>
+        <a
+          href="quotation_form.php?quotation_id=<?= $requestedQuotationId ?>&chat_id=<?= $chat_id ?>"
+          class="btn-quotation"
+        >
+          📤 Hantar Quotation
+        </a>
       <?php endif; ?>
 
         </div>
@@ -600,22 +617,7 @@ btn?.addEventListener("click", ()=>{
   });
 });
 
-
 </script>
-
-<script>
-document.getElementById("btn-send-quotation")?.addEventListener("click", (e)=>{
-  const qid = e.currentTarget.dataset.quotationId;
-  if (!qid) return;
-
-  // sementara buka page (modal boleh kemudian)
-  window.location.href =
-    "quotation_form.php?quotation_id=" + qid + "&chat_id=" + chatId;
-});
-
-</script>
-
-
   
 <?php
 include 'footer.php';
