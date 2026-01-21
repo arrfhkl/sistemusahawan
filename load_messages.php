@@ -64,12 +64,13 @@ $messages = [];
 
 while ($row = $result->fetch_assoc()) {
 $messages[] = [
-    "id"        => (int)$row['id'],
-    "sender_id" => (int)$row['sender_id'], 
-    "message"   => $row['message'],         
-    "date"      => $row['msg_date'],
-    "time"      => date("h:i A", strtotime($row['msg_time'])),
-    "is_me"     => ($row['sender_id'] == $user_id)
+  "id"        => (int)$row['id'],
+  "sender_id" => (int)$row['sender_id'], // ⭐ PENTING
+  "message"   => $row['message'],
+  "date"      => $row['msg_date'],
+  "time"      => date("h:i A", strtotime($row['msg_time'])),
+  "is_me"     => ($row['sender_id'] == $user_id)
+
   ];
 }
 

@@ -85,6 +85,30 @@ $isBuyer   = !$isSeller;
 $servis_id = $info['servis_id'];
 $namaServis = $info['servis_nama'];
 
+/* ===============================
+   CHECK REQUESTED QUOTATION (SELLER)
+================================ */
+$requestedQuotationId = null;
+
+if ($isSeller) {
+  $q = $conn->prepare("
+    SELECT id
+    FROM quotation
+    WHERE chat_id = ?
+      AND seller_id = ?
+      AND status = 'requested'
+    LIMIT 1
+  ");
+  $q->bind_param("ii", $chat_id, $user_id);
+  $q->execute();
+  $res = $q->get_result()->fetch_assoc();
+
+  if ($res) {
+    $requestedQuotationId = (int)$res['id'];
+  }
+}
+
+
 /* AUTO MESSAGE – hanya untuk pelanggan */
 $sendAutoMessage = ($user_id != $tukang_id);
 
@@ -369,6 +393,16 @@ $gambar = $info['gambar_servis_url']
   font-style: italic;
 }
 
+.msg.system a {
+  color: #b89544;
+  text-decoration: underline;
+  font-weight: 600;
+}
+.msg.system a:hover {
+  opacity: 0.8;
+}
+
+
 </style>
 </head>
 
@@ -422,10 +456,15 @@ $gambar = $info['gambar_servis_url']
       <?php endif; ?>
 
       <?php if ($isSeller): ?>
-      <button id="btn-send-quotation" disabled>
+      <button
+        id="btn-send-quotation"
+        <?= $requestedQuotationId ? '' : 'disabled' ?>
+        data-quotation-id="<?= $requestedQuotationId ?>"
+      >
         📤 Hantar Quotation Rasmi
       </button>
-    <?php endif; ?>
+      <?php endif; ?>
+
         </div>
 
   </div>
@@ -433,6 +472,7 @@ $gambar = $info['gambar_servis_url']
 
 <script>
 let lastMessageId = 0;
+let renderedMessageIds = new Set();
 const chatId   = <?= $chat_id ?>;
 const tukangId = <?= $tukang_id ?>;
 
@@ -444,20 +484,28 @@ function loadMsg(){
     .then(messages=>{
       if(messages.length === 0) return;
 
-      messages.forEach(m=>{
+      messages.forEach(m => {
+        if (renderedMessageIds.has(m.id)) return; // ⛔ STOP duplicate
+
+        renderedMessageIds.add(m.id);
+
         const div = document.createElement("div");
         if (m.sender_id == 0) {
           div.className = "msg system";
         } else {
           div.className = "msg " + (m.is_me ? "me" : "other");
         }
+
         div.innerHTML = `
           ${m.message.replace(/\n/g,"<br>")}
           <div class="meta">${m.time}</div>
         `;
+
         document.getElementById("chat-box").appendChild(div);
-        lastMessageId = m.id;
+
+        lastMessageId = Math.max(lastMessageId, m.id);
       });
+
 
       document.getElementById("chat-box").scrollTop =
         document.getElementById("chat-box").scrollHeight;
@@ -520,8 +568,14 @@ setInterval(() => {
 </script>
 
 <script>
-document.getElementById("btn-request-quotation")?.addEventListener("click", ()=>{
+const btn = document.getElementById("btn-request-quotation");
+
+btn?.addEventListener("click", ()=>{
   if(!confirm("Hantar permintaan quotation rasmi?")) return;
+
+  // 🔒 lock + tukar teks
+  btn.disabled = true;
+  btn.textContent = "⏳ Menghantar...";
 
   fetch("request_quotation.php",{
     method:"POST",
@@ -532,18 +586,33 @@ document.getElementById("btn-request-quotation")?.addEventListener("click", ()=>
   .then(res=>{
     if(res==="OK"){
       alert("Permintaan quotation dihantar");
-    loadMsg();
+      // optional: hide button selepas berjaya
+      btn.style.display = "none";
     }else{
       alert(res);
+      btn.disabled = false;
+      btn.textContent = "📄 Minta Quotation Rasmi";
     }
+  })
+  .catch(()=>{
+    btn.disabled = false;
+    btn.textContent = "📄 Minta Quotation Rasmi";
   });
 });
+
+
 </script>
 
 <script>
-document.getElementById("btn-send-quotation")?.addEventListener("click", ()=>{
-  // buka modal form quotation
+document.getElementById("btn-send-quotation")?.addEventListener("click", (e)=>{
+  const qid = e.currentTarget.dataset.quotationId;
+  if (!qid) return;
+
+  // sementara buka page (modal boleh kemudian)
+  window.location.href =
+    "quotation_form.php?quotation_id=" + qid + "&chat_id=" + chatId;
 });
+
 </script>
 
 
