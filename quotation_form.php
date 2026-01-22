@@ -319,6 +319,16 @@ if (!$quotation) {
       .document-info-row { flex-direction: column; align-items: flex-start; }
       .document-info-input, .total-section { width: 100%; }
     }
+
+    .info-text {
+      padding: 12px 14px;
+      font-size: 14px;
+      background: #f9fafb;
+      border-radius: 8px;
+      color: #111827;
+      line-height: 1.6;
+    }
+
   </style>
 </head>
 
@@ -337,37 +347,41 @@ if (!$quotation) {
       <strong><?= htmlspecialchars($quotation['servis_nama']) ?></strong>
     </h3>
 
-    <!-- COMPANY INFO -->
-    <div class="header">
-        <div class="company-info">
+    <br>
 
-          <input
-            value="<?= htmlspecialchars($seller['perniagaan']) ?>"
-            readonly
-          >
+      <!-- COMPANY (hidden for backend) -->
+      <input type="hidden" name="company_name" value="<?= htmlspecialchars($seller['perniagaan']) ?>">
+      <input type="hidden" name="company_address" value="<?= htmlspecialchars($seller['alamat']) ?>">
+      <input type="hidden" name="company_phone" value="<?= htmlspecialchars($seller['telefon']) ?>">
+      <input type="hidden" name="company_email" value="<?= htmlspecialchars($seller['email']) ?>">
 
-          <textarea readonly><?= htmlspecialchars($seller['alamat']) ?></textarea>
+      <!-- QUOTATION META -->
+      <input type="hidden" name="quotation_no" value="<?= $quotation_no ?>">
 
-          <input
-            value="<?= htmlspecialchars($seller['telefon']) ?>"
-            readonly
-          >
+      <!-- SELLER INFO -->
+      <input type="hidden" name="seller_info" value="<?= htmlspecialchars(
+        $seller['nama']."\n".$seller['perniagaan']."\n".$seller['telefon']."\n".$seller['email']
+      ) ?>">
 
-          <input
-            value="<?= htmlspecialchars($seller['email']) ?>"
-            readonly
-          >
-
-        </div>
 
       <div class="logo-box">📷 Logo</div>
     </div>
 
     <!-- DOCUMENT INFO -->
     <div class="document-info">
-      <input type="date" name="quotation_date" required>
-      <input value="<?= $quotation_no ?>" readonly>
+
+      <div class="document-info-row">
+        <span class="document-info-label">Tarikh</span>
+        <input type="date" name="quotation_date" required>
+      </div>
+
+      <div class="document-info-row">
+        <span class="document-info-label">No Quotation</span>
+        <span class="info-text"><?= $quotation_no ?></span>
+      </div>
+
     </div>
+
 
     <hr class="divider">
 
@@ -379,14 +393,10 @@ if (!$quotation) {
       </div>
       <div class="party-box">
         <h4 class="party-title">Disediakan Oleh</h4>
-        <textarea readonly>
-        <?= htmlspecialchars($seller['nama']) ?>
-
-        <?= htmlspecialchars($seller['perniagaan']) ?>
-
-        <?= htmlspecialchars($seller['telefon']) ?>
-        <?= htmlspecialchars($seller['email']) ?>
-        </textarea>
+          <div class="info-text">
+            <strong><?= htmlspecialchars($seller['nama']) ?></strong><br>
+            <?= htmlspecialchars($seller['perniagaan']) ?><br>
+          </div>
       </div>
     </div>
 
@@ -423,7 +433,7 @@ if (!$quotation) {
           </td>
 
           <td class="text-center">
-            <button type="button" class="btn btn-danger delete-row">🗑️</button>
+            <button type="button" class="btn btn-danger delete-row">HAPUS</button>
           </td>
         </tr>
       </tbody>
@@ -437,10 +447,6 @@ if (!$quotation) {
       <div class="total-row">
         <span>Subtotal</span>
         <span id="subtotal">RM 0.00</span>
-      </div>
-      <div class="total-row">
-        <span>SST (6%)</span>
-        <span id="tax">RM 0.00</span>
       </div>
       <div class="total-row">
         <span>Jumlah Besar</span>
@@ -463,7 +469,6 @@ if (!$quotation) {
 const itemsTable = document.getElementById('itemsTable');
 const addRow = document.getElementById('addRow');
 const subtotalEl = document.getElementById('subtotal');
-const taxEl = document.getElementById('tax');
 const grandTotalEl = document.getElementById('grandTotal');
 
 function calculateRow(row) {
@@ -482,10 +487,8 @@ function calculateAll() {
     subtotal += parseFloat(row.querySelector('.item-total')?.value) || 0;
   });
 
-  const tax = subtotal * 0.06;
+
   subtotalEl.textContent = 'RM ' + subtotal.toFixed(2);
-  taxEl.textContent = 'RM ' + tax.toFixed(2);
-  grandTotalEl.textContent = 'RM ' + (subtotal + tax).toFixed(2);
 }
 
 addRow.onclick = () => {
@@ -500,7 +503,7 @@ addRow.onclick = () => {
     <td><input type="number" name="item_total[]" class="item-total" step="0.01" readonly></td>
 
     <td class="text-center">
-      <button type="button" class="btn btn-danger delete-row">🗑️</button>
+      <button type="button" class="btn btn-danger delete-row">HAPUS</button>
     </td>
   `;
 };
@@ -527,6 +530,10 @@ itemsTable.addEventListener('click', e => {
 });
 </script>
 
-</body>
 
+
+
+</body>
 </html>
+
+<?php include 'footer.php'?>

@@ -73,7 +73,7 @@ if ($isSeller) {
   $other = $stmt2->get_result()->fetch_assoc();
 
   $header_name   = $other['nama'] ?? 'Pengguna';
-  $header_avatar = $other['avatar'] ?? 'assets/img/user.png';
+  $header_avatar = $other['avatar'] ?? 'assets/img/default_avatar.jpg';
 
 } else {
   // buyer login → lawan = seller (owner servis)
