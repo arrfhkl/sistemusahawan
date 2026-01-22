@@ -349,20 +349,23 @@ if (!$quotation) {
 
     <br>
 
-      <!-- COMPANY (hidden for backend) -->
-      <input type="hidden" name="company_name" value="<?= htmlspecialchars($seller['perniagaan']) ?>">
-      <input type="hidden" name="company_address" value="<?= htmlspecialchars($seller['alamat']) ?>">
-      <input type="hidden" name="company_phone" value="<?= htmlspecialchars($seller['telefon']) ?>">
-      <input type="hidden" name="company_email" value="<?= htmlspecialchars($seller['email']) ?>">
+    <!-- COMPANY INFO -->
+    <div class="header">
+        <div class="company-info">
+            <!-- COMPANY (hidden for backend) -->
+              <input type="hidden" name="company_name" value="<?= htmlspecialchars($seller['perniagaan']) ?>">
+              <input type="hidden" name="company_address" value="<?= htmlspecialchars($seller['alamat']) ?>">
+              <input type="hidden" name="company_phone" value="<?= htmlspecialchars($seller['telefon']) ?>">
+              <input type="hidden" name="company_email" value="<?= htmlspecialchars($seller['email']) ?>">
 
-      <!-- QUOTATION META -->
-      <input type="hidden" name="quotation_no" value="<?= $quotation_no ?>">
+              <!-- QUOTATION META -->
+              <input type="hidden" name="quotation_no" value="<?= $quotation_no ?>">
 
-      <!-- SELLER INFO -->
-      <input type="hidden" name="seller_info" value="<?= htmlspecialchars(
-        $seller['nama']."\n".$seller['perniagaan']."\n".$seller['telefon']."\n".$seller['email']
-      ) ?>">
-
+              <!-- SELLER INFO -->
+              <input type="hidden" name="seller_info" value="<?= htmlspecialchars(
+                $seller['nama']."\n".$seller['perniagaan']."\n".$seller['telefon']."\n".$seller['email']
+              ) ?>">
+        </div>
 
       <div class="logo-box">📷 Logo</div>
     </div>
