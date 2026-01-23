@@ -37,7 +37,7 @@ $stmt->close();
 </html>
 
 <?php
-// Sambungan ke pangkalan data
+// Sambungan ke pangkalan dat
 include "connection.php";
 if ($conn->connect_error) {
     die("Sambungan gagal: " . $conn->connect_error);
@@ -105,7 +105,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-
     // Dapatkan NAMA kategori untuk kolum `kategori`
     $getKategori = $conn->prepare("SELECT nama FROM kategori_servis WHERE id = ?");
     $getKategori->bind_param("i", $kategori_id);
@@ -119,20 +118,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $stmt = $conn->prepare("
     INSERT INTO servis 
     (kategori_servis_id, usahawan_id, nama, deskripsi, lokasi, gambar_servis_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
 ");
-
 
 $stmt->bind_param(
     "iissss",
-    $kategori_id,   // i
-    $usahawan_id,   // i
-    $nama,          // s
-    $deskripsi,     // s
-    $lokasi,        // s
-    $gambar_url     // s
+    $kategori_id,
+    $usahawan_id,
+    $nama,
+    $deskripsi,
+    $lokasi,
+    $gambar_url
 );
-
 
 if ($stmt->execute()) {
     echo "<script>
