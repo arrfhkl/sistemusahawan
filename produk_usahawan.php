@@ -1,83 +1,5 @@
 <?php
 include "connection.php";
-
-if (isset($_POST['ajax']) && $_POST['ajax'] === 'search') {
-
-    if (!isset($_SESSION['usahawan_id'])) exit;
-
-    $usahawan_id = (int) $_SESSION['usahawan_id'];
-    $keyword = trim($_POST['keyword'] ?? '');
-
-    $sql = "SELECT * FROM produk WHERE usahawan_id = ?";
-    if ($keyword !== '') {
-        $sql .= " AND nama LIKE ?";
-    }
-    $sql .= " ORDER BY id DESC";
-
-    $stmt = $conn->prepare($sql);
-
-    if ($keyword !== '') {
-        $search = "%$keyword%";
-        $stmt->bind_param("is", $usahawan_id, $search);
-    } else {
-        $stmt->bind_param("i", $usahawan_id);
-    }
-
-    $stmt->execute();
-    $produk = $stmt->get_result();
-
-    if ($produk->num_rows === 0) {
-        echo '<div class="empty">Tiada produk dijumpai.</div>';
-        exit;
-    }
-
-    while ($p = $produk->fetch_assoc()) {
-
-        if ($p['stok'] == 0) {
-            $badge = "badge-red";
-            $label = "Habis Stok";
-        } elseif ($p['stok'] <= 5) {
-            $badge = "badge-orange";
-            $label = "Stok Rendah";
-        } else {
-            $badge = "badge-green";
-            $label = "Aktif";
-        }
-
-        $img = !empty($p['gambar_url'])
-            ? "uploads/" . $p['gambar_url']
-            : "assets/img/no-image.png";
-        ?>
-        
-        <div class="product-card">
-            <img src="<?= $img ?>" class="product-cover">
-            <div class="product-body">
-                <span class="badge <?= $badge ?>"><?= $label ?></span>
-                <h3><?= htmlspecialchars($p['nama']) ?></h3>
-                <p><?= substr(strip_tags($p['deskripsi']), 0, 60) ?>...</p>
-
-                <div class="product-meta">
-                    <strong>RM <?= number_format($p['harga'],2) ?></strong>
-                    <span>Stok: <?= $p['stok'] ?></span>
-                </div>
-            </div>
-
-            <div class="product-actions">
-                <a href="produk_view.php?id=<?= $p['id'] ?>">Lihat</a>
-                <a href="edit_produk.php?id=<?= $p['id'] ?>">Edit</a>
-                <a href="delete_produk.php?id=<?= $p['id'] ?>"
-                   onclick="return confirm('Padam produk ini?')">Padam</a>
-            </div>
-        </div>
-
-        <?php
-    }
-
-    exit;
-}
-?>
-
-<?php
 include "header.php";
 
 if (!isset($_SESSION['usahawan_id'])) {
@@ -123,12 +45,28 @@ $q_nilai = $conn->query("
 /* ===========================
    SENARAI PRODUK
 =========================== */
-$produk = $conn->query("
-    SELECT * 
-    FROM produk 
-    WHERE usahawan_id = $usahawan_id
-    ORDER BY id DESC
-");
+$search = $_GET['search'] ?? '';
+
+$sql = "SELECT * FROM produk WHERE usahawan_id = ?";
+
+if ($search !== '') {
+    $sql .= " AND nama LIKE ?";
+}
+
+$sql .= " ORDER BY id DESC";
+
+$stmt = $conn->prepare($sql);
+
+if ($search !== '') {
+    $like = "%$search%";
+    $stmt->bind_param("is", $usahawan_id, $like);
+} else {
+    $stmt->bind_param("i", $usahawan_id);
+}
+
+$stmt->execute();
+$produk = $stmt->get_result();
+
 ?>
 
 <style>
@@ -365,7 +303,7 @@ $produk = $conn->query("
 
 
     <div class="header-actions">
-        <input type="text" id="searchProduk" placeholder="🔍 Cari produk..." class="search-input">
+        <input type="text" id="searchProduk" placeholder="🔍 Cari produk..." autocomplete="off" class="search-input">
         <a href="tambah_produk.php" class="btn-primary">+ Tambah Produk</a>
     </div>
 </div>
@@ -465,43 +403,22 @@ $produk = $conn->query("
 
 <script>
 const searchInput = document.getElementById("searchProduk");
-const grid = document.querySelector("#produkContainer .product-grid");
+const produkContainer = document.getElementById("produkContainer");
 
-let delay = null;
-let originalHTML = grid.innerHTML; // simpan list asal
+function loadProduk() {
+    const keyword = searchInput.value;
 
-searchInput.addEventListener("keyup", function () {
-    clearTimeout(delay);
+    fetch(`?search=${encodeURIComponent(keyword)}`)
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            produkContainer.innerHTML =
+                doc.querySelector("#produkContainer").innerHTML;
+        });
+}
 
-    delay = setTimeout(() => {
-        const keyword = this.value.trim();
-
-        // 🔄 Kalau kosong → restore list asal
-        if (keyword === "") {
-            grid.innerHTML = originalHTML;
-            return;
-        }
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "", true);
-        xhr.setRequestHeader(
-            "Content-Type",
-            "application/x-www-form-urlencoded"
-        );
-
-        xhr.onload = function () {
-            if (this.status === 200) {
-                grid.innerHTML = this.responseText;
-            }
-        };
-
-        xhr.send(
-            "ajax=search&keyword=" + encodeURIComponent(keyword)
-        );
-    }, 300);
-});
+searchInput.addEventListener("keyup", loadProduk);
 </script>
-
-
 
 <?php include "footer.php"; ?>
