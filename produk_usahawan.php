@@ -1,5 +1,83 @@
 <?php
 include "connection.php";
+
+if (isset($_POST['ajax']) && $_POST['ajax'] === 'search') {
+
+    if (!isset($_SESSION['usahawan_id'])) exit;
+
+    $usahawan_id = (int) $_SESSION['usahawan_id'];
+    $keyword = trim($_POST['keyword'] ?? '');
+
+    $sql = "SELECT * FROM produk WHERE usahawan_id = ?";
+    if ($keyword !== '') {
+        $sql .= " AND nama LIKE ?";
+    }
+    $sql .= " ORDER BY id DESC";
+
+    $stmt = $conn->prepare($sql);
+
+    if ($keyword !== '') {
+        $search = "%$keyword%";
+        $stmt->bind_param("is", $usahawan_id, $search);
+    } else {
+        $stmt->bind_param("i", $usahawan_id);
+    }
+
+    $stmt->execute();
+    $produk = $stmt->get_result();
+
+    if ($produk->num_rows === 0) {
+        echo '<div class="empty">Tiada produk dijumpai.</div>';
+        exit;
+    }
+
+    while ($p = $produk->fetch_assoc()) {
+
+        if ($p['stok'] == 0) {
+            $badge = "badge-red";
+            $label = "Habis Stok";
+        } elseif ($p['stok'] <= 5) {
+            $badge = "badge-orange";
+            $label = "Stok Rendah";
+        } else {
+            $badge = "badge-green";
+            $label = "Aktif";
+        }
+
+        $img = !empty($p['gambar_url'])
+            ? "uploads/" . $p['gambar_url']
+            : "assets/img/no-image.png";
+        ?>
+        
+        <div class="product-card">
+            <img src="<?= $img ?>" class="product-cover">
+            <div class="product-body">
+                <span class="badge <?= $badge ?>"><?= $label ?></span>
+                <h3><?= htmlspecialchars($p['nama']) ?></h3>
+                <p><?= substr(strip_tags($p['deskripsi']), 0, 60) ?>...</p>
+
+                <div class="product-meta">
+                    <strong>RM <?= number_format($p['harga'],2) ?></strong>
+                    <span>Stok: <?= $p['stok'] ?></span>
+                </div>
+            </div>
+
+            <div class="product-actions">
+                <a href="produk_view.php?id=<?= $p['id'] ?>">Lihat</a>
+                <a href="edit_produk.php?id=<?= $p['id'] ?>">Edit</a>
+                <a href="delete_produk.php?id=<?= $p['id'] ?>"
+                   onclick="return confirm('Padam produk ini?')">Padam</a>
+            </div>
+        </div>
+
+        <?php
+    }
+
+    exit;
+}
+?>
+
+<?php
 include "header.php";
 
 if (!isset($_SESSION['usahawan_id'])) {
@@ -42,13 +120,6 @@ $q_nilai = $conn->query("
     WHERE usahawan_id = $usahawan_id
 ")->fetch_assoc()['nilai'] ?? 0;
 
-// Bilangan kategori digunakan
-$q_kategori = $conn->query("
-    SELECT COUNT(DISTINCT kategori_id) AS kategori 
-    FROM produk 
-    WHERE usahawan_id = $usahawan_id
-")->fetch_assoc()['kategori'] ?? 0;
-
 /* ===========================
    SENARAI PRODUK
 =========================== */
@@ -61,19 +132,31 @@ $produk = $conn->query("
 ?>
 
 <style>
+:root {
+    --primary-dark: #0f2a44;   /* biru gelap utama */
+    --primary-soft: #3b6ea8;   /* biru lembut */
+    --text-muted: #6b7280;
+}
+
 /* ===========================
    LAYOUT ASAS
 =========================== */
 .container {
-    padding: 30px;
-    margin-left: 260px;
-    background: #f4f6f9;
+    max-width: 1280px;   /* atau 1200px kalau nak lebih padat */
+    margin: 0 auto;      /* center */
+    padding: 30px 40px;
     min-height: 100vh;
 }
 
-h1 {
-    font-size: 26px;
-    margin-bottom: 20px;
+.title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-wrap i {
+    font-size: 20px;
+    color: var(--primary-soft);
 }
 
 /* ===========================
@@ -81,9 +164,10 @@ h1 {
 =========================== */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    max-width: 1100px;
+    margin: 0 auto 30px;
     gap: 20px;
-    margin-bottom: 30px;
 }
 
 .kpi-card {
@@ -115,34 +199,69 @@ h1 {
 .orange { color:#fd7e14; }
 
 /* ===========================
-   TABLE PRODUK
+ PRODUK
 =========================== */
-.table-wrapper {
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 24px;
+}
+
+.product-card {
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
-    overflow-x: auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    transition: 0.3s;
 }
 
-table {
+.product-card:hover {
+    transform: translateY(-6px);
+}
+
+.product-cover {
     width: 100%;
-    border-collapse: collapse;
+    height: 180px;
+    object-fit: cover;
 }
 
-th, td {
-    padding: 14px;
-    border-bottom: 1px solid #eee;
-    text-align: left;
-    vertical-align: middle;
+.product-body {
+    padding: 16px;
+    flex: 1;
 }
 
-th {
-    background: #f8f9fb;
+.product-body h3 {
+    font-size: 16px;
+    margin: 8px 0 4px;
+}
+
+.product-body p {
+    font-size: 13px;
+    color: #666;
+}
+
+.product-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
     font-size: 14px;
 }
 
-tr:hover {
-    background: #f9fbff;
+.product-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-top: 1px solid #eee;
+}
+
+.product-actions a {
+    font-weight: 600;
+    text-decoration: none;
+    color: #007bff;
 }
 
 .product-img {
@@ -177,103 +296,212 @@ tr:hover {
     text-align: center;
     color: #777;
 }
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.search-input {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    min-width: 220px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+}
+.kpi-card {
+    position: relative;
+}
+
+.kpi-icon {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(0,0,0,0.06);
+}
+
+/* warna ikut KPI */
+.icon-blue   { color:#007bff; }
+.icon-green  { color:#28a745; }
+.icon-red    { color:#dc3545; }
+.icon-orange { color:#fd7e14; }
+
 </style>
 
 <div class="container">
 
-<h1>📦 Senarai Produk Perniagaan</h1>
+<div class="page-header">
+    <div class="title-wrap">
+    <i class="fa-solid fa-box-open"></i>
+    <h1 class="page-title">Produk <span>Perniagaan</span></h1>
+    </div>
+
+
+    <div class="header-actions">
+        <input type="text" id="searchProduk" placeholder="🔍 Cari produk..." class="search-input">
+        <a href="tambah_produk.php" class="btn-primary">+ Tambah Produk</a>
+    </div>
+</div>
 
 <!-- ===========================
      KPI SECTION
 =========================== -->
 <div class="kpi-grid">
+
     <div class="kpi-card">
+    <div class="kpi-icon icon-blue">
+        <i class="fa-solid fa-box"></i>
+    </div>
         <div class="kpi-title">Jumlah Produk</div>
         <div class="kpi-value blue"><?= $q_total ?></div>
     </div>
+
     <div class="kpi-card">
+        <div class="kpi-icon icon-green">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
         <div class="kpi-title">Produk Aktif</div>
         <div class="kpi-value green"><?= $q_aktif ?></div>
     </div>
+
     <div class="kpi-card">
+        <div class="kpi-icon icon-red">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
         <div class="kpi-title">Produk Habis Stok</div>
         <div class="kpi-value red"><?= $q_habis ?></div>
     </div>
+
     <div class="kpi-card">
+        <div class="kpi-icon icon-blue">
+            <i class="fa-solid fa-coins"></i>
+        </div>
         <div class="kpi-title">Nilai Inventori (RM)</div>
         <div class="kpi-value blue"><?= number_format($q_nilai,2) ?></div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-title">Kategori Digunakan</div>
-        <div class="kpi-value orange"><?= $q_kategori ?></div>
-    </div>
+
 </div>
 
 <!-- ===========================
      TABLE PRODUK
 =========================== -->
-<div class="table-wrapper">
-<table>
-<thead>
-<tr>
-    <th>Produk</th>
-    <th>Nama & Deskripsi</th>
-    <th>Harga (RM)</th>
-    <th>Stok</th>
-    <th>Lokasi</th>
-    <th>Tindakan</th>
-</tr>
-</thead>
-<tbody>
+<div id="produkContainer">
+<div class="product-grid">
 
 <?php if ($produk->num_rows > 0): ?>
-<?php while($p = $produk->fetch_assoc()): 
+    <?php while ($p = $produk->fetch_assoc()):
 
-    if ($p['stok'] == 0) {
-        $status = "<span class='badge badge-red'>Habis Stok</span>";
-    } elseif ($p['stok'] <= 5) {
-        $status = "<span class='badge badge-orange'>Stok Rendah</span>";
-    } else {
-        $status = "<span class='badge badge-green'>Aktif</span>";
-    }
+        if ($p['stok'] == 0) {
+            $badge = "badge-red";
+            $label = "Habis Stok";
+        } elseif ($p['stok'] <= 5) {
+            $badge = "badge-orange";
+            $label = "Stok Rendah";
+        } else {
+            $badge = "badge-green";
+            $label = "Aktif";
+        }
 
-    $img = !empty($p['gambar_url'])
-        ? "uploads/" . $p['gambar_url']
-        : "assets/img/no-image.png";
-?>
+        $img = !empty($p['gambar_url'])
+            ? "uploads/" . $p['gambar_url']
+            : "assets/img/no-image.png";
+    ?>
+        <div class="product-card">
+            <img src="<?= $img ?>" class="product-cover">
 
-<tr>
-    <td><img src="<?= $img ?>" class="product-img"></td>
-    <td>
-        <strong><?= htmlspecialchars($p['nama']) ?></strong><br>
-        <small><?= substr(strip_tags($p['deskripsi']),0,80) ?>...</small>
-    </td>
-    <td><?= number_format($p['harga'],2) ?></td>
-    <td><?= $status ?> (<?= $p['stok'] ?>)</td>
-    <td><?= htmlspecialchars($p['lokasi']) ?></td>
-    <td class="action">
-        <a href="produk_view.php?id=<?= $p['id'] ?>">Lihat</a>
-        <a href="produk_edit.php?id=<?= $p['id'] ?>">Edit</a>
-        <a href="produk_delete.php?id=<?= $p['id'] ?>" 
-           onclick="return confirm('Padam produk ini?')">Padam</a>
-    </td>
-</tr>
+            <div class="product-body">
+                <span class="badge <?= $badge ?>"><?= $label ?></span>
+                <h3><?= htmlspecialchars($p['nama']) ?></h3>
+                <p><?= substr(strip_tags($p['deskripsi']),0,60) ?>...</p>
 
-<?php endwhile; ?>
+                <div class="product-meta">
+                    <strong>RM <?= number_format($p['harga'],2) ?></strong>
+                    <span>Stok: <?= $p['stok'] ?></span>
+                </div>
+            </div>
+
+            <div class="product-actions">
+                <a href="produk_view.php?id=<?= $p['id'] ?>">Lihat</a>
+                <a href="edit_produk.php?id=<?= $p['id'] ?>">Edit</a>
+                <a href="delete_produk.php?id=<?= $p['id'] ?>"
+                   onclick="return confirm('Padam produk ini?')">Padam</a>
+            </div>
+        </div>
+    <?php endwhile; ?>
 <?php else: ?>
-<tr>
-    <td colspan="6" class="empty">
-        Tiada produk didaftarkan.  
-        <br><br>
-        <a href="produk_tambah.php">➕ Tambah Produk Pertama</a>
-    </td>
-</tr>
+    <div class="empty">Tiada produk.</div>
 <?php endif; ?>
 
-</tbody>
-</table>
+</div>
+</div>
 </div>
 
-</div>
+<script>
+const searchInput = document.getElementById("searchProduk");
+const grid = document.querySelector("#produkContainer .product-grid");
+
+let delay = null;
+let originalHTML = grid.innerHTML; // simpan list asal
+
+searchInput.addEventListener("keyup", function () {
+    clearTimeout(delay);
+
+    delay = setTimeout(() => {
+        const keyword = this.value.trim();
+
+        // 🔄 Kalau kosong → restore list asal
+        if (keyword === "") {
+            grid.innerHTML = originalHTML;
+            return;
+        }
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "", true);
+        xhr.setRequestHeader(
+            "Content-Type",
+            "application/x-www-form-urlencoded"
+        );
+
+        xhr.onload = function () {
+            if (this.status === 200) {
+                grid.innerHTML = this.responseText;
+            }
+        };
+
+        xhr.send(
+            "ajax=search&keyword=" + encodeURIComponent(keyword)
+        );
+    }, 300);
+});
+</script>
+
+
 
 <?php include "footer.php"; ?>
