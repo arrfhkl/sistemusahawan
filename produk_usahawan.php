@@ -69,6 +69,16 @@ $produk = $stmt->get_result();
 
 ?>
 
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesanan Masuk - Sistem Usahawan Pahang</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" type="image/png" href="assets/img/jatapahang.png">
+
 <style>
 :root {
     --primary-dark: #0f2a44;   /* biru gelap utama */
@@ -422,3 +432,6 @@ searchInput.addEventListener("keyup", loadProduk);
 </script>
 
 <?php include "footer.php"; ?>
+
+</body>
+</html>
