@@ -86,13 +86,14 @@ $produk = $stmt->get_result();
     --text-muted: #6b7280;
 }
 
-/* ===========================
+/* ===========================c                                                                                                                                                
    LAYOUT ASAS
 =========================== */
 .container {
     max-width: 1280px;   /* atau 1200px kalau nak lebih padat */
     margin: 0 auto;      /* center */
     padding: 30px 40px;
+    padding-top: 120px;
     min-height: 100vh;
 }
 
@@ -110,41 +111,59 @@ $produk = $stmt->get_result();
 /* ===========================
    KPI CARDS
 =========================== */
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    max-width: 1100px;
-    margin: 0 auto 30px;
-    gap: 20px;
-}
-
-.kpi-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
-    transition: 0.3s;
-}
-
 .kpi-card:hover {
     transform: translateY(-4px);
-}
-
-.kpi-title {
-    font-size: 13px;
-    color: #777;
-}
-
-.kpi-value {
-    font-size: 26px;
-    font-weight: 700;
-    margin-top: 5px;
 }
 
 .blue { color:#007bff; }
 .green { color:#28a745; }
 .red { color:#dc3545; }
 .orange { color:#fd7e14; }
+
+/* KPI / STATS STYLE — SAME AS PESANAN MASUK */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.stat-icon.total { color: #003399; }
+.stat-icon.active { color: #28a745; }
+.stat-icon.low { color: #dc3545; }
+.stat-icon.value { color: #007bff; }
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #003399;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
 
 /* ===========================
  PRODUK
@@ -244,11 +263,20 @@ $produk = $stmt->get_result();
     text-align: center;
     color: #777;
 }
+
 .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.page-header h2 {
+  color: #003399;
+  margin: 0;
+  font-weight: 700;
 }
 
 .subtitle {
@@ -281,81 +309,130 @@ $produk = $stmt->get_result();
     position: relative;
 }
 
-.kpi-icon {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    background: rgba(0,0,0,0.06);
-}
-
 /* warna ikut KPI */
 .icon-blue   { color:#007bff; }
 .icon-green  { color:#28a745; }
 .icon-red    { color:#dc3545; }
 .icon-orange { color:#fd7e14; }
 
+.filters-section {
+  background: #fff;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+}
+
+.filters-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 220px;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #003399;
+}
+
+.filter-group input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.filter-btn {
+  background: #003399;
+  color: #fff;
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.product-card {
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-6px);
+}
+
+.product-actions a {
+    cursor: pointer;
+}
+
 </style>
 
 <div class="container">
 
-<div class="page-header">
-    <div class="title-wrap">
-    <i class="fa-solid fa-box-open"></i>
-    <h1 class="page-title">Produk <span>Perniagaan</span></h1>
+    <div class="page-header">
+        <h2><i class="fas fa-box-open"></i> Produk Perniagaan</h2>
     </div>
 
-
-    <div class="header-actions">
-        <input type="text" id="searchProduk" placeholder="🔍 Cari produk..." autocomplete="off" class="search-input">
-        <a href="tambah_produk.php" class="btn-primary">+ Tambah Produk</a>
-    </div>
-</div>
-
-<!-- ===========================
-     KPI SECTION
+    <!-- ===========================
+    CONTAINER
 =========================== -->
-<div class="kpi-grid">
+<div class="stats-container">
 
-    <div class="kpi-card">
-    <div class="kpi-icon icon-blue">
-        <i class="fa-solid fa-box"></i>
-    </div>
-        <div class="kpi-title">Jumlah Produk</div>
-        <div class="kpi-value blue"><?= $q_total ?></div>
-    </div>
-
-    <div class="kpi-card">
-        <div class="kpi-icon icon-green">
-            <i class="fa-solid fa-circle-check"></i>
+    <div class="stat-card">
+        <div class="stat-icon total">
+            <i class="fas fa-box"></i>
         </div>
-        <div class="kpi-title">Produk Aktif</div>
-        <div class="kpi-value green"><?= $q_aktif ?></div>
+        <div class="stat-number"><?= $q_total ?></div>
+        <div class="stat-label">Jumlah Produk</div>
     </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon icon-red">
-            <i class="fa-solid fa-triangle-exclamation"></i>
+    <div class="stat-card">
+        <div class="stat-icon active">
+            <i class="fas fa-circle-check"></i>
         </div>
-        <div class="kpi-title">Produk Habis Stok</div>
-        <div class="kpi-value red"><?= $q_habis ?></div>
+        <div class="stat-number"><?= $q_aktif ?></div>
+        <div class="stat-label">Produk Aktif</div>
     </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon icon-blue">
-            <i class="fa-solid fa-coins"></i>
+    <div class="stat-card">
+        <div class="stat-icon low">
+            <i class="fas fa-triangle-exclamation"></i>
         </div>
-        <div class="kpi-title">Nilai Inventori (RM)</div>
-        <div class="kpi-value blue"><?= number_format($q_nilai,2) ?></div>
+        <div class="stat-number"><?= $q_habis ?></div>
+        <div class="stat-label">Produk Habis Stok</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon value">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="stat-number">RM <?= number_format($q_nilai, 2) ?></div>
+        <div class="stat-label">Nilai Inventori</div>
     </div>
 
 </div>
+
+    <div class="filters-section">
+        <div class="filters-row">
+            <div class="filter-group">
+                <label><i class="fas fa-search"></i> Cari Produk</label>
+                <input type="text"
+                    id="searchProduk"
+                    placeholder="Nama produk"
+                    autocomplete="off">
+            </div>
+
+            <a href="tambah_produk.php" class="filter-btn">
+                <i class="fas fa-plus"></i> Tambah Produk
+            </a>
+        </div>
+    </div>
+    
 
 <!-- ===========================
      TABLE PRODUK
@@ -381,27 +458,22 @@ $produk = $stmt->get_result();
             ? "uploads/" . $p['gambar_url']
             : "assets/img/no-image.png";
     ?>
-        <div class="product-card">
-            <img src="<?= $img ?>" class="product-cover">
 
-            <div class="product-body">
-                <span class="badge <?= $badge ?>"><?= $label ?></span>
-                <h3><?= htmlspecialchars($p['nama']) ?></h3>
-                <p><?= substr(strip_tags($p['deskripsi']),0,60) ?>...</p>
+    <div class="product-card" data-href="produk_view.php?id=<?= $p['id'] ?>">
+        <img src="<?= $img ?>" class="product-cover">
 
-                <div class="product-meta">
-                    <strong>RM <?= number_format($p['harga'],2) ?></strong>
-                    <span>Stok: <?= $p['stok'] ?></span>
-                </div>
-            </div>
+        <div class="product-body">
+            <span class="badge <?= $badge ?>"><?= $label ?></span>
+            <h3><?= htmlspecialchars($p['nama']) ?></h3>
+            <p><?= substr(strip_tags($p['deskripsi']),0,60) ?>...</p>
 
-            <div class="product-actions">
-                <a href="produk_view.php?id=<?= $p['id'] ?>">Lihat</a>
-                <a href="edit_produk.php?id=<?= $p['id'] ?>">Edit</a>
-                <a href="delete_produk.php?id=<?= $p['id'] ?>"
-                   onclick="return confirm('Padam produk ini?')">Padam</a>
+            <div class="product-meta">
+                <strong>RM <?= number_format($p['harga'],2) ?></strong>
+                <span>Stok: <?= $p['stok'] ?></span>
             </div>
         </div>
+    </div>
+
     <?php endwhile; ?>
 <?php else: ?>
     <div class="empty">Tiada produk.</div>
@@ -430,6 +502,22 @@ function loadProduk() {
 
 searchInput.addEventListener("keyup", loadProduk);
 </script>
+
+<script>
+document.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('click', function () {
+        window.location.href = this.dataset.href;
+    });
+});
+
+// prevent click bubbling for action links
+document.querySelectorAll('.product-actions a').forEach(link => {
+    link.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+});
+</script>
+
 
 <?php include "footer.php"; ?>
 

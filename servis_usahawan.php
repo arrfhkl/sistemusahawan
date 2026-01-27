@@ -19,7 +19,7 @@ $q_total = $conn->query("
     WHERE usahawan_id = $usahawan_id
 ")->fetch_assoc()['total'] ?? 0;
 
-// Servis aktif (anggap ada nama & deskripsi)
+// Servis aktif
 $q_aktif = $conn->query("
     SELECT COUNT(*) AS aktif 
     FROM servis 
@@ -27,130 +27,226 @@ $q_aktif = $conn->query("
     AND nama IS NOT NULL
 ")->fetch_assoc()['aktif'] ?? 0;
 
-// Jumlah booking
-$q_booking = $conn->query("
+// Jumlah tempahan
+$q_tempahan = $conn->query("
     SELECT COUNT(*) AS total 
     FROM servis_booking 
     WHERE usahawan_id = $usahawan_id
 ")->fetch_assoc()['total'] ?? 0;
 
-// Booking pending
-$q_pending = $conn->query("
-    SELECT COUNT(*) AS pending 
+// Tempahan menunggu
+$q_menunggu = $conn->query("
+    SELECT COUNT(*) AS menunggu 
     FROM servis_booking 
     WHERE usahawan_id = $usahawan_id
     AND status = 'pending'
-")->fetch_assoc()['pending'] ?? 0;
-
-// Bilangan kategori servis digunakan
-$q_kategori = $conn->query("
-    SELECT COUNT(DISTINCT kategori_servis_id) AS kategori 
-    FROM servis 
-    WHERE usahawan_id = $usahawan_id
-")->fetch_assoc()['kategori'] ?? 0;
+")->fetch_assoc()['menunggu'] ?? 0;
 
 /* ===========================
    SENARAI SERVIS
 =========================== */
-$servis = $conn->query("
-    SELECT 
-        s.*,
-        ks.nama AS kategori_nama,
-        (
-            SELECT COUNT(*) 
-            FROM servis_booking sb 
-            WHERE sb.service_id = s.id
-        ) AS jumlah_booking
-    FROM servis s
-    LEFT JOIN kategori_servis ks ON ks.id = s.kategori_servis_id
-    WHERE s.usahawan_id = $usahawan_id
-    ORDER BY s.id DESC
-");
+
+$search = $_GET['search'] ?? '';
+
+$sql = "
+SELECT 
+    s.*,
+    ks.nama AS nama_kategori,
+    (
+        SELECT COUNT(*) 
+        FROM servis_booking sb 
+        WHERE sb.service_id = s.id
+    ) AS jumlah_tempahan
+FROM servis s
+LEFT JOIN kategori_servis ks ON ks.id = s.kategori_servis_id
+WHERE s.usahawan_id = ?
+";
+
+if ($search !== '') {
+    $sql .= " AND s.nama LIKE ?";
+}
+
+$sql .= " ORDER BY s.id DESC";
+
+$stmt = $conn->prepare($sql);
+
+if ($search !== '') {
+    $like = "%$search%";
+    $stmt->bind_param("is", $usahawan_id, $like);
+} else {
+    $stmt->bind_param("i", $usahawan_id);
+}
+
+$stmt->execute();
+$servis = $stmt->get_result();
 ?>
 
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servis Perniagaan</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
+/* warna ikut KPI */
+.icon-blue   { color:#007bff; }
+.icon-green  { color:#28a745; }
+.icon-orange { color:#fd7e14; }
+.icon-red    { color:#dc3545; }
+
+.page-header {
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.page-header h2 {
+  color: #003399;
+  margin: 0;
+  font-weight: 700;
+}
+
 .container {
-    padding: 30px;
-    margin-left: 260px;
-    background: #f4f6f9;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    padding-top: 120px;
     min-height: 100vh;
 }
 
-h1 {
-    font-size: 26px;
-    margin-bottom: 20px;
-}
-
-/* KPI */
-.kpi-grid {
+/* ================= KPI ================= */
+.stats-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
 
-.kpi-card {
+.stat-card {
     background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    text-align: center;
     transition: 0.3s;
 }
 
-.kpi-card:hover {
-    transform: translateY(-4px);
+.stat-card:hover {
+    transform: translateY(-5px);
 }
 
-.kpi-title {
-    font-size: 13px;
-    color: #777;
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
 }
 
-.kpi-value {
-    font-size: 26px;
+.stat-number {
+    font-size: 2rem;
     font-weight: 700;
-    margin-top: 5px;
+    color: #003399;
 }
 
-.blue { color:#007bff; }
-.green { color:#28a745; }
-.orange { color:#fd7e14; }
-.red { color:#dc3545; }
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+}
 
-/* Table */
-.table-wrapper {
+/* ================= PENAPIS ================= */
+.filters-section {
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
-    overflow-x: auto;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
 }
 
-table {
+.filters-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 220px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+    color: #003399;
+}
+
+.filter-group input {
     width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 14px;
-    border-bottom: 1px solid #eee;
-    vertical-align: middle;
-}
-
-th {
-    background: #f8f9fb;
-    font-size: 14px;
-}
-
-tr:hover {
-    background: #f9fbff;
-}
-
-.service-img {
-    width: 55px;
-    height: 55px;
-    object-fit: cover;
-    border-radius: 8px;
+    padding: 10px;
+    border-radius: 10px;
     border: 1px solid #ddd;
+}
+
+.filter-btn {
+    background: #003399;
+    color: #fff;
+    padding: 10px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* ================= KAD SERVIS ================= */
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.service-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+    overflow: hidden;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.service-card:hover {
+    transform: translateY(-6px);
+}
+
+.service-cover {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.service-body {
+    padding: 16px;
+}
+
+.service-body h3 {
+    font-size: 16px;
+    margin: 8px 0 4px;
+}
+
+.service-body p {
+    font-size: 13px;
+    color: #666;
+}
+
+.service-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-top: 10px;
 }
 
 .badge {
@@ -160,110 +256,147 @@ tr:hover {
     font-weight: 600;
 }
 
-.badge-green { background:#e6f4ea; color:#1e7e34; }
-.badge-orange { background:#fff3cd; color:#856404; }
-.badge-blue { background:#e7f1ff; color:#004085; }
-
-.action a {
-    margin-right: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    color: #007bff;
-}
+.badge-hijau { background:#e6f4ea; color:#1e7e34; }
+.badge-biru { background:#e7f1ff; color:#004085; }
 
 .empty {
-    padding: 40px;
     text-align: center;
+    padding: 40px;
     color: #777;
 }
 </style>
+</head>
+
+<body>
 
 <div class="container">
 
-<h1>🛠️ Senarai Servis Perniagaan</h1>
+<div class="page-header">
+        <h2><i class="fas fa-briefcase"></i> Servis Perniagaan</h2>
+    </div>
 
 <!-- KPI -->
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-title">Jumlah Servis</div>
-        <div class="kpi-value blue"><?= $q_total ?></div>
+<div class="stats-container">
+
+    <!-- Jumlah Servis -->
+    <div class="stat-card">
+        <div class="stat-icon icon-blue">
+            <i class="fas fa-list"></i>
+        </div>
+        <div class="stat-number"><?= $q_total ?></div>
+        <div class="stat-label">Jumlah Servis</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-title">Servis Aktif</div>
-        <div class="kpi-value green"><?= $q_aktif ?></div>
+
+    <!-- Servis Aktif -->
+    <div class="stat-card">
+        <div class="stat-icon icon-green">
+            <i class="fas fa-circle-check"></i>
+        </div>
+        <div class="stat-number"><?= $q_aktif ?></div>
+        <div class="stat-label">Servis Aktif</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-title">Jumlah Booking</div>
-        <div class="kpi-value blue"><?= $q_booking ?></div>
+
+    <!-- Jumlah Tempahan -->
+    <div class="stat-card">
+        <div class="stat-icon icon-blue">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-number"><?= $q_tempahan ?></div>
+        <div class="stat-label">Jumlah Tempahan</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-title">Booking Pending</div>
-        <div class="kpi-value orange"><?= $q_pending ?></div>
+
+    <!-- Tempahan Menunggu -->
+    <div class="stat-card">
+        <div class="stat-icon icon-orange">
+            <i class="fas fa-hourglass-half"></i>
+        </div>
+        <div class="stat-number"><?= $q_menunggu ?></div>
+        <div class="stat-label">Tempahan Menunggu</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-title">Kategori Servis</div>
-        <div class="kpi-value blue"><?= $q_kategori ?></div>
+
+</div>
+
+<!-- PENAPIS -->
+<div class="filters-section">
+    <div class="filters-row">
+        <div class="filter-group">
+            <label><i class="fas fa-search"></i> Cari Servis</label>
+            <input type="text" id="searchServis" placeholder="Masukkan nama servis">
+        </div>
+
+        <a href="servis_tambah.php" class="filter-btn">
+            <i class="fas fa-plus"></i> Tambah Servis
+        </a>
     </div>
 </div>
 
-<!-- TABLE -->
-<div class="table-wrapper">
-<table>
-<thead>
-<tr>
-    <th>Servis</th>
-    <th>Nama & Deskripsi</th>
-    <th>Kategori</th>
-    <th>Lokasi</th>
-    <th>Booking</th>
-    <th>Tindakan</th>
-</tr>
-</thead>
-<tbody>
+<!-- SENARAI SERVIS -->
+<div id="servisContainer">
+<div class="service-grid">
 
 <?php if ($servis->num_rows > 0): ?>
-<?php while($s = $servis->fetch_assoc()):
+<?php while ($s = $servis->fetch_assoc()):
 
     $img = !empty($s['gambar_servis_url'])
-        ? "uploads/" . $s['gambar_servis_url']
+        ? "uploads/".$s['gambar_servis_url']
         : "assets/img/no-image.png";
 
-    $badge = $s['jumlah_booking'] > 0
-        ? "<span class='badge badge-green'>Aktif</span>"
-        : "<span class='badge badge-blue'>Belum Dibooking</span>";
+    $badge = $s['jumlah_tempahan'] > 0
+        ? "<span class='badge badge-hijau'>Aktif</span>"
+        : "<span class='badge badge-biru'>Belum Ditempah</span>";
 ?>
 
-<tr>
-    <td><img src="<?= $img ?>" class="service-img"></td>
-    <td>
-        <strong><?= htmlspecialchars($s['nama']) ?></strong><br>
-        <small><?= substr(strip_tags($s['deskripsi']),0,80) ?>...</small>
-    </td>
-    <td><?= htmlspecialchars($s['kategori_nama'] ?? '-') ?></td>
-    <td><?= htmlspecialchars($s['lokasi']) ?></td>
-    <td><?= $badge ?> (<?= $s['jumlah_booking'] ?>)</td>
-    <td class="action">
-        <a href="servis_view.php?id=<?= $s['id'] ?>">Lihat</a>
-        <a href="servis_edit.php?id=<?= $s['id'] ?>">Edit</a>
-        <a href="servis_delete.php?id=<?= $s['id'] ?>"
-           onclick="return confirm('Padam servis ini?')">Padam</a>
-    </td>
-</tr>
+<div class="service-card" data-href="servis_view.php?id=<?= $s['id'] ?>">
+    <img src="<?= $img ?>" class="service-cover">
+
+    <div class="service-body">
+        <?= $badge ?>
+        <h3><?= htmlspecialchars($s['nama']) ?></h3>
+        <p><?= substr(strip_tags($s['deskripsi']),0,70) ?>...</p>
+
+        <div class="service-meta">
+            <span><?= htmlspecialchars($s['nama_kategori'] ?? '-') ?></span>
+            <span><?= $s['jumlah_tempahan'] ?> tempahan</span>
+        </div>
+    </div>
+</div>
 
 <?php endwhile; ?>
 <?php else: ?>
-<tr>
-    <td colspan="6" class="empty">
-        Tiada servis didaftarkan.<br><br>
-        <a href="servis_tambah.php">➕ Tambah Servis Pertama</a>
-    </td>
-</tr>
+<div class="empty">Tiada servis didaftarkan.</div>
 <?php endif; ?>
 
-</tbody>
-</table>
+</div>
 </div>
 
 </div>
+
+<script>
+const searchInput = document.getElementById("searchServis");
+const servisContainer = document.getElementById("servisContainer");
+
+function loadServis() {
+    const keyword = searchInput.value;
+
+    fetch(`?search=${encodeURIComponent(keyword)}`)
+        .then(res => res.text())
+        .then(html => {
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            servisContainer.innerHTML =
+                doc.querySelector("#servisContainer").innerHTML;
+        });
+}
+
+searchInput.addEventListener("keyup", loadServis);
+
+document.addEventListener("click", function(e) {
+    const card = e.target.closest(".service-card");
+    if (card) {
+        window.location.href = card.dataset.href;
+    }
+});
+</script>
 
 <?php include "footer.php"; ?>
+</body>
+</html>
