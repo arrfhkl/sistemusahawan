@@ -2,6 +2,33 @@
 session_start();
 include "connection.php";
 
+// ===== AJAX UPDATE KUANTITI =====
+if (isset($_POST['action']) && $_POST['action'] === 'update_qty') {
+  $cart_id = (int) $_POST['cart_id'];
+  $qty     = max(1, (int) $_POST['qty']); // minimum 1
+
+  $stmt = $conn->prepare("UPDATE cart SET kuantiti=? WHERE id=? AND usahawan_id=?");
+  $stmt->bind_param("iii", $qty, $cart_id, $_SESSION['usahawan_id']);
+  $stmt->execute();
+
+  // Ambil harga produk untuk kira subtotal
+  $q = $conn->query("
+    SELECT p.harga 
+    FROM cart c 
+    JOIN produk p ON c.produk_id = p.id 
+    WHERE c.id = $cart_id
+  ");
+  $row = $q->fetch_assoc();
+
+  $subtotal = $row['harga'] * $qty;
+
+  echo json_encode([
+    'qty' => $qty,
+    'subtotal' => number_format($subtotal, 2)
+  ]);
+  exit;
+}
+
 // Semak jika pengguna belum login
 if (!isset($_SESSION['usahawan_id'])) {
   echo "<script>alert('Sila log masuk untuk lihat troli anda.'); window.location.href='login.php';</script>";
@@ -438,6 +465,24 @@ footer .copyright {
 .delete-btn:hover {
   background: #d93025;
 }
+
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  font-weight: bold;
+  background: #003399;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.qty-btn:hover {
+  background: #FFD700;
+  color: #111;
+}
+
 </style>
 </head>
 
@@ -481,13 +526,24 @@ footer .copyright {
           $subtotal = $row['harga'] * $row['kuantiti'];
           $total += $subtotal;
         ?>
-        <tr id="row<?= $row['id'] ?>" data-subtotal="<?= $subtotal ?>">
+        <tr id="row<?= $row['id'] ?>" 
+        data-harga="<?= $row['harga'] ?>" 
+        data-subtotal="<?= $subtotal ?>">
+
   <td><input type="checkbox" name="selected_items[]" value="<?= $row['id'] ?>" onchange="updateTotal()"></td>
   <td><img src="uploads/<?= htmlspecialchars($row['gambar_url']) ?>" width="80" height="80" alt=""></td>
   <td><?= htmlspecialchars($row['nama']) ?></td>
   <td><?= number_format($row['harga'], 2) ?></td>
-  <td><?= htmlspecialchars($row['kuantiti']) ?></td>
-  <td><?= number_format($subtotal, 2) ?></td>
+  <td>
+  <div class="d-flex justify-content-center align-items-center gap-2">
+      <button type="button" class="qty-btn" onclick="updateQty(<?= $row['id'] ?>, -1)">−</button>
+
+      <span id="qty<?= $row['id'] ?>"><?= $row['kuantiti'] ?></span>
+
+      <button type="button" class="qty-btn" onclick="updateQty(<?= $row['id'] ?>, 1)">+</button>
+    </div>
+  </td>
+  <td>RM <span id="subtotal<?= $row['id'] ?>"><?= number_format($subtotal, 2) ?></span></td>
   <td><button type="button" class="delete-btn" onclick="padamItem(<?= $row['id'] ?>)">Padam</button></td>
 </tr>
 
@@ -564,6 +620,35 @@ document.getElementById("checkoutForm").addEventListener("submit", function(e){
     e.preventDefault();
   }
 });
+</script>
+
+<script>
+function updateQty(cartId, change) {
+  const qtyEl = document.getElementById('qty' + cartId);
+  let qty = parseInt(qtyEl.textContent) + change;
+
+  if (qty < 1) return;
+
+  const formData = new FormData();
+  formData.append('action', 'update_qty');
+  formData.append('cart_id', cartId);
+  formData.append('qty', qty);
+
+  fetch("cart.php", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    qtyEl.textContent = data.qty;
+    document.getElementById('subtotal' + cartId).textContent = data.subtotal;
+
+    const row = document.getElementById('row' + cartId);
+    row.dataset.subtotal = parseFloat(data.subtotal.replace(',', ''));
+
+    updateTotal();
+  });
+}
 </script>
 
 </body>
