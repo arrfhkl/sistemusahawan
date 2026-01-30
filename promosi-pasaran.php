@@ -25,8 +25,13 @@ if ($is_logged_in) {
   $cart_count = $result_cart ? $result_cart->fetch_assoc()['total'] : 0;
 }
 
-$search = isset($_GET['search']) ? $_GET['search'] : '';
-$lokasi_filter = isset($_GET['lokasi']) ? $_GET['lokasi'] : '';
+$search = isset($_GET['search']) 
+  ? mysqli_real_escape_string($conn, $_GET['search']) 
+  : '';
+
+$lokasi_filter = isset($_GET['lokasi']) 
+  ? mysqli_real_escape_string($conn, $_GET['lokasi']) 
+  : '';
 
 $sql = "SELECT * FROM produk WHERE 1";
 
@@ -557,65 +562,45 @@ footer .copyright {
 /* ===== DARK MODERN CENTER TOAST ===== */
 .toast {
   position: fixed;
-  top: 50%;
+  bottom: 30px;              /* ⬅ pindah dari tengah ke bawah */
   left: 50%;
-  transform: translate(-50%, -50%) translateY(10px);
+  transform: translateX(-50%) scale(0.95);
+
   min-width: 320px;
   max-width: 420px;
   padding: 18px 22px;
   border-radius: 14px;
 
-  background: linear-gradient(
-    135deg,
-    #2d63afff 100%
-  );
-
+  background: #1e3a8a;       /* 🔵 solid color (tak lut sinar) */
   color: #ffffff;
+
   font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
+  font-weight: 600;
   text-align: center;
 
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.6);
 
   opacity: 0;
   pointer-events: none;
-  transition: all 0.4s ease;
-  z-index: 4000;
+  transition: all 0.3s ease;
+
+  z-index: 99999;            /* ⬅ confirm atas semua */
 }
 
-/* SHOW */
 .toast.show {
   opacity: 1;
-  transform: translate(-50%, -50%) translateY(0);
+  transform: translateX(-50%) scale(1);
 }
 
-/* ICON (Neutral & Premium) */
-.toast::before {
-  content: "🛒";
-  display: block;
-  font-size: 22px;
-  margin-bottom: 8px;
-  opacity: 0.9;
+/* SUCCESS */
+.toast.success {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
 }
 
-/* ERROR (still dark, not aggressive) */
+/* ERROR */
 .toast.error {
-  background: linear-gradient(
-    135deg,
-    #2a0b0b 0%,
-    #4a1212 50%,
-    #6b1a1a 100%
-  );
+  background: linear-gradient(135deg, #7f1d1d, #dc2626);
 }
-
-.toast.error::before {
-  content: "⚠";
-}
-
-
 
 </style>
 </head>
@@ -723,7 +708,15 @@ footer .copyright {
       <p id="modalDeskripsi"></p>
       <p id="modalLokasi"></p>
       <div class="modal-buttons">
-        <button class="btn btn-cart" onclick="tambahKeCart(document.getElementById('modalNama').innerText)">🛒 Add to Cart</button>
+        <button class="btn btn-cart" onclick="
+          tambahKeCart(
+            currentProduk.id,
+            currentProduk.nama,
+            currentProduk.harga,
+            currentProduk.gambar_url
+          )
+        ">🛒 Add to Cart</button>
+
         <button class="btn btn-chat" onclick="bukaChat(document.getElementById('modalNama').innerText)">💬 Chat</button>
       </div>
     </div>
@@ -732,21 +725,6 @@ footer .copyright {
 
 <!-- ===== TOAST NOTIFICATION ===== -->
 <div id="toast" class="toast"></div>
-
-
-<!-- ===== Footer Rasmi ===== -->
-<footer>
-  <div class="footer-content">
-    <img src="assets/img/jatapahang.png" alt="Jata Negeri Pahang">
-    <p><strong>Sistem Usahawan Pahang</strong></p>
-    <p>Pejabat Setiausaha Kerajaan Negeri Pahang<br>
-    Kompleks SUK, 25503 Kuantan, Pahang Darul Makmur</p>
-    <p>Telefon: 09-1234567 | Emel: info@pahang.gov.my</p>
-    <div class="copyright">
-      © <?= date("Y") ?> Kerajaan Negeri Pahang. Hak cipta terpelihara.
-    </div>
-  </div>
-</footer>
 
 <script>
 function toggleMenu(){
@@ -774,7 +752,11 @@ function loadProduk() {
 }
 
 // ✅ Auto reload bila taip
-searchInput.addEventListener("keyup", loadProduk);
+let searchTimer;
+searchInput.addEventListener("keyup", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadProduk, 400);
+});
 
 // ✅ Auto reload bila tukar lokasi
 lokasiFilter.addEventListener("change", loadProduk);
@@ -818,8 +800,9 @@ async function tambahKeCart(produk_id, nama, harga, gambar_url) {
 
       // reload selepas toast 3 saat
       setTimeout(() => {
-        location.reload();
+        document.querySelector(".cart-icon").innerText = "🛒";
       }, 3000);
+
 
     } else {
       showToast("⚠️ Gagal menambah produk ke troli.", "error");
@@ -838,11 +821,14 @@ function bukaChat(nama){
 
 // ===== Popup Produk =====
 function bukaPopup(data){
+  currentProduk = data;
+
   document.getElementById("modalGambar").src = "uploads/" + data.gambar_url;
   document.getElementById("modalNama").innerText = data.nama;
   document.getElementById("modalHarga").innerText = "RM " + parseFloat(data.harga).toFixed(2);
   document.getElementById("modalDeskripsi").innerText = data.deskripsi;
   document.getElementById("modalLokasi").innerText = "📍 " + data.lokasi;
+
   document.getElementById("produkModal").style.display = "flex";
 }
 
@@ -850,20 +836,31 @@ function tutupPopup(){
   document.getElementById("produkModal").style.display = "none";
 }
 
+document.getElementById("produkModal").addEventListener("click", function(e){
+  if (e.target === this) {
+    tutupPopup();
+  }
+});
+
 function bukaCart(){
   window.location.href = "cart.php";
 }
 
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.className = `toast show ${type}`;
+
+  toast.className = `toast ${type}`;
+  toast.innerHTML = message;
+
+  // force reflow (important)
+  toast.offsetHeight;
+
+  toast.classList.add("show");
 
   setTimeout(() => {
     toast.classList.remove("show");
-  }, 3000); // ⏱️ 3 saat
+  }, 3000);
 }
-
 
 </script>
 
