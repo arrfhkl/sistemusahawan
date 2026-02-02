@@ -8,18 +8,62 @@ if (!isset($_SESSION['usahawan_id'])) {
   die("Login dahulu");
 }
 
-$chat_id = (int)($_GET['chat_id'] ?? 0);
 $user_id = $_SESSION['usahawan_id'];
+$isSeller = false;
+$isBuyer  = false;
 
-if ($chat_id === 0) {
+$chat_id   = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
+$servis_id = isset($_GET['servis_id']) ? (int)$_GET['servis_id'] : 0;
+
+if ($chat_id === 0 && $servis_id === 0) {
   die("Chat tidak sah");
 }
 
+
+/* ===============================
+   UPDATE ONLINE STATUS
+================================ */
 $conn->query("
   INSERT INTO user_online_status (user_id, last_active)
   VALUES ($user_id, NOW())
   ON DUPLICATE KEY UPDATE last_active = NOW()
 ");
+
+if ($chat_id === 0 && $servis_id > 0) {
+
+  $stmt = $conn->prepare("
+    SELECT 
+      s.id AS servis_id,
+      s.nama AS servis_nama,
+      s.lokasi,
+      s.gambar_servis_url,
+      u.id AS tukang_id,
+      u.nama AS nama_tukang,
+      u.avatar AS avatar_tukang
+    FROM servis s
+    JOIN usahawan u ON u.id = s.usahawan_id
+    WHERE s.id = ?
+    LIMIT 1
+  ");
+  $stmt->bind_param("i", $servis_id);
+  $stmt->execute();
+  $info = $stmt->get_result()->fetch_assoc();
+
+  if (!$info) {
+    die("Servis tidak dijumpai");
+  }
+
+  $tukang_id = $info['tukang_id'];
+  $isSeller  = ($user_id == $tukang_id);
+  $isBuyer   = !$isSeller;
+
+  $header_name   = $info['nama_tukang'];
+  $header_avatar = $info['avatar_tukang'] ?? 'assets/img/default_avatar.jpg';
+
+  $namaServis = $info['servis_nama'];
+}
+
+if ($chat_id > 0) {
 
 /* ===============================
    INFO CHAT + SERVIS
@@ -41,7 +85,7 @@ SELECT
   JOIN usahawan u ON u.id = s.usahawan_id
   WHERE cr.id = ?
     AND (cr.user_a = ? OR cr.user_b = ?)
-
+  LIMIT 1
 ");
 $stmt->bind_param("iii", $chat_id, $user_id, $user_id);
 $stmt->execute();
@@ -51,16 +95,22 @@ $info = $stmt->get_result()->fetch_assoc();
 if (!$info) {
   die("Chat tidak dijumpai");
 }
-
 $other_user_id = ($user_id == $info['user_a'])
   ? $info['user_b']
   : $info['user_a'];
 
+}
+
+if (!isset($info)) {
+  die("Data tidak lengkap");
+}
 
 $tukang_id = $info['tukang_id'];
 $isSeller  = ($user_id == $tukang_id);
 
-if ($isSeller) {
+
+if ($isSeller && $chat_id > 0) {
+
   // seller login → lawan = buyer (juga usahawan)
   $stmt2 = $conn->prepare("
     SELECT nama, avatar
@@ -110,7 +160,7 @@ if ($isSeller) {
 
 
 /* AUTO MESSAGE – hanya untuk pelanggan */
-$sendAutoMessage = ($user_id != $tukang_id);
+$sendAutoMessage = ($chat_id > 0 && $user_id != $tukang_id);
 
 /* GAMBAR SERVIS */
 $gambar = $info['gambar_servis_url']
@@ -490,7 +540,7 @@ $gambar = $info['gambar_servis_url']
 <script>
 let lastMessageId = 0;
 let renderedMessageIds = new Set();
-const chatId   = <?= $chat_id ?>;
+const chatId = <?= $chat_id ?>;
 const tukangId = <?= $tukang_id ?>;
 
 let shouldAutoScroll = true;
@@ -535,15 +585,26 @@ function sendMsg(){
   const msg = input.value.trim();
   if(!msg) return;
 
+  if (chatId === 0) {
+    // FIRST MESSAGE → CREATE CHAT
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "create_chat.php";
 
-  shouldAutoScroll = true; // paksa scroll lepas send 
+    form.innerHTML = `
+      <input name="servis_id" value="<?= $servis_id ?>">
+      <input name="message" value="${msg.replace(/"/g,'&quot;')}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+    return;
+  }
 
+  // chat dah ada
   fetch("send_message.php",{
     method:"POST",
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:
-      "chat_id="+chatId+
-      "&message="+encodeURIComponent(msg)
+    body:"chat_id="+chatId+"&message="+encodeURIComponent(msg)
   }).then(()=>{
     input.value="";
     loadMsg();
@@ -562,26 +623,29 @@ setInterval(()=>{
     });
 },5000);
 
-setInterval(loadMsg,2000);
-loadMsg();
+if (chatId > 0) {
 
-document.getElementById("msg").addEventListener("input", () => {
-  fetch("update_typing.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "chat_id=" + chatId
-  });
-});
-;
+  setInterval(()=>{ /* check_status */ }, 5000);
+  setInterval(loadMsg, 2000);
 
-setInterval(() => {
-  fetch("check_typing.php?chat_id="+chatId)
-    .then(r=>r.text())
-    .then(status => {
-      const el = document.getElementById("typing");
-      el.style.display = (status === "typing") ? "block" : "none";
+  document.getElementById("msg").addEventListener("input", () => {
+    fetch("update_typing.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "chat_id=" + chatId
     });
-}, 1500);
+  });
+
+  setInterval(() => {
+    fetch("check_typing.php?chat_id="+chatId)
+      .then(r=>r.text())
+      .then(status => {
+        document.getElementById("typing").style.display =
+          (status === "typing") ? "block" : "none";
+      });
+  }, 1500);
+
+}
 </script>
 
 <script>

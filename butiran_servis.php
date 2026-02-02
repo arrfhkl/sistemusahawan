@@ -346,7 +346,7 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
     Tempah Servis
   </button>
   <button class="btn-secondary"
-    onclick="window.location.href='create_chat.php?servis_id=<?= $service['id'] ?>'">
+    onclick="window.location.href='chat_room.php?servis_id=<?= $service['id'] ?>'">
     💬 Chat Dengan Tukang
   </button>
 </div>
@@ -441,8 +441,7 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
 </div>
 <div class="sticky-cta">
   <a href="tempah_servis.php?id=<?= $service['id'] ?>" class="btn-primary">Tempah</a>
-  <a href="create_chat.php?servis_id=<?= $service['id'] ?>" class="btn-secondary">Chat</a>
-</div>
+  <a href="chat_room.php?servis_id=<?= $service['id'] ?>" class="btn-secondary">Chat</a>
 
 <?php include "footer.php"; ?>
 

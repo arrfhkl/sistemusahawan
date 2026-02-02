@@ -2,39 +2,78 @@
 session_start();
 include "connection.php";
 
+/* =======================
+   SECURITY CHECK
+======================= */
 if (!isset($_SESSION['usahawan_id'])) {
-  die("Sila login.");
+    die("Sila login.");
 }
 
-$servis_id = (int)$_GET['servis_id'];
-$user_id  = $_SESSION['usahawan_id'];
+$user_id   = $_SESSION['usahawan_id'];
+$servis_id = isset($_POST['servis_id']) ? (int)$_POST['servis_id'] : 0;
+$message   = isset($_POST['message']) ? trim($_POST['message']) : '';
 
-// dapatkan tukang dari servis
+/* =======================
+   PREVENT EMPTY ACTION
+======================= */
+if ($servis_id <= 0 || $message === '') {
+    exit; // no action → no chat
+}
+
+/* =======================
+   GET TUKANG ID
+======================= */
 $stmt = $conn->prepare("SELECT usahawan_id FROM servis WHERE id=?");
 $stmt->bind_param("i", $servis_id);
 $stmt->execute();
-$tukang_id = $stmt->get_result()->fetch_assoc()['usahawan_id'];
+$result = $stmt->get_result();
 
-// semak chat sedia ada
+if ($result->num_rows === 0) {
+    exit; // servis tak wujud
+}
+
+$tukang_id = $result->fetch_assoc()['usahawan_id'];
+
+/* =======================
+   CHECK EXISTING CHAT
+======================= */
 $stmt = $conn->prepare("
-  SELECT id FROM chat_rooms
-  WHERE servis_id=? AND user_a=? AND user_b=?
+    SELECT id FROM chat_rooms
+    WHERE servis_id=? AND user_a=? AND user_b=?
 ");
 $stmt->bind_param("iii", $servis_id, $user_id, $tukang_id);
 $stmt->execute();
 $res = $stmt->get_result();
 
 if ($res->num_rows > 0) {
-  header("Location: chat_room.php?chat_id=".$res->fetch_assoc()['id']);
-  exit;
+    $chat_id = $res->fetch_assoc()['id'];
+} else {
+    /* =======================
+       CREATE CHAT ROOM
+       (ONLY WHEN MESSAGE SENT)
+    ======================= */
+    $stmt = $conn->prepare("
+        INSERT INTO chat_rooms (servis_id, user_a, user_b, created_at)
+        VALUES (?,?,?,NOW())
+    ");
+    $stmt->bind_param("iii", $servis_id, $user_id, $tukang_id);
+    $stmt->execute();
+
+    $chat_id = $stmt->insert_id;
 }
 
-// create baru
+/* =======================
+   SAVE MESSAGE
+======================= */
 $stmt = $conn->prepare("
-  INSERT INTO chat_rooms (servis_id, user_a, user_b)
-  VALUES (?,?,?)
+    INSERT INTO chat_messages (chat_id, sender_id, message, created_at)
+    VALUES (?,?,?,NOW())
 ");
-$stmt->bind_param("iii", $servis_id, $user_id, $tukang_id);
+$stmt->bind_param("iis", $chat_id, $user_id, $message);
 $stmt->execute();
 
-header("Location: chat_room.php?chat_id=".$stmt->insert_id);
+/* =======================
+   REDIRECT TO CHAT ROOM
+======================= */
+header("Location: chat_room.php?chat_id=".$chat_id);
+exit;
