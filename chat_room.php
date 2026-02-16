@@ -489,7 +489,8 @@ $gambar = $info['gambar_servis_url']
   
     <!-- HEADER -->
     <div class="chat-header">
-      <img src="<?= htmlspecialchars($header_avatar) ?>">
+      <img src="<?= htmlspecialchars($header_avatar) ?>"
+     onerror="this.src='assets/img/default_avatar.jpg'">
       <div>
         <strong><?= htmlspecialchars($header_name) ?></strong><br>
         <span id="status">Menyemak status...</span>

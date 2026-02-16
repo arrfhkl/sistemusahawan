@@ -44,8 +44,18 @@ if (!empty($gambar) && strpos($gambar, 'uploads/') === false) {
    AVATAR TUKANG
 ================================ */
 $avatar = $service['avatar'];
-if (empty($avatar)) $avatar = "default.png";
-if (strpos($avatar, 'uploads/') === false) $avatar = "uploads/$avatar";
+
+if (!empty($avatar)) {
+    if (strpos($avatar, 'uploads/') === false) {
+        $avatar = 'uploads/' . $avatar;
+    }
+
+    if (!file_exists($avatar)) {
+        $avatar = 'assets/img/default_avatar.jpg';
+    }
+} else {
+    $avatar = 'assets/img/default_avatar.jpg';
+}
 
 /* ===============================
    TOTAL CUSTOMER
@@ -101,12 +111,18 @@ if (!empty($service['usahawan_id'])) {
 $servis_berkaitan = [];
 if (!empty($service['kategori_servis_id'])) {
   $stmt5 = $conn->prepare("
-    SELECT id, nama, lokasi, gambar_servis_url
-    FROM servis
-    WHERE kategori_servis_id = ?
-      AND id != ?
-    ORDER BY id DESC
-    LIMIT 6
+      SELECT 
+          s.id,
+          s.nama,
+          s.lokasi,
+          s.gambar_servis_url,
+          u.perniagaan
+      FROM servis s
+      LEFT JOIN usahawan u ON s.usahawan_id = u.id
+      WHERE s.kategori_servis_id = ?
+        AND s.id != ?
+      ORDER BY s.id DESC
+      LIMIT 6
   ");
   $stmt5->bind_param("ii", $service['kategori_servis_id'], $service['id']);
   $stmt5->execute();
@@ -314,6 +330,25 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
   box-shadow: 0 10px 25px rgba(0,0,0,.12);
 }
 
+.btn-view{
+  display:inline-block;
+  margin-top:10px;
+  padding:8px 14px;
+  border-radius:6px;
+  background:#1f3c88;
+  color:#fff;
+  text-decoration:none;
+  font-size:0.85rem;
+  font-weight:600;
+  transition: all .15s ease;
+}
+
+.btn-view:hover{
+  background:#162d66;
+  transform:translateY(-2px);
+}
+
+
 </style>
 </head>
 
@@ -397,7 +432,7 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
 <!-- SERVIS LAIN OLEH TUKANG -->
 <?php if ($servis_lain && $servis_lain->num_rows > 0): ?>
 <div class="section">
-<h2>Servis lain oleh <?= htmlspecialchars($service['perniagaan']) ?></h2>
+<h2>Perkhidmatan lain oleh <?= htmlspecialchars($service['perniagaan']) ?></h2>
 <div class="servis-lain-grid">
 <?php while ($sl = $servis_lain->fetch_assoc()):
   $img = $sl['gambar_servis_url'] ?: "default-service.png";
@@ -408,7 +443,7 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
   <div class="servis-card-body">
     <h4><?= htmlspecialchars($sl['nama']) ?></h4>
     <p>📍 <?= htmlspecialchars($sl['lokasi']) ?></p>
-    <a href="butiran_servis.php?id=<?= $sl['id'] ?>">Tengok lanjut →</a>
+    <a class="btn-view" href="butiran_servis.php?id=<?= $sl['id'] ?>">Tengok lanjut →</a>
   </div>
 </div>
 <?php endwhile; ?>
@@ -419,7 +454,7 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
 <!-- SERVIS BERKAITAN -->
 <?php if ($servis_berkaitan && $servis_berkaitan->num_rows > 0): ?>
 <div class="section">
-<h2>Servis Berkaitan</h2>
+<h2>Pilihan lain dalam kategori ini</h2>
 <div class="servis-lain-grid">
 <?php while ($sb = $servis_berkaitan->fetch_assoc()):
   $img = $sb['gambar_servis_url'] ?: "default-service.png";
@@ -428,9 +463,12 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
 <div class="servis-card">
   <img src="<?= htmlspecialchars($img) ?>">
   <div class="servis-card-body">
-    <h4><?= htmlspecialchars($sb['nama']) ?></h4>
+    <h3><?= htmlspecialchars($sb['perniagaan']) ?></h3>
+    <p>🛠 <?= htmlspecialchars($sb['nama']) ?></p>
     <p>📍 <?= htmlspecialchars($sb['lokasi']) ?></p>
-    <a href="butiran_servis.php?id=<?= $sb['id'] ?>">Tengok lanjut →</a>
+    <br>
+    <a class="btn-view" href="butiran_servis.php?id=<?= $sb['id'] ?>">
+      Tengok lanjut → </a>
   </div>
 </div>
 <?php endwhile; ?>
