@@ -106,6 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <title>Tempah Servis - Sistem Usahawan Pahang</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
    * {
@@ -526,7 +528,14 @@ style="width:100%; max-height:250px; object-fit:cover; border-radius:12px; margi
 <img id="preview" style="display:none; margin-top:15px; max-width:200px; border-radius:10px;">
 
 <label>Alamat *</label>
-<input type="text" id="alamat" name="alamat" value="<?= htmlspecialchars($user['alamat']) ?>" required>
+<input type="text" id="alamat" name="alamat"
+oninput="searchAddress(this.value)"
+value="<?= htmlspecialchars($user['alamat']) ?>" required>
+
+<div id="searchResults" 
+     style="background:#fff;border:1px solid #ccc;
+     max-height:150px;overflow:auto;
+     display:none;border-radius:6px;margin-top:5px;"></div>
 
 <button type="button" onclick="getLocation()">📍 Guna Lokasi Semasa</button>
 <div id="map" class="map-box"></div>
@@ -575,21 +584,6 @@ style="width:100%; max-height:250px; object-fit:cover; border-radius:12px; margi
 const today = new Date().toISOString().split('T')[0];
 document.getElementById("tarikh").setAttribute("min", today);
 
-function getLocation(){
-  if(!navigator.geolocation) return alert("GPS tidak disokong");
-
-  navigator.geolocation.getCurrentPosition(function(pos){
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-
-    document.getElementById("alamat").value = `Lat: ${lat}, Lng: ${lng}`;
-
-    document.getElementById("map").innerHTML = `
-      <iframe width="100%" height="300"
-        src="https://www.google.com/maps?q=${lat},${lng}&output=embed">
-      </iframe>`;
-  });
-}
 
  //preview gambar upload
     function previewImage(event) {
@@ -637,6 +631,103 @@ function closeModal(){
 function submitForm(){
   document.querySelector("form").submit();
 }
+
+//location 
+let map;
+let marker;
+
+function initMap(lat = 3.8163, lng = 103.3317) { // Default Kuantan
+  map = L.map('map').setView([lat, lng], 15);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+  updateAddress(lat, lng);
+
+  marker.on('dragend', function (e) {
+    const position = marker.getLatLng();
+    updateAddress(position.lat, position.lng);
+  });
+}
+
+function updateAddress(lat, lng) {
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.display_name) {
+        document.getElementById("alamat").value = data.display_name;
+      }
+    });
+}
+
+function getLocation(){
+  if(!navigator.geolocation) return alert("GPS tidak disokong");
+
+  navigator.geolocation.getCurrentPosition(function(pos){
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    map.setView([lat, lng], 15);
+    marker.setLatLng([lat, lng]);
+    updateAddress(lat, lng);
+  });
+}
+
+// Initialize map on load
+window.onload = function(){
+  initMap();
+};
+
+//
+function searchAddress(query) {
+  if (query.length < 4) {
+    document.getElementById("searchResults").style.display = "none";
+    return;
+  }
+
+  //Lebih tepat untuk Malaysia sahaja
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=my&q=${query}`)
+    .then(res => res.json())
+    .then(data => {
+
+      const resultsBox = document.getElementById("searchResults");
+      resultsBox.innerHTML = "";
+
+      if (data.length === 0) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      data.slice(0,5).forEach(place => {
+
+        const div = document.createElement("div");
+        div.style.padding = "8px";
+        div.style.cursor = "pointer";
+        div.style.borderBottom = "1px solid #eee";
+        div.innerHTML = place.display_name;
+
+        div.onclick = function() {
+
+          const lat = place.lat;
+          const lon = place.lon;
+
+          map.setView([lat, lon], 16);
+          marker.setLatLng([lat, lon]);
+
+          document.getElementById("alamat").value = place.display_name;
+          resultsBox.style.display = "none";
+        };
+
+        resultsBox.appendChild(div);
+      });
+
+      resultsBox.style.display = "block";
+    });
+}
+
 </script>
 
 </body>
