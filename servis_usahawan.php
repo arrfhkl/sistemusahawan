@@ -273,7 +273,13 @@ $servis = $stmt->get_result();
 
 <div class="page-header">
         <h2><i class="fas fa-briefcase"></i> Servis Perniagaan</h2>
-    </div>
+</div>
+
+<div style="text-align:right; margin-bottom:20px;">
+    <a href="seller_booking.php" class="filter-btn">
+        <i class="fas fa-calendar-check"></i> Lihat Semua Tempahan
+    </a>
+</div>
 
 <!-- KPI -->
 <div class="stats-container">
