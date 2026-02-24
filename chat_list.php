@@ -27,39 +27,39 @@ $current_chat_id = isset($_GET['chat_id']) ? (int) $_GET['chat_id'] : 0;
 $stmt = $conn->prepare("
 SELECT
   cr.id AS chat_id,
-  cr.servis_id,
 
   CASE
-    WHEN cr.user_a = ? THEN cr.user_b
-    ELSE cr.user_a
+    WHEN cr.user_low = ? THEN cr.user_high
+    ELSE cr.user_low
   END AS partner_id,
 
   u.nama   AS partner_name,
   u.avatar AS partner_avatar,
 
-  s.nama AS servis_nama,
-
-  MAX(cm.created_at) AS last_message_time
+  lm.message AS last_message,
+  lm.created_at AS last_message_time
 
 FROM chat_rooms cr
 
 JOIN usahawan u
   ON u.id = CASE
-      WHEN cr.user_a = ? THEN cr.user_b
-      ELSE cr.user_a
+      WHEN cr.user_low = ? THEN cr.user_high
+      ELSE cr.user_low
     END
 
-JOIN servis s
-  ON s.id = cr.servis_id
+LEFT JOIN chat_messages lm
+  ON lm.id = (
+      SELECT id
+      FROM chat_messages
+      WHERE chat_id = cr.id
+        AND is_deleted = 0
+      ORDER BY id DESC
+      LIMIT 1
+  )
 
-LEFT JOIN chat_messages cm
-  ON cm.chat_id = cr.id
+WHERE cr.user_low = ? OR cr.user_high = ?
 
-WHERE cr.user_a = ? OR cr.user_b = ?
-
-GROUP BY cr.id
-
-ORDER BY last_message_time DESC, cr.created_at DESC
+ORDER BY lm.created_at DESC, cr.created_at DESC
 ");
 
 $stmt->bind_param(
@@ -119,7 +119,12 @@ $isActive = ($current_chat_id === (int)$row['chat_id']);
 
   <div>
     <strong><?= htmlspecialchars($row['partner_name']) ?></strong><br>
-    <small><?= htmlspecialchars($row['servis_nama']) ?></small>
+
+    <span style="font-size:13px;color:#777;">
+        <?= !empty($row['last_message']) 
+            ? htmlspecialchars($row['last_message']) 
+            : 'Belum ada mesej' ?>
+    </span>
   </div>
 </a>
 
