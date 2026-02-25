@@ -1,9 +1,28 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$is_usahawan = !empty($_SESSION['usahawan_id']);
 
-session_start();
-$is_usahawan = !empty($_SESSION['usahawan_id']);{
+$loginNama  = null;
+$loginJenis = null;
+
+if ($is_usahawan) {
+    $stmt = $conn->prepare("
+        SELECT nama, jenis 
+        FROM usahawan 
+        WHERE id = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param("i", $_SESSION['usahawan_id']);
+    $stmt->execute();
+    $stmt->bind_result($loginNama, $loginJenis);
+    $stmt->fetch();
+    $stmt->close();
+
     include "usahawan_sidebar.php";
 }
+
 
 ?>
 <!DOCTYPE html>
@@ -11,8 +30,11 @@ $is_usahawan = !empty($_SESSION['usahawan_id']);{
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Template - Sistem Usahawan Pahang</title>
+  <title>Sistem Usahawan Pahang</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
   
   <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
 
@@ -232,6 +254,106 @@ body::after {
   }
 }
 
+.login-info {
+  color: #fff;
+  font-size: 0.85rem;
+  text-align: right;
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.login-info strong {
+  font-weight: 600;
+}
+
+.login-info small {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+/* ===== DROPDOWN ===== */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.arrow {
+  font-size: 0.7rem;
+  transition: 0.3s;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  min-width: 200px;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  overflow: hidden;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: 0.3s ease;
+}
+
+.dropdown-content a {
+  display: block;
+  padding: 10px 14px;
+  color: #333;
+}
+
+.dropdown-content a:hover {
+  background: #f2f2f2;
+}
+
+/* Desktop hover */
+@media (min-width: 901px) {
+  .dropdown:hover .dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .dropdown:hover .arrow {
+    transform: rotate(180deg);
+  }
+}
+
+/* Mobile style */
+@media (max-width: 900px) {
+
+  .dropdown-content {
+    position: static;
+    background: transparent;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    display: none;
+  }
+
+  .dropdown-content a {
+    color: #fff;
+    padding-left: 30px;
+  }
+
+  .dropdown.show .dropdown-content {
+    display: block;
+  }
+
+  .dropdown.show .arrow {
+    transform: rotate(180deg);
+  }
+}
+
+
   </style>
 </head>
 
@@ -246,11 +368,31 @@ body::after {
     ☰
   </button>
 
-  <nav id="navMenu">
-    <a href="index.php" class="active"><strong>Laman Utama</strong></a>
-    <a href="daftar.php"><strong>Daftar Akaun</strong></a>
-    <a href="senarai.php"><strong>Senarai Usahawan</strong></a>
-  </nav>
+  <?php if ($is_usahawan && $loginNama): ?>
+  <div class="login-info">
+    Login sebagai:<br>
+    <strong><?= htmlspecialchars($loginNama) ?></strong> <!---  developer mode for identify user-->
+    <small>(<?= htmlspecialchars($loginJenis) ?>)</small>
+  </div>
+<?php endif; ?>
+
+    <nav id="navMenu">
+      <a href="index.php" class="active"><strong>Laman Utama</strong></a>
+      <a href="senarai.php"><strong>Senarai Usahawan</strong></a>
+    
+      <div class="dropdown">
+        <a href="#" class="dropdown-toggle">
+          <strong>Pesanan</strong>
+          <i class="fas fa-chevron-down arrow"></i>
+        </a>
+        <div class="dropdown-content">
+          <a href="pesanan_detail.php">Produk</a>
+          <a href="customer_booking.php">Servis</a>
+        </div>
+      </div>
+
+      <a href="login.php"><strong>Log Masuk</strong></a>
+    </nav>
 </header>
 
 
@@ -269,5 +411,23 @@ body::after {
     if (!nav.contains(e.target) && !toggle.contains(e.target)) {
       nav.classList.remove('show');
     }
+  });
+
+    // Dropdown click (mobile)
+  document.querySelectorAll('.dropdown-toggle').forEach(item => {
+    item.addEventListener('click', function(e) {
+      if (window.innerWidth <= 900) {
+        e.preventDefault();
+        this.parentElement.classList.toggle('show');
+      }
+    });
+  });
+
+  // Auto close dropdown bila klik link
+  document.querySelectorAll('.dropdown-content a').forEach(link => {
+    link.addEventListener('click', function() {
+      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show'));
+      document.getElementById('navMenu').classList.remove('show');
+    });
   });
 </script>

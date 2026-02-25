@@ -1,6 +1,9 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 include "connection.php";
-include "header.php";
 
 if (!isset($_SESSION['usahawan_id'])) {
     die("Login dahulu");
@@ -104,6 +107,8 @@ $header_avatar = !empty($partner['avatar'])
     ? $partner['avatar']
     : 'assets/img/default_avatar.jpg';
 }
+
+include "header.php";
 ?>
 
 <!DOCTYPE html>
@@ -430,7 +435,6 @@ $header_avatar = !empty($partner['avatar'])
               <div class="chat-header">
                   <div>
                       <strong>Tiada perbualan dipilih</strong><br>
-                      <span>Sila pilih perbualan di sebelah kiri.</span>
                   </div>
               </div>
           <?php else: ?>
