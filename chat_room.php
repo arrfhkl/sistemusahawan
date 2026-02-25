@@ -2,24 +2,22 @@
 include "connection.php";
 include "header.php";
 
-$conn->query("SET time_zone = '+08:00'");
-
 if (!isset($_SESSION['usahawan_id'])) {
-  die("Login dahulu");
+    die("Login dahulu");
 }
 
-$user_id = $_SESSION['usahawan_id'];
-$isSeller = false;
-$isBuyer  = false;
+$user_id = (int)$_SESSION['usahawan_id'];
 
-$chat_id   = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
-$servis_id = isset($_GET['servis_id']) ? (int)$_GET['servis_id'] : 0;
+$chat_id    = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
+$partner_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
 
-if ($chat_id === 0 && $servis_id === 0) {
-  die("Chat tidak sah");
+if ($chat_id === 0 && $partner_id === 0) {
+    $no_chat_selected = true;
+} else {
+    $no_chat_selected = false;
 }
 
-
+if (!$no_chat_selected) {
 /* ===============================
    UPDATE ONLINE STATUS
 ================================ */
@@ -29,147 +27,85 @@ $conn->query("
   ON DUPLICATE KEY UPDATE last_active = NOW()
 ");
 
-if ($chat_id === 0 && $servis_id > 0) {
-
-  $stmt = $conn->prepare("
-    SELECT 
-      s.id AS servis_id,
-      s.nama AS servis_nama,
-      s.lokasi,
-      s.gambar_servis_url,
-      u.id AS tukang_id,
-      u.nama AS nama_tukang,
-      u.avatar AS avatar_tukang
-    FROM servis s
-    JOIN usahawan u ON u.id = s.usahawan_id
-    WHERE s.id = ?
-    LIMIT 1
-  ");
-  $stmt->bind_param("i", $servis_id);
-  $stmt->execute();
-  $info = $stmt->get_result()->fetch_assoc();
-
-  if (!$info) {
-    die("Servis tidak dijumpai");
-  }
-
-  $tukang_id = $info['tukang_id'];
-  $isSeller  = ($user_id == $tukang_id);
-  $isBuyer   = !$isSeller;
-
-  $header_name   = $info['nama_tukang'];
-  $header_avatar = $info['avatar_tukang'] ?? 'assets/img/default_avatar.jpg';
-
-  $namaServis = $info['servis_nama'];
-}
-
+/* ===============================
+   LOAD CHAT BASED ON chat_id
+================================ */
 if ($chat_id > 0) {
 
+    $stmt = $conn->prepare("
+        SELECT user_low, user_high
+        FROM chat_rooms
+        WHERE id = ?
+          AND (user_low = ? OR user_high = ?)
+        LIMIT 1
+    ");
+
+    $stmt->bind_param("iii", $chat_id, $user_id, $user_id);
+    $stmt->execute();
+    $chat = $stmt->get_result()->fetch_assoc();
+
+    if (!$chat) {
+        die("Chat tidak dijumpai");
+    }
+
+    $partner_id = ($user_id == $chat['user_low'])
+        ? $chat['user_high']
+        : $chat['user_low'];
+
+}
+
 /* ===============================
-   INFO CHAT + SERVIS
+   CHECK EXISTING CHAT IF OPEN VIA user_id
 ================================ */
-$stmt = $conn->prepare("
-SELECT 
-    cr.id AS chat_id,
-    cr.user_a,
-    cr.user_b,
-    cr.servis_id,
-    s.nama AS servis_nama,
-    s.lokasi,
-    s.gambar_servis_url,
-    u.id AS tukang_id,
-    u.nama AS nama_tukang,
-    u.avatar AS avatar_tukang
-  FROM chat_rooms cr
-  JOIN servis s ON s.id = cr.servis_id
-  JOIN usahawan u ON u.id = s.usahawan_id
-  WHERE cr.id = ?
-    AND (cr.user_a = ? OR cr.user_b = ?)
-  LIMIT 1
-");
-$stmt->bind_param("iii", $chat_id, $user_id, $user_id);
-$stmt->execute();
+else {
 
-$info = $stmt->get_result()->fetch_assoc();
+    $low  = min($user_id, $partner_id);
+    $high = max($user_id, $partner_id);
 
-if (!$info) {
-  die("Chat tidak dijumpai");
-}
-$other_user_id = ($user_id == $info['user_a'])
-  ? $info['user_b']
-  : $info['user_a'];
+    $stmt = $conn->prepare("
+        SELECT id
+        FROM chat_rooms
+        WHERE user_low = ? AND user_high = ?
+        LIMIT 1
+    ");
 
+    $stmt->bind_param("ii", $low, $high);
+    $stmt->execute();
+    $existing = $stmt->get_result()->fetch_assoc();
+
+    if ($existing) {
+        header("Location: chat_room.php?chat_id=".$existing['id']);
+        exit;
+    }
+
+    // Chat belum wujud – akan create bila mesej pertama dihantar
 }
 
-if (!isset($info)) {
-  die("Data tidak lengkap");
-}
-
-$tukang_id = $info['tukang_id'];
-$isSeller  = ($user_id == $tukang_id);
-
-
-if ($isSeller && $chat_id > 0) {
-
-  // seller login → lawan = buyer (juga usahawan)
-  $stmt2 = $conn->prepare("
+/* ===============================
+   LOAD PARTNER INFO
+================================ */
+$stmt2 = $conn->prepare("
     SELECT nama, avatar
     FROM usahawan
     WHERE id = ?
     LIMIT 1
-  ");
-  $stmt2->bind_param("i", $other_user_id);
-  $stmt2->execute();
-  $other = $stmt2->get_result()->fetch_assoc();
+");
 
-  $header_name   = $other['nama'] ?? 'Pengguna';
-  $header_avatar = $other['avatar'] ?? 'assets/img/default_avatar.jpg';
+$stmt2->bind_param("i", $partner_id);
+$stmt2->execute();
+$partner = $stmt2->get_result()->fetch_assoc();
 
-} else {
-  // buyer login → lawan = seller (owner servis)
-  $header_name   = $info['nama_tukang'];
-  $header_avatar = $info['avatar_tukang'];
+if (!$partner) {
+    die("User tidak dijumpai");
 }
 
-$isBuyer   = !$isSeller;
-$servis_id = $info['servis_id'];
-$namaServis = $info['servis_nama'];
-
-/* ===============================
-   CHECK REQUESTED QUOTATION (SELLER)
-================================ */
-$requestedQuotationId = null;
-
-if ($isSeller) {
-  $q = $conn->prepare("
-    SELECT id
-    FROM quotation
-    WHERE chat_id = ?
-      AND seller_id = ?
-      AND status = 'requested'
-    LIMIT 1
-  ");
-  $q->bind_param("ii", $chat_id, $user_id);
-  $q->execute();
-  $res = $q->get_result()->fetch_assoc();
-
-  if ($res) {
-    $requestedQuotationId = (int)$res['id'];
-  }
+$header_name   = $partner['nama'];
+$header_avatar = !empty($partner['avatar'])
+    ? $partner['avatar']
+    : 'assets/img/default_avatar.jpg';
 }
-
-
-/* AUTO MESSAGE – hanya untuk pelanggan */
-$sendAutoMessage = ($chat_id > 0 && $user_id != $tukang_id);
-
-/* GAMBAR SERVIS */
-$gambar = $info['gambar_servis_url']
-  ? (strpos($info['gambar_servis_url'], 'uploads/') === false
-      ? "uploads/" . $info['gambar_servis_url']
-      : $info['gambar_servis_url'])
-  : "assets/img/no-image.png";
-  
 ?>
+
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -477,72 +413,67 @@ $gambar = $info['gambar_servis_url']
 </style>
 </head>
 
+<body>
+
 <div class="chat-layout">
 
-  <!-- SIDEBAR -->
-  <div class="chat-sidebar">
-    <?php include "chat_list.php"; ?>
-  </div>
-
-  <!-- CHAT -->
-  <div class="chat-main">
-  
-    <!-- HEADER -->
-    <div class="chat-header">
-      <img src="<?= htmlspecialchars($header_avatar) ?>"
-     onerror="this.src='assets/img/default_avatar.jpg'">
-      <div>
-        <strong><?= htmlspecialchars($header_name) ?></strong><br>
-        <span id="status">Menyemak status...</span>
-        <div id="typing" style="font-size:12px;color:#666;display:none;">
-   Sedang menaip…✍️
-</div>
-
-      </div>
+    <!-- SIDEBAR -->
+    <div class="chat-sidebar">
+        <?php include "chat_list.php"; ?>
     </div>
 
-    <!-- SERVIS -->
-    <div class="servis-card">
-      <img src="<?= htmlspecialchars($gambar) ?>">
-      <div>
-        <strong><?= htmlspecialchars($info['servis_nama']) ?></strong><br>
-        <small><?= htmlspecialchars($info['lokasi']) ?></small>
-      </div>
-    </div>
+    <!-- MAIN CHAT -->
+    <div class="chat-main">
 
-    <!-- MESSAGE -->
-    <div class="chat-box" id="chat-box"></div>
-    
-    <!-- INPUT -->
-    <div class="chat-input">
-      <input type="text" id="msg" placeholder="Taip mesej...">
-      <button onclick="sendMsg()">Hantar</button>
+        <!-- HEADER -->
+         <?php if ($no_chat_selected): ?>
+              <div class="chat-header">
+                  <div>
+                      <strong>Tiada perbualan dipilih</strong><br>
+                      <span>Sila pilih perbualan di sebelah kiri.</span>
+                  </div>
+              </div>
+          <?php else: ?>
+              <div class="chat-header">
+                  <img src="<?= htmlspecialchars($header_avatar) ?>"
+                      onerror="this.src='assets/img/default_avatar.jpg'">
+                  <div>
+                      <strong><?= htmlspecialchars($header_name) ?></strong><br>
+                      <span id="status">Menyemak status...</span>
+                  </div>
+              </div>
+          <?php endif; ?>
 
-      <?php if ($isBuyer): ?>
-      <button id="btn-request-quotation">
-        📄 Minta Quotation Rasmi
-        </button>
-      <?php endif; ?>
+        <!-- MESSAGE AREA -->
+        <?php if ($no_chat_selected): ?>
+            <div class="chat-box">
+                <div class="msg system">
+                    Anda belum memilih sebarang perbualan.
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="chat-box" id="chat-box"></div>
+        <?php endif; ?>
 
-      <?php if ($isSeller && $requestedQuotationId): ?>
-        <a
-          href="quotation_form.php?quotation_id=<?= $requestedQuotationId ?>&chat_id=<?= $chat_id ?>"
-          class="btn-quotation"
-        >
-          📤 Hantar Quotation
-        </a>
-      <?php endif; ?>
-
+        <!-- INPUT -->
+        <?php if (!$no_chat_selected): ?>
+        <div class="chat-input">
+            <input type="text" id="msg" placeholder="Taip mesej...">
+            <button onclick="sendMsg()">Hantar</button>
         </div>
+        <?php endif; ?>
 
-  </div>
+    </div>
+
 </div>
 
 <script>
+const chatId = <?= $no_chat_selected ? 0 : $chat_id ?>;
+
+
+//old file
 let lastMessageId = 0;
 let renderedMessageIds = new Set();
-const chatId = <?= $chat_id ?>;
-const tukangId = <?= $tukang_id ?>;
 
 let shouldAutoScroll = true;
 
@@ -593,7 +524,7 @@ function sendMsg(){
     form.action = "create_chat.php";
 
     form.innerHTML = `
-      <input name="servis_id" value="<?= $servis_id ?>">
+      <input name="partner_id" value="<?= $partner_id ?>">
       <input name="message" value="${msg.replace(/"/g,'&quot;')}">
     `;
     document.body.appendChild(form);
@@ -649,44 +580,6 @@ if (chatId > 0) {
 }
 </script>
 
-<script>
-const btn = document.getElementById("btn-request-quotation");
-
-btn?.addEventListener("click", ()=>{
-  if(!confirm("Hantar permintaan quotation rasmi?")) return;
-
-  // 🔒 lock + tukar teks
-  btn.disabled = true;
-  btn.textContent = "⏳ Menghantar...";
-
-  fetch("request_quotation.php",{
-    method:"POST",
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:"chat_id="+chatId
-  })
-  .then(r=>r.text())
-  .then(res=>{
-    if(res==="OK"){
-      alert("Permintaan quotation dihantar");
-      // optional: hide button selepas berjaya
-      btn.style.display = "none";
-    }else{
-      alert(res);
-      btn.disabled = false;
-      btn.textContent = "📄 Minta Quotation Rasmi";
-    }
-  })
-  .catch(()=>{
-    btn.disabled = false;
-    btn.textContent = "📄 Minta Quotation Rasmi";
-  });
-});
-
-</script>
-  
-<?php
-include 'footer.php';
-?>
-
+<?php include "footer.php"; ?>
 </body>
 </html>
