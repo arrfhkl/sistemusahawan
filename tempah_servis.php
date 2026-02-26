@@ -1,9 +1,6 @@
 <?php
-session_start();
-$conn = new mysqli("localhost", "root", "", "sistem_usahawan_pahang");
-if ($conn->connect_error) {
-  die("Sambungan gagal: " . $conn->connect_error);
-}
+include 'connection.php';
+include 'header.php';
 
 /* ✅ BETULKAN SESSION */
 if (!isset($_SESSION['usahawan_id'])) {
@@ -66,16 +63,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   }
 
   /* ✅ INSERT KE SERVIS_BOOKING */
-  $stmt = $conn->prepare("
+$stmt = $conn->prepare("
     INSERT INTO servis_booking
-    (service_id, usahawan_id, nama_pelanggan, telefon, alamat, tarikh, masa, masalah, imej, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-  ");
+    (service_id, usahawan_id, pelanggan_id, nama_pelanggan, telefon, alamat, tarikh, masa, masalah, imej, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+");
 
-  $stmt->bind_param(
-    "iisssssss",
+$stmt->bind_param(
+    "iiisssssss",
     $service_id,
     $servis['usahawan_id'],
+    $user_id, // ← INI PELANGGAN ID
     $nama,
     $telefon,
     $alamat,
@@ -83,12 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $masa,
     $masalah,
     $imej
-  );
+);
 
   if ($stmt->execute()) {
     echo "<script>
       alert('✅ Tempahan berjaya dihantar!');
-      window.location='senarai_servis.php';
+      window.location='pilih_kategori_servis.php';
     </script>";
     exit;
   } else {
@@ -481,17 +479,6 @@ button {
 
 </style>
 </head>
-
-<header>
-  <img src="assets/img/jatapahang.png" alt="Jata Negeri Pahang" class="jata">
-  <h1 class="title">Sistem Usahawan Pahang</h1>
-  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-  <nav id="navMenu">
-    <a href="index.php" class="active"><strong>Laman Utama</strong></a>
-    <a href="daftar.php"><strong>Daftar Usahawan</strong></a>
-    <a href="senarai.php"><strong>Senarai Usahawan</strong></a>
-  </nav>
-</header>
 
 <br><br><br><br>
 
