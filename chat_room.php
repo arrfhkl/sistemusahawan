@@ -561,9 +561,35 @@ setInterval(()=>{
 
 if (chatId > 0) {
 
-  setInterval(()=>{ /* check_status */ }, 5000);
+  // LOAD MESSAGE TERUS MASA PAGE LOAD
+  loadMsg();
+
+  // CHECK STATUS TERUS MASA PAGE LOAD
+  fetch("check_status.php?chat_id="+chatId)
+    .then(r=>r.text())
+    .then(s=>{
+      document.getElementById("status").innerHTML =
+        s==="online"
+        ? "🟢 Online"
+        : "⚫ Offline";
+    });
+
+  // POLLING MESSAGE SETIAP 2 SAAT
   setInterval(loadMsg, 2000);
 
+  // POLLING STATUS SETIAP 5 SAAT
+  setInterval(()=>{
+    fetch("check_status.php?chat_id="+chatId)
+      .then(r=>r.text())
+      .then(s=>{
+        document.getElementById("status").innerHTML =
+          s==="online"
+          ? "🟢 Online"
+          : "⚫ Offline";
+      });
+  }, 5000);
+
+  // TYPING EVENT
   document.getElementById("msg").addEventListener("input", () => {
     fetch("update_typing.php", {
       method: "POST",
@@ -571,6 +597,7 @@ if (chatId > 0) {
       body: "chat_id=" + chatId
     });
   });
+}
 
   setInterval(() => {
     fetch("check_typing.php?chat_id="+chatId)
@@ -581,7 +608,6 @@ if (chatId > 0) {
       });
   }, 1500);
 
-}
 </script>
 
 <?php include "footer.php"; ?>
