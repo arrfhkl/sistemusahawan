@@ -4,6 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 $is_usahawan = !empty($_SESSION['usahawan_id']);
 
+$current_page = basename($_SERVER['PHP_SELF']);
+$show_cart = ($current_page === 'promosi-pasaran.php');
+
 $loginNama  = null;
 $loginJenis = null;
 
@@ -21,6 +24,24 @@ if ($is_usahawan) {
     $stmt->close();
 
     include "usahawan_sidebar.php";
+
+
+//TROLI UNTUK PAGE PRODUK
+$cart_count = 0;
+
+if ($show_cart && isset($_SESSION['usahawan_id'])) {
+    $uid = (int)$_SESSION['usahawan_id'];
+
+    $result_cart = $conn->query("
+        SELECT COUNT(*) AS total 
+        FROM cart 
+        WHERE usahawan_id = $uid
+    ");
+
+    if ($result_cart) {
+        $cart_count = $result_cart->fetch_assoc()['total'];
+    }
+}
 }
 
 
@@ -353,6 +374,68 @@ body::after {
   }
 }
 
+/* ===== CART ICON PREMIUM ===== */
+.cart-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.25s ease;
+  margin-left: 15px;
+  backdrop-filter: blur(4px);
+}
+
+.cart-wrapper i {
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.cart-wrapper:hover {
+  background: #ffd700;
+  transform: translateY(-2px);
+}
+
+.cart-wrapper:hover i {
+  color: #001F3F;
+}
+
+/* ===== BADGE ===== */
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 22px;
+  height: 22px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  border: 2px solid #001F3F;
+}
+
+.logout-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #ffffff;
+  font-weight: 500;
+  opacity: 0.9;
+  transition: 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #ffd700;
+  opacity: 1;
+}
 
   </style>
 </head>
@@ -378,7 +461,6 @@ body::after {
 
     <nav id="navMenu">
       <a href="index.php" class="active"><strong>Laman Utama</strong></a>
-      <a href="senarai.php"><strong>Senarai Usahawan</strong></a>
     
       <div class="dropdown">
         <a href="#" class="dropdown-toggle">
@@ -391,7 +473,22 @@ body::after {
         </div>
       </div>
 
-      <a href="login.php"><strong>Log Masuk</strong></a>
+      <?php if ($is_usahawan): ?>
+          <a href="logout.php" class="logout-btn">
+              <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+      <?php else: ?>
+          <a href="login.php"><strong>Log Masuk</strong></a>
+      <?php endif; ?>
+
+      <?php if ($show_cart): ?>
+        <div class="cart-wrapper" onclick="bukaCart()">
+            <i class="fas fa-cart-shopping"></i>
+            <?php if ($cart_count > 0): ?>
+                <span class="cart-badge"><?= $cart_count ?></span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     </nav>
 </header>
 
@@ -430,4 +527,12 @@ body::after {
       document.getElementById('navMenu').classList.remove('show');
     });
   });
+
+  
+</script>
+
+<script>
+  function bukaCart(){
+      window.location.href = "cart.php";
+  }
 </script>
