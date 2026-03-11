@@ -8,6 +8,30 @@ if (empty($_SESSION['usahawan_id'])) {
 }
 
 $current_page = basename($_SERVER['PHP_SELF']);
+
+// ── NOTIFICATION COUNTS ──────────────────────────────────────────
+$uid = (int) $_SESSION['usahawan_id'];
+$pesanan_count = 0;
+$booking_count = 0;
+
+if (isset($conn)) {
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM pesanan WHERE usahawan_id = ? AND status_pesanan NOT IN ('completed', 'cancelled')");
+    $stmt->bind_param("i", $uid);
+    $stmt->execute();
+    $stmt->bind_result($pesanan_count);
+    $stmt->fetch();
+    $stmt->close();
+
+    $stmt2 = $conn->prepare("SELECT COUNT(*) FROM servis_booking WHERE usahawan_id = ? AND status NOT IN ('completed', 'cancelled')");
+    $stmt2->bind_param("i", $uid);
+    $stmt2->execute();
+    $stmt2->bind_result($booking_count);
+    $stmt2->fetch();
+    $stmt2->close();
+}
+
+$total_notif = $pesanan_count + $booking_count;
+// ─────────────────────────────────────────────────────────────────
 ?>
 
 <style>
@@ -60,8 +84,30 @@ $current_page = basename($_SERVER['PHP_SELF']);
   transition: background .2s ease, padding .2s ease;
 }
 
-.usahawan-toggle-bar span {
+/* label "USAHAWAN" dalam toggle bar */
+.usahawan-toggle-bar .toggle-label {
   color: var(--gold);
+}
+
+/* badge pada toggle bar */
+.toggle-notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -115px;
+  background: #e53935;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #fff;
+  line-height: 1;
+  pointer-events: none;
 }
 
 /* ================= SIDEBAR ================= */
@@ -98,15 +144,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 /* open */
 .usahawan-sidebar.open {
   transform: translateX(0);
-}
-
-/* when sidebar open, toggle becomes icon only */
-.usahawan-sidebar.open ~ .usahawan-toggle-bar {
-  padding: 0 10px;
-}
-
-.usahawan-sidebar.open ~ .usahawan-toggle-bar span {
-  display: none;
 }
 
 /* ================= BRAND ================= */
@@ -176,6 +213,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
     transform: translateX(0);
   }
 }
+
+/* ================= NOTIFICATION BADGE (TAMBAHAN SAHAJA) ================= */
+.notif-badge {
+  margin-left: auto;
+  background: #e53935;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  line-height: 1;
+  flex-shrink: 0;
+}
 </style>
 
 <!-- ===== SIDEBAR ===== -->
@@ -188,31 +243,56 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
   <ul class="usahawan-menu">
     <li><a href="seller_dashboard.php" class="<?= $current_page=='seller_dashboard.php'?'active':'' ?>">🧭 Dashboard</a></li>
-    <li><a href="seller_inbox.php" class="<?= $current_page=='seller_inbox.php'?'active':'' ?>">💬 Chat</a></li>
+    <li><a href="chat_room.php" class="<?= $current_page=='chat_room.php'?'active':'' ?>">💬 Chat</a></li>
     <li><a href="profile_usahawan2.php" class="<?= $current_page=='profile_usahawan2.php'?'active':'' ?>">👤 Profil</a></li>
     <li><a href="produk_usahawan.php" class="<?= $current_page=='produk_usahawan.php'?'active':'' ?>">📦 Produk</a></li>
+    <li>
+      <a href="pesanan_masuk.php" class="<?= $current_page=='pesanan_masuk.php'?'active':'' ?>">
+        🚚 Pesanan Produk
+        <?php if ($pesanan_count > 0): ?>
+          <span class="notif-badge"><?= $pesanan_count > 99 ? '99+' : $pesanan_count ?></span>
+        <?php endif; ?>
+      </a>
+    </li>
     <li><a href="servis_usahawan.php" class="<?= $current_page=='servis_usahawan.php'?'active':'' ?>">🛠️ Servis</a></li>
-    <li><a href="pesanan_masuk.php" class="<?= $current_page=='pesanan_masuk.php'?'active':'' ?>">🚚 Pesanan</a></li>
-    <li><a href="jualan.php" class="<?= $current_page=='jualan.php'?'active':'' ?>">💰 Jualan</a></li>
+    <li>
+      <a href="seller_booking.php" class="<?= $current_page=='seller_booking.php'?'active':'' ?>">
+        📖 Tempahan Servis
+        <?php if ($booking_count > 0): ?>
+          <span class="notif-badge"><?= $booking_count > 99 ? '99+' : $booking_count ?></span>
+        <?php endif; ?>
+      </a>
+    </li>
     <li><a href="laporan_perniagaan.php" class="<?= $current_page=='laporan_perniagaan.php'?'active':'' ?>">📊 Laporan</a></li>
-    <li><a href="tetapan_perniagaan.php" class="<?= $current_page=='tetapan_perniagaan.php'?'active':'' ?>">⚙️ Tetapan</a></li>
-
   </ul>
 
 </aside>
 
 <!-- ===== TOGGLE BAR ===== -->
 <div class="usahawan-toggle-bar" onclick="toggleUsahawanSidebar()">
-  <i id="usahawanToggleIcon">☰</i>
-  <span>USAHAWAN</span>
+  <span style="position:relative; display:inline-flex; align-items:center;">
+    <i id="usahawanToggleIcon">☰</i>
+    <?php if ($total_notif > 0): ?>
+      <span class="toggle-notif-badge" id="usahawanToggleBadge"><?= $total_notif > 99 ? '99+' : $total_notif ?></span>
+    <?php endif; ?>
+  </span>
+  <span class="toggle-label" id="usahawanToggleLabel">USAHAWAN</span>
 </div>
 
 <script>
 function toggleUsahawanSidebar() {
-  const sidebar = document.getElementById("usahawanSidebar");
-  const icon = document.getElementById("usahawanToggleIcon");
+  const sidebar  = document.getElementById("usahawanSidebar");
+  const icon     = document.getElementById("usahawanToggleIcon");
+  const label    = document.getElementById("usahawanToggleLabel");
+  const toggleEl = document.querySelector(".usahawan-toggle-bar");
 
-  sidebar.classList.toggle("open");
-  icon.textContent = sidebar.classList.contains("open") ? "◂" : "☰";
+  const isOpen = sidebar.classList.toggle("open");
+
+  const badge    = document.getElementById("usahawanToggleBadge");
+
+  icon.textContent        = isOpen ? "◂" : "☰";
+  label.style.display     = isOpen ? "none" : "";
+  toggleEl.style.padding  = isOpen ? "0 10px" : "";
+  if (badge) badge.style.display = isOpen ? "none" : "";
 }
 </script>
