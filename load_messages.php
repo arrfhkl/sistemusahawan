@@ -1,87 +1,76 @@
 <?php
-/* =========================================
-   START SESSION & CONNECTION
-========================================= */
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 include "connection.php";
 
-date_default_timezone_set("Asia/Kuala_Lumpur");
-
-/* =========================================
-   1. AUTH CHECK
-========================================= */
 if (!isset($_SESSION['usahawan_id'])) {
-    http_response_code(401);
-    exit;
+    http_response_code(401); echo json_encode([]); exit;
 }
 
-$user_id = (int) $_SESSION['usahawan_id'];
-$chat_id = isset($_GET['chat_id']) ? (int) $_GET['chat_id'] : 0;
-$last_id = isset($_GET['last_id']) ? (int) $_GET['last_id'] : 0;
+$user_id = (int)$_SESSION['usahawan_id'];
+$chat_id = (int)($_GET['chat_id'] ?? 0);
+$last_id = (int)($_GET['last_id'] ?? 0);
 
-if ($chat_id <= 0) {
-    http_response_code(400);
-    exit;
-}
+if ($chat_id <= 0) { echo json_encode([]); exit; }
 
-/* =========================================
-   2. VALIDATE USER IS PARTICIPANT
-   (GUNA user_low / user_high)
-========================================= */
-$stmt = $conn->prepare("
-    SELECT id
-    FROM chat_rooms
-    WHERE id = ?
-      AND (user_low = ? OR user_high = ?)
-    LIMIT 1
+// Verify user belongs to this chat
+$chk = $conn->prepare("SELECT id FROM chat_rooms WHERE id=? AND (user_low=? OR user_high=?) LIMIT 1");
+$chk->bind_param("iii", $chat_id, $user_id, $user_id);
+$chk->execute();
+if ($chk->get_result()->num_rows === 0) { echo json_encode([]); exit; }
+
+// Mark as read (passive — runs on every poll)
+$conn->query("
+    UPDATE chat_messages SET is_read=1
+    WHERE chat_id=$chat_id AND sender_id!=$user_id AND is_read=0
 ");
 
-$stmt->bind_param("iii", $chat_id, $user_id, $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    http_response_code(403);
-    exit;
-}
-
-/* =========================================
-   3. LOAD NEW MESSAGES SAHAJA
-========================================= */
+// Fetch messages after last_id
 $stmt = $conn->prepare("
     SELECT
-        id,
-        sender_id,
-        message,
-        message_type,
-        created_at
+        id, sender_id, message, message_type,
+        file_url, file_name, file_size, file_mime,
+        created_at,
+        DATE(created_at) AS date_raw
     FROM chat_messages
     WHERE chat_id = ?
       AND id > ?
       AND is_deleted = 0
     ORDER BY id ASC
+    LIMIT 50
 ");
-
 $stmt->bind_param("ii", $chat_id, $last_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$rows = $stmt->get_result();
 
-$messages = [];
+$output = [];
 
-while ($row = $result->fetch_assoc()) {
+while ($row = $rows->fetch_assoc()) {
+    $type    = $row['message_type'] ?? 'text';
+    $is_me   = ((int)$row['sender_id'] === $user_id);
+    $created = new DateTime($row['created_at']);
 
-    $messages[] = [
-        "id"           => (int) $row['id'],
-        "sender_id"    => (int) $row['sender_id'],
-        "message"      => $row['message'],
-        "message_type" => $row['message_type'],
-        "time"         => date("h:i A", strtotime($row['created_at'])),
-        "is_me"        => ($row['sender_id'] == $user_id)
+    $item = [
+        'id'           => (int)$row['id'],
+        'sender_id'    => (int)$row['sender_id'],
+        'message'      => $row['message'] ?? '',
+        'message_type' => $type,
+        'is_me'        => $is_me,
+        'time'         => $created->format('H:i'),
+        'date_raw'     => $row['created_at'],
+        'file_url'     => $row['file_url'],
+        'file_name'    => $row['file_name'],
+        'file_size'    => $row['file_size'] ? (int)$row['file_size'] : null,
+        'file_mime'    => $row['file_mime'],
     ];
+
+    // Parse card JSON
+    if (($type === 'card' || $type === 'servis') && !empty($row['message'])) {
+        $card = json_decode($row['message'], true);
+        if ($card) $item['card'] = $card;
+    }
+
+    $output[] = $item;
 }
 
-/* =========================================
-   4. RETURN JSON
-========================================= */
-header("Content-Type: application/json; charset=UTF-8");
-echo json_encode($messages);
+header('Content-Type: application/json');
+echo json_encode($output);
