@@ -264,6 +264,7 @@ $total_notif = $pesanan_count + $booking_count;
       </a>
     </li>
     <li><a href="laporan_perniagaan.php" class="<?= $current_page=='laporan_perniagaan.php'?'active':'' ?>">📊 Laporan</a></li>
+    <li><a href="senarai_permohonan.php" class="<?= $current_page=='senarai_permohonan.php'?'active':'' ?>">📝 Permohonan</a></li>
   </ul>
 
 </aside>
