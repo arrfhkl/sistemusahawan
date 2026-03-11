@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <label>Deskripsi</label>
         <textarea name="deskripsi" rows="4"></textarea>
 
-        <label>Gambar Produk</label>
+        <label>Gambar Produk Utama</label>
         <input type="file" name="gambar" accept="image/*" onchange="previewImage(event)">
         <img id="preview" style="
           display:none;
@@ -188,6 +188,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           box-shadow:0 4px 10px rgba(0,0,0,0.15);
         "
         >
+
+        <label>Galeri Produk – Sokongan Muat Naik Berbilang Gambar</label>
+        <input type="file" name="gallery[]" multiple accept="image/*" onchange="previewGallery(event)">
+        <div id="gallery-preview" style="
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-top:12px;
+        "></div>
 
         <label>Lokasi</label>
         <input type="text" name="lokasi">
@@ -222,6 +231,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       };
     reader.readAsDataURL(event.target.files[0]);
     }
+
+ // preview multiple gallery images
+function previewGallery(event) {
+
+    const container = document.getElementById('gallery-preview');
+    container.innerHTML = ""; // reset preview
+
+    const files = event.target.files;
+
+    for (let i = 0; i < files.length; i++) {
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+
+            const img = document.createElement("img");
+            img.src = e.target.result;
+            img.style.width = "120px";
+            img.style.height = "120px";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "8px";
+            img.style.border = "1px solid #ccc";
+            img.style.boxShadow = "0 3px 8px rgba(0,0,0,0.15)";
+
+            container.appendChild(img);
+        };
+
+        reader.readAsDataURL(files[i]);
+    }
+}
   
 </script>
 
