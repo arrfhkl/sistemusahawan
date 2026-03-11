@@ -183,7 +183,8 @@ body{
       <?php while($row = $result->fetch_assoc()): ?>
         <a href="chat_room.php?chat_id=<?= $row['chat_id'] ?>" class="chat-row">
 
-          <img src="<?= htmlspecialchars($row['partner_avatar'] ?? 'assets/img/user.png') ?>">
+          <img src="<?= htmlspecialchars($avatar) ?>" onerror="this.src='assets/img/default_avatar.jpg'">
+
 
           <div class="chat-info">
             <strong><?= htmlspecialchars($row['partner_name']) ?></strong>

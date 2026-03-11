@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem Usahawan Pahang</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="assets/img/jatapahang.png">
+  <link rel="icon" type="image/png" href="sups/assets/img/jatapahang.png">
   <style>
     * {
   margin: 0;
@@ -30,7 +30,7 @@ footer {
   animation: metalshine 6s linear infinite;
   color: #fff;
   padding: 30px 20px;
-  margin-top: 40px;
+  margin-top: 0;
   text-align: center;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;

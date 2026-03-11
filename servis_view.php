@@ -99,7 +99,7 @@ $gallery = $conn->query("
 <!-- ACTION -->
 <div class="d-flex gap-2 mb-4 justify-content-center">
   <a href="butiran_servis.php?id=<?= $servis_id ?>" class="btn btn-outline-primary">Preview Customer</a>
-  <a href="servis_edit.php?id=<?= $servis_id ?>" class="btn btn-primary">Edit Servis</a>
+  <a href="edit_servis.php?id=<?= $servis_id ?>" class="btn btn-primary">Edit Servis</a>
 </div>
 
 <!-- KPI -->

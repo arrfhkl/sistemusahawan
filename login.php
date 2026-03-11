@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-// Jika sudah login, terus ke profil
+// Jika sudah login, terus ke index
 if (isset($_SESSION['usahawan_id'])) {
-    header("Location: profil_usahawan.php?id=" . $_SESSION['usahawan_id']);
+    header("Location: index.php");
     exit();
 }
 
@@ -30,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($password === $user['password']) {
             $_SESSION['usahawan_id'] = $user['id'];
             $_SESSION['usahawan_nama'] = $user['nama'];
-            header("Location: profil_usahawan.php?id=" . $user['id']);
+            // Redirect to index.php after login
+            header("Location: index.php");
             exit();
         } else {
             $error = "Kata laluan salah.";
@@ -42,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $conn->close();
+
 ?>
 <!DOCTYPE html>
 <html lang="ms">

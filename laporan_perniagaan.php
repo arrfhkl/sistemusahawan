@@ -120,6 +120,13 @@ if ($status['pending'] > 0) {
 if ($status['delivered'] > 0) {
     $analisis[] = "Sebahagian tempahan telah berjaya diselesaikan.";
 }
+
+// Jumlah tempahan
+$q_tempahan = $conn->query("
+    SELECT COUNT(*) AS total 
+    FROM servis_booking 
+    WHERE usahawan_id = $usahawan_id
+")->fetch_assoc()['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -308,6 +315,14 @@ if ($status['delivered'] > 0) {
         </div>
         <div class="stat-number"><?= $kpi['jumlah_pesanan'] ?></div>
         <div class="stat-label">Jumlah Pesanan</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon icon-blue">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-number"><?= $q_tempahan ?></div>
+        <div class="stat-label">Jumlah Tempahan</div>
     </div>
 
     <div class="stat-card">

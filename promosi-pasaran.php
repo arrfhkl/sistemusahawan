@@ -106,10 +106,12 @@ $result = $conn->query($sql);
   box-shadow:0 2px 10px rgba(0,0,0,0.1);
   transition: transform 0.2s ease;
   cursor: pointer;
-    height: 370px;
+
   display: flex;
   flex-direction: column;
-  cursor: pointer;
+
+  height: auto;          /* 🔥 remove fixed height */
+  min-height: 300px;     /* optional */
 }
 .produk-info {
   padding:15px;

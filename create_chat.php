@@ -15,6 +15,7 @@ if (!isset($_SESSION['usahawan_id'])) {
 $user_id    = (int) $_SESSION['usahawan_id'];
 $partner_id = isset($_POST['partner_id']) ? (int) $_POST['partner_id'] : 0;
 $message    = isset($_POST['message']) ? trim($_POST['message']) : '';
+$produk_id = isset($_POST['produk_id']) ? (int)$_POST['produk_id'] : 0;
 
 /* =========================================
    2. VALIDATE INPUT
@@ -55,25 +56,30 @@ $stmt->execute();
 $res = $stmt->get_result();
 
 if ($res->num_rows > 0) {
+    $existing = $res->fetch_assoc();
+    $chat_id = (int) $existing['id'];
 
-    // Chat sudah wujud
-    $chat_id = (int) $res->fetch_assoc()['id'];
-
+    // Update produk_id if missing
+    if ($produk_id > 0) {
+        $upd = $conn->prepare("UPDATE chat_rooms SET produk_id = ? WHERE id = ? AND produk_id = 0");
+        $upd->bind_param("ii", $produk_id, $chat_id);
+        $upd->execute();
+    }
 } else {
 
     /* =========================================
        6. CREATE NEW CHAT ROOM
     ========================================= */
-    $stmt = $conn->prepare("
-        INSERT INTO chat_rooms (user_low, user_high, created_at)
-        VALUES (?, ?, NOW())
-    ");
+$stmt = $conn->prepare("
+    INSERT INTO chat_rooms (user_low, user_high, produk_id, created_at)
+    VALUES (?, ?, ?, NOW())
+");
 
     if (!$stmt) {
         die("PREPARE_INSERT_ERROR: " . $conn->error);
     }
 
-    $stmt->bind_param("ii", $user_low, $user_high);
+    $stmt->bind_param("iii", $user_low, $user_high, $produk_id);
 
     if (!$stmt->execute()) {
         die("INSERT_CHAT_ERROR: " . $stmt->error);
@@ -108,5 +114,5 @@ if (!$stmt->execute()) {
 /* =========================================
    8. REDIRECT TO CHAT ROOM
 ========================================= */
-header("Location: chat_room.php?chat_id=" . $chat_id);
+header("Location: chat_room.php?chat_id=" . $chat_id . ($produk_id ? "&produk_id=".$produk_id : ""));
 exit;

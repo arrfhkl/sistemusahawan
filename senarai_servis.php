@@ -19,7 +19,14 @@ if (isset($_GET['ajax'])) {
     exit;
   }
 
-  $sql = "SELECT * FROM servis WHERE kategori_servis_id = ?";
+  $sql = "
+  SELECT 
+    s.*, 
+    u.perniagaan
+    FROM servis s
+    LEFT JOIN usahawan u ON s.usahawan_id = u.id
+    WHERE s.kategori_servis_id = ?
+  ";
   $params = [$kategori_id];
   $types = "i";
 
@@ -49,8 +56,9 @@ if (isset($_GET['ajax'])) {
   <div class="service-card">
     <img src="uploads/<?= htmlspecialchars($row['gambar_servis_url']) ?>">
     <div class="service-info">
-      <h3><?= htmlspecialchars($row['nama']) ?></h3>
-      <p>📍 <?= htmlspecialchars($row['lokasi']) ?></p>
+      <h3><?= htmlspecialchars($row['perniagaan']) ?></h3>
+      <p> 🛠 <?= htmlspecialchars($row['nama']) ?></p>
+      <p> 📍<?= htmlspecialchars($row['lokasi']) ?></p>
 
       <button class="btn-butiran"
         onclick="window.location.href='butiran_servis.php?id=<?= $row['id'] ?>'">
@@ -596,7 +604,7 @@ footer .copyright {
 <!-- ===== HEADER ===== -->
 <header>
   <img src="assets/img/jatapahang.png" alt="Jata Negeri Pahang" class="jata">
-  <h1 class="title">Senarai Servis- Sistem Usahawan Pahang</h1>
+  <h1 class="title">Sistem Usahawan Pahang</h1>
 
   <!-- Butang menu (mobile) -->
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>

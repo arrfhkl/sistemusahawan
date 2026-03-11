@@ -2,6 +2,10 @@
 include("connection.php");
 include "header.php";
 
+$user_id = isset($_SESSION['usahawan_id']) 
+    ? (int)$_SESSION['usahawan_id'] 
+    : 0;
+
 if (!isset($_GET['id'])) {
   die("Servis tidak ditemui.");
 }
@@ -269,32 +273,7 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
   box-shadow: 0 6px 18px rgba(0,0,0,.15);
 }
 
-/*mobile-friendly sticky bar.*/
-.sticky-cta {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: none;
-  gap: 10px;
-  padding: 12px;
-  background: #fff;
-  border-top: 1px solid #ddd;
-}
 
-.sticky-cta a {
-  flex: 1;
-  text-align: center;
-  padding: 12px;
-  border-radius: 8px;
-  color: #fff;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-@media(max-width:768px){
-  .sticky-cta { display: flex; }
-}
 
 .verified {
   display: inline-block;
@@ -380,19 +359,37 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
     onclick="window.location.href='tempah_servis.php?id=<?= $service['id'] ?>'">
     Tempah Servis
   </button>
-  <button class="btn-secondary"
-    onclick="window.location.href='chat_room.php?servis_id=<?= $service['id'] ?>'">
-    💬 Chat Dengan Tukang
+  <?php if ($user_id === (int)$service['usahawan_id']): ?>
+
+  <button class="btn-secondary" disabled
+    style="background:#999; cursor:not-allowed;">
+    Ini servis anda
   </button>
+
+  <?php else: ?>
+
+    <button class="btn-secondary"
+      onclick="window.location.href='chat_room.php?user_id=<?= $service['usahawan_id'] ?>'">
+      💬 Chat Dengan Usahawan
+    </button>
+
+  <?php endif; ?>
 </div>
 
 <!-- PROFIL TUKANG -->
 <div class="section">
   <h2>Profil Penyedia Servis</h2>
+  <a href="profil_usahawan3.php?id=<?= $service['usahawan_id'] ?>" 
+   style="text-decoration:none; color:inherit;">
   <div class="tukang-card">
     <img src="<?= htmlspecialchars($avatar) ?>">
     <div>
-      <p><strong><?= htmlspecialchars($service['nama_tukang']) ?></strong></p>
+      <p>
+        <a href="profil_usahawan3.php?id=<?= $service['usahawan_id'] ?>" 
+          style="text-decoration:none; color:#1f3c88; font-weight:bold;">
+          <?= htmlspecialchars($service['nama_tukang']) ?>
+        </a>
+      </p>
       <p><?= htmlspecialchars($service['perniagaan']) ?></p>
       <p><?= htmlspecialchars($service['jenis']) ?></p>
       <p>📞 <?= htmlspecialchars($service['telefon']) ?></p>
@@ -477,10 +474,6 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
 <?php endif; ?>
 
 </div>
-<div class="sticky-cta">
-  <a href="tempah_servis.php?id=<?= $service['id'] ?>" class="btn-primary">Tempah</a>
-  <a href="chat_room.php?servis_id=<?= $service['id'] ?>" class="btn-secondary">Chat</a>
-
 <?php include "footer.php"; ?>
 
 <script>

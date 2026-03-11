@@ -27,7 +27,7 @@ $current_chat_id = isset($_GET['chat_id']) ? (int) $_GET['chat_id'] : 0;
 $stmt = $conn->prepare("
 SELECT
   cr.id AS chat_id,
-
+  cr.produk_id,
   CASE
     WHEN cr.user_low = ? THEN cr.user_high
     ELSE cr.user_low
@@ -109,7 +109,7 @@ if (!empty($avatar)) {
 $isActive = ($current_chat_id === (int)$row['chat_id']);
 ?>
 
-<a href="chat_room.php?chat_id=<?= (int)$row['chat_id'] ?>"
+<a href="chat_room.php?chat_id=<?= (int)$row['chat_id'] ?>&produk_id=<?= (int)$row['produk_id'] ?>"
    class="chat-item <?= $isActive ? 'active' : '' ?>">
 
  <img src="<?= htmlspecialchars($avatar) ?>"
