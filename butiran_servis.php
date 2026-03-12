@@ -110,6 +110,52 @@ if (!empty($service['usahawan_id'])) {
 }
 
 /* ===============================
+   CUSTOMER REVIEWS
+================================ */
+$reviews = null;
+$avg_rating = 0;
+$total_reviews = 0;
+
+$checkReview = $conn->query("SHOW TABLES LIKE 'reviews'");
+
+if ($checkReview->num_rows > 0) {
+
+  // Get rating summary
+  $stmt6 = $conn->prepare("
+      SELECT 
+        AVG(r.rating) as avg_rating,
+        COUNT(*) as total
+      FROM reviews r
+      JOIN servis_booking b ON r.booking_id = b.id
+      WHERE r.type = 'servis'
+      AND b.service_id = ?
+  ");
+  $stmt6->bind_param("i", $id);
+  $stmt6->execute();
+
+  $summary = $stmt6->get_result()->fetch_assoc();
+
+  $avg_rating = $summary['avg_rating'] ? round($summary['avg_rating'],1) : 0;
+  $total_reviews = (int)$summary['total'];
+
+
+  // Get latest 2 reviews
+  $stmt7 = $conn->prepare("
+      SELECT r.*
+      FROM reviews r
+      JOIN servis_booking b ON r.booking_id = b.id
+      WHERE r.type = 'servis'
+      AND b.service_id = ?
+      ORDER BY r.created_at DESC
+      LIMIT 2
+  ");
+  $stmt7->bind_param("i", $id);
+  $stmt7->execute();
+
+  $reviews = $stmt7->get_result();
+}
+
+/* ===============================
    SERVIS BERKAITAN (KATEGORI SAMA)
 ================================ */
 $servis_berkaitan = [];
@@ -327,6 +373,51 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
   transform:translateY(-2px);
 }
 
+.review-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:50px;
+margin-bottom:10px;
+}
+
+.review-header a{
+text-decoration:none;
+color:#1f3c88;
+font-size:0.9rem;
+font-weight:600;
+}
+
+.rating-summary{
+font-size:1.1rem;
+font-weight:bold;
+margin-bottom:15px;
+}
+
+.review-card{
+background:#fafafa;
+border:1px solid #eee;
+border-radius:10px;
+padding:15px;
+margin-bottom:12px;
+}
+
+.review-name{
+font-weight:bold;
+font-size:0.9rem;
+margin-bottom:3px;
+}
+
+.review-rating{
+color:#f5a623;
+font-size:0.9rem;
+margin-bottom:5px;
+}
+
+.review-text{
+font-size:0.9rem;
+color:#444;
+}
 
 </style>
 </head>
@@ -374,6 +465,51 @@ body { font-family: Arial, sans-serif; background: #f4f6f8; }
     </button>
 
   <?php endif; ?>
+</div>
+
+<!-- CUSTOMER REVIEWS -->
+<div class="section">
+
+<div class="review-header">
+<h2>Customer Reviews</h2>
+
+<a href="servis_reviews.php?id=<?= $service['id'] ?>">
+See more >
+</a>
+</div>
+
+<div class="rating-summary">
+⭐ <?= $avg_rating ?> (<?= $total_reviews ?>)
+</div>
+
+<?php if ($reviews && $reviews->num_rows > 0): ?>
+
+<?php while($r = $reviews->fetch_assoc()): ?>
+
+<div class="review-card">
+
+<div class="review-name">
+<?= htmlspecialchars($r['pelanggan_nama']) ?>
+</div>
+
+<div class="review-rating">
+<?= str_repeat("⭐", $r['rating']) ?>
+</div>
+
+<div class="review-text">
+<?= htmlspecialchars($r['komen']) ?>
+</div>
+
+</div>
+
+<?php endwhile; ?>
+
+<?php else: ?>
+
+<p>Belum ada review untuk servis ini.</p>
+
+<?php endif; ?>
+
 </div>
 
 <!-- PROFIL TUKANG -->

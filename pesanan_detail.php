@@ -207,9 +207,50 @@ nav a:hover,nav a.active{color:#ffd700;}
   box-shadow:0 5px 18px rgba(255,165,0,.35);
 }
 .btn-review:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(255,165,0,.45);color:#003399;}
-.review-done{
-  display:inline-flex;align-items:center;gap:9px;
-  background:#e9f7ef;color:#28a745;padding:10px 24px;border-radius:30px;font-weight:600;font-size:.95rem; margin-left: auto;
+/* Kemaskini warna kepada merah (Red) */
+.btn-review {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: linear-gradient(135deg, #ff4d4d, #cc0000); /* Warna Merah */
+  color: #fff; /* Tukar teks kepada putih supaya jelas */
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: .3s;
+  box-shadow: 0 5px 15px rgba(204, 0, 0, 0.3);
+}
+
+.btn-review:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(204, 0, 0, 0.45);
+  color: #fff;
+}
+
+/* Ubah section review supaya rapat ke kanan */
+.review-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  text-align: right; /* Alihkan kandungan ke kanan */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Pastikan elemen di dalamnya rapat ke kanan */
+}
+
+.review-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: #e9f7ef;
+  color: #28a745;
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: .85rem; 
 }
 .review-hint{color:#888;font-size:.87rem;margin-top:8px;}
 
@@ -413,22 +454,19 @@ footer .copyright{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255
       </div>
 
       <!-- Total -->
-      <div class="totals-row">
+        <div class="totals-row">
         <div class="total-amount">Jumlah Bayaran: RM <?= number_format($order['jumlah_bayaran'],2) ?></div>
       </div>
 
-      <!-- ── Review section (delivered orders only) ── -->
       <?php if ($cur_status === 'delivered'): ?>
       <div class="review-section">
         <?php if ($reviewed): ?>
           <div class="review-done">
-            Ulasan anda telah dihantar. Terima kasih!
+            <i class="fas fa-check-circle"></i> Ulasan telah dihantar
           </div>
         <?php else: ?>
-          <a href="review_produk.php?order_id=<?= $order['id'] ?>" class="btn-review">
-            <i class="fas fa-star"></i> Tulis Ulasan
-          </a>
-          <p class="review-hint">Kongsi pengalaman anda tentang produk yang diterima</p>
+          <a href="review_produk.php?order_id=<?= $order['id'] ?>" class="btn-review"> Tulis Ulasan </a>
+          <p class="review-hint" style="margin-right: 10px;">Beri maklum balas produk anda</p>
         <?php endif; ?>
       </div>
       <?php endif; ?>

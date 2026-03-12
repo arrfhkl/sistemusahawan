@@ -264,7 +264,7 @@ body {
 .price {
     font-size: 30px;
     font-weight: 800;
-    color: #2563eb;
+    color: #eb2525;
     margin: 14px 0;
     letter-spacing: -0.5px;
 }
