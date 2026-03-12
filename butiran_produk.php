@@ -910,7 +910,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 });
-<<<<<<< HEAD
 
 function beliSekarang(produk_id,nama,harga,gambar_url){
 
@@ -988,8 +987,6 @@ async function tambahKeCart(produk_id, nama, harga, gambar_url) {
 }
 
 }
-=======
->>>>>>> ec6320a04db5bb0add4e3bbc66ec5113f3dcb48d
 </script>
 
 </div>

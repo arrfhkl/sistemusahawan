@@ -13,34 +13,17 @@ if (!isset($_SESSION['usahawan_id'])) {
 $user_id    = (int)$_SESSION['usahawan_id'];
 $chat_id    = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
 $partner_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
-<<<<<<< HEAD
-$produk_id = isset($_GET['produk_id']) ? (int)$_GET['produk_id'] : 0;
-=======
 $ref_type   = isset($_GET['ref_type']) ? trim($_GET['ref_type']) : '';
 $ref_id     = isset($_GET['ref_id'])   ? (int)$_GET['ref_id']   : 0;
->>>>>>> ec6320a04db5bb0add4e3bbc66ec5113f3dcb48d
 
 $no_chat = ($chat_id === 0 && $partner_id === 0);
 
 if (!$no_chat) {
 
-<<<<<<< HEAD
-/* ===============================
-   LOAD CHAT BASED ON chat_id
-================================ */
-if ($chat_id > 0) {
-    $stmt = $conn->prepare("
-        SELECT user_low, user_high, produk_id
-        FROM chat_rooms
-        WHERE id = ?
-          AND (user_low = ? OR user_high = ?)
-        LIMIT 1
-=======
     /* Update online status */
     $conn->query("
         INSERT INTO user_online_status (user_id, last_active) VALUES ($user_id, NOW())
         ON DUPLICATE KEY UPDATE last_active = NOW()
->>>>>>> ec6320a04db5bb0add4e3bbc66ec5113f3dcb48d
     ");
 
     /* Resolve chat_id / partner_id */
@@ -72,43 +55,12 @@ if ($chat_id > 0) {
     $partner = $s2->get_result()->fetch_assoc();
     if (!$partner) die("Pengguna tidak dijumpai.");
 
-<<<<<<< HEAD
-    // ✅ Set produk_id if not already from URL
-    if ($produk_id === 0 && isset($chat['produk_id']) && $chat['produk_id'] > 0) {
-    $produk_id = (int)$chat['produk_id'];
-}
-}
-
-/* ===============================
-   CHECK EXISTING CHAT IF OPEN VIA user_id
-================================ */
-else {
-
-    $low  = min($user_id, $partner_id);
-    $high = max($user_id, $partner_id);
-
-    $stmt = $conn->prepare("
-        SELECT id
-        FROM chat_rooms
-        WHERE user_low = ? AND user_high = ?
-        LIMIT 1
-    ");
-
-    $stmt->bind_param("ii", $low, $high);
-    $stmt->execute();
-    $existing = $stmt->get_result()->fetch_assoc();
-
-    if ($existing) {
-        header("Location: chat_room.php?chat_id=".$existing['id']."&produk_id=".$produk_id);
-        exit;
-=======
     $partner_name   = $partner['nama'];
     $partner_avatar = !empty($partner['avatar']) ? $partner['avatar'] : 'assets/img/default_avatar.jpg';
 
     /* Mark as read */
     if ($chat_id > 0) {
         $conn->query("UPDATE chat_messages SET is_read=1 WHERE chat_id=$chat_id AND sender_id!=$user_id AND is_read=0");
->>>>>>> ec6320a04db5bb0add4e3bbc66ec5113f3dcb48d
     }
 
     /* Context card */
@@ -365,47 +317,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg-chat); }
   color: var(--gold);
 }
 
-<<<<<<< HEAD
-.chat-header img{
-  width:48px;height:48px;border-radius:50%;
-}
-
-#status{
-  font-size:12px;
-  color:#555;
-}
-
-/* SERVIS CARD */
-.servis-card{
-  display:flex;
-  align-items:center;      
-  gap:20px;
-  padding:8px 12px;       
-  background:rgba(255,255,255,.75);
-  border-bottom:1px solid rgba(0,0,0,.08);
-}
-
-.servis-card img{
-  width:50px;            
-  height:50px;
-  border-radius:6px;
-  object-fit:cover;
-  flex-shrink:0;
-}
-
-.servis-card div{
-  line-height:1.7;
-  font-size:14px;
-}
-
-/* CHAT BOX */
-.chat-box{
-=======
 /* ============================================================
    CHAT BOX
 ============================================================ */
 .chat-box {
->>>>>>> ec6320a04db5bb0add4e3bbc66ec5113f3dcb48d
   flex: 1;
   overflow-y: auto;
   padding: 18px 20px 12px;
@@ -968,47 +883,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg-chat); }
           <?php if (isset($ctx_card['harga'])): ?>
             <div class="ch-card-price">RM <?= number_format($ctx_card['harga'],2) ?></div>
           <?php endif; ?>
-<<<<<<< HEAD
-
-<?php if (!$no_chat_selected && $produk_chat): ?>
-<div class="servis-card">
-    <img src="<?= htmlspecialchars(
-        strpos($produk_chat['gambar_url'], 'uploads/') === false
-        ? 'uploads/'.$produk_chat['gambar_url']
-        : $produk_chat['gambar_url']
-    ) ?>" onerror="this.src='assets/img/default_avatar.jpg'">
-
-    <div>
-        <strong><?= htmlspecialchars($produk_chat['nama']) ?></strong><br>
-        RM <?= number_format($produk_chat['harga'],2) ?><br>
-
-        <span style="font-size:13px; color:<?= $produk_chat['stok'] > 0 ? '#2e7d32' : '#c62828' ?>;">
-            <?= $produk_chat['stok'] > 0 
-                ? $produk_chat['stok']." unit tersedia" 
-                : "Stok habis" ?>
-        </span>
-    </div>
-</div>
-<?php endif; ?>
-
-        <!-- MESSAGE AREA -->
-        <?php if ($no_chat_selected): ?>
-            <div class="chat-box">
-                <div class="msg system">
-                    Anda belum memilih sebarang perbualan.
-                </div>
-            </div>
-        <?php else: ?>
-            <div class="chat-box" id="chat-box"></div>
-        <?php endif; ?>
-
-        <!-- INPUT -->
-        <?php if (!$no_chat_selected): ?>
-        <div class="chat-input">
-            <input type="text" id="msg" placeholder="Taip mesej...">
-            <button onclick="sendMsg()">Hantar</button>
-=======
->>>>>>> ec6320a04db5bb0add4e3bbc66ec5113f3dcb48d
         </div>
       </a>
       <?php endif; ?>
@@ -1139,15 +1013,6 @@ function humanDate(raw) {
   return `${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-<<<<<<< HEAD
-form.innerHTML = `
-  <input name="partner_id" value="<?= $partner_id ?>">
-  <input name="produk_id" value="<?= $produk_id ?>">
-  <input name="message" value="${msg.replace(/"/g,'&quot;')}">
-`;
-    document.body.appendChild(form);
-    form.submit();
-=======
 function dateKey(raw) {
   const d = new Date(raw);
   return isNaN(d) ? raw : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -1163,7 +1028,6 @@ function onFileSelected(e) {
   if (file.size > 20 * 1024 * 1024) {
     alert('Saiz fail melebihi had 20MB. Sila pilih fail yang lebih kecil.');
     e.target.value = '';
->>>>>>> ec6320a04db5bb0add4e3bbc66ec5113f3dcb48d
     return;
   }
 
