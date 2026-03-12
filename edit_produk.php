@@ -19,6 +19,16 @@ if ($result->num_rows === 0) {
 }
 $produk = $result->fetch_assoc();
 
+/* ===============================
+   AMBIL GALLERY PRODUK
+================================ */
+$gallery = $conn->query("
+SELECT * 
+FROM produk_gallery 
+WHERE produk_id = $id
+ORDER BY id ASC
+");
+
 // ===== Proses kemaskini data =====
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nama = $conn->real_escape_string($_POST['nama']);
@@ -50,14 +60,73 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     ");
 
     if ($update) {
-        echo "<script>alert('Produk berjaya dikemaskini!'); 
-        window.location.href='profil_usahawan.php?id=" . $produk['usahawan_id'] . "';</script>";
-        exit;
+
+    if ($update) {
+
+    /* ===============================
+       UPLOAD GALLERY BARU
+    ================================ */
+    if (!empty($_FILES['gallery']['name'][0])) {
+
+        $targetDir = "uploads/";
+
+        foreach ($_FILES['gallery']['tmp_name'] as $key => $tmp_name) {
+
+            $fileName = time().'_'.$key.'_'.basename($_FILES['gallery']['name'][$key]);
+            $targetFile = $targetDir . $fileName;
+
+            $ext = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+            $allowTypes = ['jpg','jpeg','png','gif','webp'];
+
+            if (in_array($ext,$allowTypes)) {
+
+                if (move_uploaded_file($tmp_name,$targetFile)) {
+
+                    $conn->query("
+                        INSERT INTO produk_gallery (produk_id,gambar_url,is_primary)
+                        VALUES ($id,'$fileName',0)
+                    ");
+
+                  }
+              }
+          }
+      }
+
+      // Redirect selepas semua siap
+      echo "<script>alert('Produk berjaya dikemaskini!'); 
+      window.location.href='profil_usahawan.php?id=" . $produk['usahawan_id'] . "';</script>";
+      exit;
+  }
     } else {
         echo "<script>alert('Ralat semasa mengemaskini produk!');</script>";
     }
 }
-?>
+
+    /* ===============================
+    DELETE GAMBAR GALLERY
+  ================================ */
+  if (isset($_GET['delete_gallery'])) {
+
+      $gid = (int)$_GET['delete_gallery'];
+
+      $g = $conn->query("SELECT gambar_url FROM produk_gallery WHERE id=$gid");
+      $row = $g->fetch_assoc();
+
+      if ($row) {
+
+          $file = "uploads/".$row['gambar_url'];
+
+          if (file_exists($file)) {
+              unlink($file);
+          }
+
+          $conn->query("DELETE FROM produk_gallery WHERE id=$gid");
+      }
+
+      header("Location: edit_produk.php?id=$id");
+      exit;
+  }
+  ?>
 
 <!DOCTYPE html>
 <html lang="ms">
@@ -508,6 +577,60 @@ footer .copyright {
 
     <div class="preview" style="margin-top: 20px;">
       <p>Gambar sedia ada:</p>
+
+      <!-- ===============================
+     GALLERY PRODUK
+================================ -->
+<?php if ($gallery->num_rows > 0): ?>
+
+<p style="margin-top:20px;font-weight:bold;">Gallery Produk</p>
+
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;">
+
+<?php while($g = $gallery->fetch_assoc()): 
+
+$img = $g['gambar_url'];
+if (strpos($img,'uploads/') === false) {
+    $img = "uploads/".$img;
+}
+?>
+
+<div style="position:relative">
+
+<img src="<?= htmlspecialchars($img) ?>" style="
+width:90px;
+height:90px;
+object-fit:cover;
+border-radius:8px;
+border:2px solid #003366;
+">
+
+    <a href="edit_produk.php?id=<?= $id ?>&delete_gallery=<?= $g['id'] ?>"
+    onclick="return confirm('Padam gambar ini?')"
+    style="
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    background:red;
+    color:#fff;
+    border-radius:50%;
+    width:20px;
+    height:20px;
+    font-size:12px;
+    text-align:center;
+    line-height:20px;
+    text-decoration:none;
+    font-weight:bold;
+    ">×</a>
+
+    </div>
+
+    <?php endwhile; ?>
+
+    </div>
+
+    <?php endif; ?>
+
       <?php
       $gambarPath = $produk['gambar_url'];
       if (strpos($gambarPath, 'uploads/') === false) {
@@ -516,6 +639,9 @@ footer .copyright {
       ?>
       <img src="<?= htmlspecialchars($gambarPath) ?>" alt="<?= htmlspecialchars($produk['nama']) ?>">
     </div>
+
+    <label style="margin-top:20px;">Tambah Gambar Gallery</label>
+    <input type="file" name="gallery[]" multiple accept="image/*">
 
     <button type="submit" class="btn-submit">Kemaskini Produk</button>
   </form>
