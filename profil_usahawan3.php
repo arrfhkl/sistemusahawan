@@ -75,7 +75,6 @@ $avg_rating = round($avgStmt->get_result()->fetch_assoc()['avg_rating'], 1);
     .profile-info { flex: 1; min-width: 250px; }
     .profile-info h2 { margin: 0; color: var(--primary); font-size: 1.8rem; }
     .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: #e8f5e9; color: #2e7d32; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; }
-
     /* Buttons */
     .btn-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
     .btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer; transition: 0.3s; }
@@ -199,7 +198,6 @@ $avg_rating = round($avgStmt->get_result()->fetch_assoc()['avg_rating'], 1);
             <h2><?= htmlspecialchars($usahawan['nama']) ?></h2>
             <p style="color: #666; margin: 5px 0;"><i class="fas fa-store"></i> <?= htmlspecialchars($usahawan['perniagaan']) ?> (<?= htmlspecialchars($usahawan['jenis']) ?>)</p>
             <p style="font-size: 0.9rem; color: #888;"><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($usahawan['alamat']) ?></p>
-
             <div class="btn-group">
                 <a href="chat_room.php?penerima_id=<?= $usahawan['id'] ?>" class="btn btn-chat">
                     <i class="fas fa-comments"></i> Chat Sekarang

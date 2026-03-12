@@ -93,7 +93,7 @@ $total_notif = $pesanan_count + $booking_count;
 .toggle-notif-badge {
   position: absolute;
   top: -6px;
-  right: -110px;
+  right: -115px;
   background: #e53935;
   color: #fff;
   font-size: 0.6rem;
@@ -264,6 +264,7 @@ $total_notif = $pesanan_count + $booking_count;
       </a>
     </li>
     <li><a href="laporan_perniagaan.php" class="<?= $current_page=='laporan_perniagaan.php'?'active':'' ?>">📊 Laporan</a></li>
+    <li><a href="senarai_permohonan.php" class="<?= $current_page=='senarai_permohonan.php'?'active':'' ?>">📝 Permohonan</a></li>
   </ul>
 
 </aside>
@@ -288,8 +289,11 @@ function toggleUsahawanSidebar() {
 
   const isOpen = sidebar.classList.toggle("open");
 
+  const badge    = document.getElementById("usahawanToggleBadge");
+
   icon.textContent        = isOpen ? "◂" : "☰";
   label.style.display     = isOpen ? "none" : "";
   toggleEl.style.padding  = isOpen ? "0 10px" : "";
+  if (badge) badge.style.display = isOpen ? "none" : "";
 }
 </script>

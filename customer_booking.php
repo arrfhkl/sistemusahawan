@@ -163,8 +163,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .btn-reject:hover{background:var(--red-lt)}
 .btn-chat{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(13,148,136,.2)}
 .btn-chat:hover{background:#0f766e}
-.btn-review{background:#7C3AED;color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.25)}
-.btn-review:hover{background:#6D28D9;transform:translateY(-1px)}
+.btn-review{
+  background:var(--red);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(220,38,38,.25)
+}
+
+.btn-review:hover{
+  background:#B91C1C;
+  transform:translateY(-1px)
+}
 
 /* ── Reviewed (greyed) state ── */
 .btn-reviewed{

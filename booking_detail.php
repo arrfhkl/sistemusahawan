@@ -891,7 +891,7 @@ body {
           <form method="POST">
             <input type="hidden" name="update_status" value="1">
             <button name="status" value="completed" class="btn btn-green" type="button" onclick="openModal('complete')">
-              🎉 Tandakan Selesai
+              🎉 Tandakan Selesa
             </button>
           </form>
           <a href="chat_room.php?user_id=<?= $data['pelanggan_id'] ?>" class="btn btn-teal">
