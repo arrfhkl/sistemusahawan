@@ -44,6 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             $s2->bind_param("i", $pesanan_id);
             $s2->execute();
         }
+
+            if ($new_status === 'shipped') {
+            $no_tracking  = trim($_POST['no_tracking'] ?? '');
+            $jenis_kurier = trim($_POST['jenis_kurier'] ?? '');
+            if ($no_tracking !== '' || $jenis_kurier !== '') {
+                $s3 = $conn->prepare("UPDATE pesanan SET no_tracking = ?, jenis_kurier = ? WHERE id = ?");
+                $s3->bind_param("ssi", $no_tracking, $jenis_kurier, $pesanan_id);
+                $s3->execute();
+            }
+        }
+        
         echo "<script>alert('✅ Status pesanan berjaya dikemaskini!'); window.location.href='pesanan_masuk.php';</script>";
     } else {
         echo "<script>alert('❌ Gagal mengemaskini status!');</script>";
@@ -359,9 +370,34 @@ function nextStatusOptions($current) {
           <span><i class="fas fa-envelope me-1"></i><?= htmlspecialchars($order['email']) ?></span>
         </div>
         <div class="meta-row">
-          <span><i class="fas fa-<?= $order['cara_hantar']==='delivery'?'truck':'map-marker-alt' ?> me-1"></i><?= $order['cara_hantar']==='delivery'?'Hantar ke Rumah':'Pickup di Dropspot' ?></span>
-          <span><i class="fas fa-money-bill-wave me-1"></i><?= $order['cara_bayar']==='online'?'Online Banking':'COD (Bayar Semasa Terima)' ?></span>
-        </div>
+  <span><i class="fas fa-<?= $order['cara_hantar']==='delivery'?'truck':'map-marker-alt' ?> me-1"></i><?= $order['cara_hantar']==='delivery'?'Hantar ke Rumah':'Pickup di Dropspot' ?></span>
+  <span><i class="fas fa-money-bill-wave me-1"></i><?= $order['cara_bayar']==='online'?'Online Banking':'COD (Bayar Semasa Terima)' ?></span>
+</div>
+
+<?php if (!empty($order['no_tracking']) || !empty($order['jenis_kurier'])): ?>
+<div style="margin-top:10px;background:#e8f0fe;border:2px solid #0d6efd;border-radius:10px;padding:11px 15px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+  <?php if (!empty($order['jenis_kurier'])): ?>
+  <span>
+    <i class="fas fa-box me-1" style="color:#0d6efd;"></i>
+    <strong style="color:#003399;">Kurier:</strong>
+    <span style="font-weight:600;color:#333;"><?= htmlspecialchars($order['jenis_kurier']) ?></span>
+  </span>
+  <?php endif; ?>
+  <?php if (!empty($order['no_tracking'])): ?>
+  <span>
+    <i class="fas fa-barcode me-1" style="color:#0d6efd;"></i>
+    <strong style="color:#003399;">No. Tracking:</strong>
+    <span style="font-weight:700;color:#0d6efd;font-family:monospace;letter-spacing:.6px;"><?= htmlspecialchars($order['no_tracking']) ?></span>
+  </span>
+  <button onclick="navigator.clipboard.writeText('<?= addslashes($order['no_tracking']) ?>').then(()=>alert('✅ Nombor tracking disalin!'))"
+          style="background:#0d6efd;color:#fff;border:none;border-radius:16px;padding:4px 13px;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-left:auto;"
+          onmouseover="this.style.background='#0b5ed7'"
+          onmouseout="this.style.background='#0d6efd'">
+    <i class="fas fa-copy"></i> Salin
+  </button>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
       </div>
 
       <!-- Products -->
@@ -386,26 +422,120 @@ function nextStatusOptions($current) {
         <div class="total-amount">Jumlah Produk Anda: RM <?= number_format($order_total,2) ?></div>
         <div class="action-buttons">
           <?php foreach ($next_opts as $opt): ?>
-          <form method="POST" style="display:inline;"
-                onsubmit="return confirm('Sahkan tukar status kepada: <?= addslashes($opt['label']) ?>?');">
-            <input type="hidden" name="pesanan_id" value="<?= $order['id'] ?>">
-            <input type="hidden" name="new_status"  value="<?= $opt['value'] ?>">
-            <button type="submit" name="update_status" class="btn-action <?= $opt['cls'] ?>">
-              <i class="fas <?= $opt['icon'] ?>"></i> <?= $opt['label'] ?>
-            </button>
-          </form>
-          <?php endforeach; ?>
+  <?php if ($opt['value'] === 'shipped'): ?>
+    <button type="button"
+            class="btn-action <?= $opt['cls'] ?>"
+            onclick="openShipModal(<?= $order['id'] ?>)">
+      <i class="fas <?= $opt['icon'] ?>"></i> <?= $opt['label'] ?>
+    </button>
+  <?php else: ?>
+    <form method="POST" style="display:inline;"
+          onsubmit="return confirm('Sahkan tukar status kepada: <?= addslashes($opt['label']) ?>?');">
+      <input type="hidden" name="pesanan_id" value="<?= $order['id'] ?>">
+      <input type="hidden" name="new_status"  value="<?= $opt['value'] ?>">
+      <button type="submit" name="update_status" class="btn-action <?= $opt['cls'] ?>">
+        <i class="fas <?= $opt['icon'] ?>"></i> <?= $opt['label'] ?>
+      </button>
+    </form>
+  <?php endif; ?>
+<?php endforeach; ?>
           <a href="detail_pesanan_masuk.php?order_id=<?= $order['id'] ?>" class="btn-action btn-view">
             <i class="fas fa-eye"></i> Butiran Penuh
           </a>
         </div>
       </div>
 
+      
+
     </div>
     <?php endforeach; ?>
   <?php endif; ?>
 
 </div>
+
+<!-- ── Shipping Modal ──────────────────────────────────────────────────── -->
+<div class="modal fade" id="shipModal" tabindex="-1" aria-labelledby="shipModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:15px;overflow:hidden;">
+      <div class="modal-header" style="background:#003399;">
+        <h5 class="modal-title text-white" id="shipModalLabel">
+          <i class="fas fa-truck me-2"></i>Maklumat Penghantaran
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" id="shipForm">
+        <div class="modal-body p-4">
+          <input type="hidden" name="pesanan_id" id="modal_pesanan_id">
+          <input type="hidden" name="new_status" value="shipped">
+
+          <div class="mb-3">
+            <label class="form-label fw-bold" style="color:#003399;">
+              <i class="fas fa-box me-1"></i> Jenis Kurier <span class="text-danger">*</span>
+            </label>
+            <select name="jenis_kurier" id="modal_kurier" class="form-select" required
+                    style="border:2px solid #e9ecef;border-radius:8px;padding:10px;">
+              <option value="">-- Pilih Kurier --</option>
+              <option value="Pos Laju">Pos Laju</option>
+              <option value="J&T Express">J&T Express</option>
+              <option value="DHL Express">DHL Express</option>
+              <option value="Ninja Van">Ninja Van</option>
+              <option value="Shopee Express">Shopee Express</option>
+              <option value="Lalamove">Lalamove</option>
+              <option value="GDex">GDex</option>
+              <option value="Skynet">Skynet</option>
+              <option value="City-Link Express">City-Link Express</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold" style="color:#003399;">
+              <i class="fas fa-barcode me-1"></i> Nombor Tracking <span class="text-danger">*</span>
+            </label>
+            <input type="text" name="no_tracking" id="modal_tracking"
+                   class="form-control" required
+                   placeholder="Contoh: EP123456789MY"
+                   style="border:2px solid #e9ecef;border-radius:8px;padding:10px;font-family:monospace;letter-spacing:.5px;">
+            <div class="form-text">Masukkan nombor tracking yang diberikan oleh kurier.</div>
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:2px solid #f0f0f0;">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Batal
+          </button>
+          <button type="submit" name="update_status" class="btn rounded-pill px-4 fw-bold"
+                  style="background:#0d6efd;color:#fff;">
+            <i class="fas fa-truck me-1"></i> Tandakan Dihantar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function openShipModal(pesananId) {
+  document.getElementById('modal_pesanan_id').value = pesananId;
+  document.getElementById('modal_kurier').value   = '';
+  document.getElementById('modal_tracking').value = '';
+  new bootstrap.Modal(document.getElementById('shipModal')).show();
+}
+
+// Confirm before submitting from modal
+document.getElementById('shipForm').addEventListener('submit', function(e) {
+  const kurier   = document.getElementById('modal_kurier').value.trim();
+  const tracking = document.getElementById('modal_tracking').value.trim();
+  if (!kurier || !tracking) {
+    e.preventDefault();
+    alert('Sila lengkapkan jenis kurier dan nombor tracking.');
+    return;
+  }
+  if (!confirm('Sahkan penghantaran dengan maklumat berikut?\n\nKurier: ' + kurier + '\nTracking: ' + tracking)) {
+    e.preventDefault();
+  }
+});
+</script>
 
 <script>setTimeout(() => location.reload(), 120000);</script>
 <?php include "footer.php"; ?>

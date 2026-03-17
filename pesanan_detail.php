@@ -391,9 +391,43 @@ footer .copyright{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255
           <i class="fas <?= $step_meta[$cur_status]['icon'] ?? 'fa-info-circle' ?> me-2"></i>
           <strong><?= $step_meta[$cur_status]['label'] ?? translateStatus($cur_status) ?>:</strong>
           <?= $cur_desc ?>
-          <?php if ($cur_status === 'shipped' && !empty($order['no_tracking'])): ?>
-            — <strong>No. Tracking:</strong> <?= htmlspecialchars($order['no_tracking']) ?>
-          <?php endif; ?>
+          <?php if ($cur_status === 'shipped' && (!empty($order['no_tracking']) || !empty($order['jenis_kurier']))): ?>
+<div class="tracking-box mt-3" style="
+  background:#fff;border:2px solid #0d6efd;border-radius:10px;
+  padding:14px 18px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+  <?php if (!empty($order['jenis_kurier'])): ?>
+    <div>
+      <div style="font-size:.78rem;color:#888;font-weight:500;margin-bottom:2px;">
+        <i class="fas fa-box me-1"></i>Kurier
+      </div>
+      <div style="font-weight:700;color:#003399;font-size:1rem;">
+        <?= htmlspecialchars($order['jenis_kurier']) ?>
+      </div>
+    </div>
+  <?php endif; ?>
+  <?php if (!empty($order['no_tracking'])): ?>
+    <div>
+      <div style="font-size:.78rem;color:#888;font-weight:500;margin-bottom:2px;">
+        <i class="fas fa-barcode me-1"></i>Nombor Tracking
+      </div>
+      <div style="font-weight:700;color:#003399;font-size:1.05rem;
+                  font-family:monospace;letter-spacing:.8px;">
+        <?= htmlspecialchars($order['no_tracking']) ?>
+      </div>
+    </div>
+    <div class="ms-auto">
+      <button onclick="navigator.clipboard.writeText('<?= addslashes($order['no_tracking']) ?>').then(()=>alert('✅ Nombor tracking disalin!'))"
+              style="background:#003399;color:#fff;border:none;border-radius:20px;
+                     padding:7px 16px;font-size:.85rem;font-weight:600;cursor:pointer;
+                     display:flex;align-items:center;gap:6px;transition:.2s;"
+              onmouseover="this.style.background='#002266'"
+              onmouseout="this.style.background='#003399'">
+        <i class="fas fa-copy"></i> Salin
+      </button>
+    </div>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
         </div>
       </div>
       <?php else: ?>
